@@ -1,53 +1,14 @@
 import http from "node:http";
 import path from "node:path";
 import fs from "node:fs";
-import express from "express";
 import { createApp } from "./app.js";
 import { createDatabase } from "./db.js";
 import { loadConfig } from "./config.js";
 import { createMailer } from "./mailer.js";
 
 const config = loadConfig();
-const db = createDatabase(config.db || config);
+const db = createDatabase(config.database);
 const mailer = createMailer(config);
-
-// Create Express app for static + API
-const app = express();
-
-// Try to find client build folder (works for UPDATE repo structure)
-const possiblePaths = [
-  path.join(process.cwd(), "client", "dist"),
-  path.join(process.cwd(), "dist"),
-  path.join(process.cwd(), "public"),
-  path.join(process.cwd(), "client", "build"),
-  path.join(process.cwd(), "..", "client", "dist")
-];
-let clientPath = null;
-for (const p of possiblePaths) {
-  if (fs.existsSync(p)) { clientPath = p; break; }
-}
-console.log("[static] client path:", clientPath || "NOT FOUND - API only");
-
-if (clientPath) {
-  app.use(express.static(clientPath));
-}
-
-// Your API app
-const apiApp = createApp({ db, config, mailer });
-
-// Mount API under /api
-app.use("/api", (req, res) => apiApp(req, res));
-
-// For all other routes, serve index.html (for your #/ hash router + normal routes)
-if (clientPath) {
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(clientPath, "index.html"));
-  });
-} else {
-  app.get("/", (req, res) => {
-    res.json({ ok: true, message: "SURGICISS API is live. Frontend not found in build, check build settings." });
-  });
-}
 
 async function initDb() {
   const tables = [
@@ -60,7 +21,7 @@ async function initDb() {
     `CREATE TABLE IF NOT EXISTS newsletter_subscribers (email VARCHAR(254) PRIMARY KEY, created_at DATETIME NOT NULL)`
   ];
   for (const sql of tables) {
-    try { await db.execute(sql); } catch (e) { console.log("[initDb]", e.message); }
+    try { await db.execute(sql); console.log("[initDb] OK"); } catch (e) { console.log("[initDb] err", e.message); }
   }
   try {
     await db.execute("ALTER TABLE users MODIFY phone VARCHAR(255) NULL DEFAULT ''");
@@ -72,9 +33,56 @@ async function initDb() {
   console.log("[initDb] Database ready!");
 }
 
-const port = config.port || process.env.PORT || 10000;
+const apiApp = createApp({ db, config, mailer });
+
+// Find client folder
+const clientPaths = [
+  path.join(process.cwd(), "client", "dist"),
+  path.join(process.cwd(), "dist"),
+  path.join(process.cwd(), "public"),
+  path.join(process.cwd(), "client", "build")
+];
+let clientDist = null;
+for (const p of clientPaths) {
+  if (fs.existsSync(p) && fs.existsSync(path.join(p, "index.html"))) {
+    clientDist = p;
+    break;
+  }
+}
+console.log("[static] Serving client from:", clientDist || "NOT FOUND - using API only");
+
+const server = http.createServer((req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+
+  // If /api/* or /auth/* -> go to API
+  if (req.url.startsWith("/api/") || req.url.startsWith("/auth/")) {
+    return apiApp(req, res);
+  }
+
+  // If client exists, try to serve static file
+  if (clientDist) {
+    let filePath = path.join(clientDist, req.url === "/" ? "index.html" : req.url.split("?")[0]);
+    // If file is a directory or has no extension, serve index.html (for Vue/React hash router)
+    if (!path.extname(filePath) || req.url.includes("#") || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      filePath = path.join(clientDist, "index.html");
+    }
+    if (fs.existsSync(filePath)) {
+      const ext = path.extname(filePath);
+      const types = { ".html": "text/html", ".js": "application/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml" };
+      res.setHeader("Content-Type", types[ext] || "application/octet-stream");
+      return fs.createReadStream(filePath).pipe(res);
+    }
+  }
+
+  // Fallback to API for other routes
+  return apiApp(req, res);
+});
+
+const port = config.port || Number(process.env.PORT) || 10000;
 
 initDb().then(() => {
-  const server = http.createServer(app);
   server.listen(port, () => console.log(`SURGICISS full stack running on port ${port}`));
+}).catch(err => {
+  console.error("initDb failed", err);
+  server.listen(port, () => console.log(`Running on port ${port} despite DB init error`));
 });
