@@ -8,7 +8,7 @@ export function createDatabase(config) {
     user: config.user,
     password: config.password,
     database: config.database,
-    ssl: config.ssl ? {rejectUnauthorized: true} : undefined,
+    ssl: config.ssl ? {rejectUnauthorized: false} : undefined,
     waitForConnections: true,
     connectionLimit: 10,
     charset: "utf8mb4",

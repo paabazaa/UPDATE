@@ -18,39 +18,70 @@ if (problems.length) {
 const db = createDatabase(config.database);
 const handler = createApp({db, config, mailer: createMailer(config)});
 
-// Serve frontend dist folder
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, "..", "dist");
 
 function serveStatic(req, res) {
-  let filePath = path.join(distPath, req.url === "/" ? "index.html" : req.url);
-  // For SPA routing: if file doesn't exist, serve index.html
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-    filePath = path.join(distPath, "index.html");
-  }
-  if (!fs.existsSync(filePath)) {
-    res.writeHead(404, {"Content-Type": "application/json"});
-    res.end(JSON.stringify({error: "Not found."}));
+  const cleanUrl = req.url.split("?")[0].split("#")[0];
+  let filePath = path.join(distPath, cleanUrl === "/" ? "index.html" : cleanUrl);
+  if (!filePath.startsWith(distPath)) filePath = path.join(distPath, "index.html");
+
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const ext = path.extname(filePath);
+    const mime = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon" }[ext] || "application/octet-stream";
+    res.writeHead(200, {"Content-Type": mime});
+    fs.createReadStream(filePath).pipe(res);
     return;
   }
-  const ext = path.extname(filePath);
-  const mime = {
-    ".html": "text/html",
-    ".js": "text/javascript",
-    ".css": "text/css",
-    ".json": "application/json",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".svg": "image/svg+xml",
-    ".ico": "image/x-icon"
-  }[ext] || "application/octet-stream";
-  
-  res.writeHead(200, {"Content-Type": mime});
-  fs.createReadStream(filePath).pipe(res);
+  const hasExt = path.extname(cleanUrl) !== "";
+  if (hasExt) {
+    res.writeHead(404, {"Content-Type": "application/json"});
+    res.end(JSON.stringify({error: "Not found: " + cleanUrl}));
+    return;
+  }
+  const indexPath = path.join(distPath, "index.html");
+  if (!fs.existsSync(indexPath)) {
+    res.writeHead(404, {"Content-Type": "application/json"});
+    res.end(JSON.stringify({error: "Frontend not built."}));
+    return;
+  }
+  res.writeHead(200, {"Content-Type": "text/html"});
+  fs.createReadStream(indexPath).pipe(res);
 }
 
-const server = http.createServer((req, res) => {
-  // API routes start with /api/
+const server = http.createServer(async (req, res) => {
+  // === ADMIN CHECK: Who signed up / logged in ===
+  if (req.url.startsWith("/api/admin/users")) {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const key = url.searchParams.get("key");
+    if (key !== "surgiciss2024") {
+      res.writeHead(401, {"Content-Type": "application/json"});
+      res.end(JSON.stringify({error: "Wrong key. Use ?key=surgiciss1995"}));
+      return;
+    }
+    try {
+      let users = [];
+      if (config.database.type === 'mysql' || config.database.type === 'mysql2') {
+        const [rows] = await db.query("SELECT id, email, name, company, created_at, last_login FROM users ORDER BY created_at DESC LIMIT 100");
+        users = rows;
+      } else {
+        try { users = db.prepare("SELECT id, email, name, created_at FROM users ORDER BY created_at DESC LIMIT 100").all(); } catch(e){}
+        if (users.length === 0) {
+          try { users = db.prepare("SELECT * FROM customers ORDER BY created_at DESC LIMIT 100").all(); } catch(e){}
+        }
+        if (users.length === 0) {
+          try { users = db.prepare("SELECT * FROM accounts ORDER BY created_at DESC LIMIT 100").all(); } catch(e){}
+        }
+      }
+      res.writeHead(200, {"Content-Type": "application/json"});
+      res.end(JSON.stringify({ count: users.length, users }, null, 2));
+    } catch (err) {
+      res.writeHead(500, {"Content-Type": "application/json"});
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   if (req.url.startsWith("/api/") || req.url === "/api") {
     handler(req, res);
   } else {
@@ -59,7 +90,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(config.port, () => console.log(`SURGICISS API + Website listening on port ${config.port}`));
-
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => server.close(() => db.close().finally(() => process.exit(0))));
 }
