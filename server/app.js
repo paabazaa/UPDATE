@@ -22,7 +22,6 @@ class HttpError extends Error {
 
 export function createApp({db, config, mailer, fetchImpl = fetch}) {
   const allow = createRateLimiter();
-
   function clientIp(req) {
     if (config.trustProxy) {
       const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
@@ -33,12 +32,10 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
   const limit = (req, name, count, windowMs, extra = "") => {
     if (!allow(`${name}:${clientIp(req)}:${extra}`, count, windowMs)) throw new HttpError(429, "Too many attempts. Please wait a little and try again.");
   };
-
   function redirect(res, location, cookieList, headers = {}) {
     res.writeHead(302, {Location: location, "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "Set-Cookie": cookieList, ...headers});
     res.end();
   }
-
   function send(res, status, body, headers = {}) {
     const json = JSON.stringify(body);
     res.writeHead(status, {
@@ -52,7 +49,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     });
     res.end(json);
   }
-
   async function readBody(req) {
     if (!/^application\/json\b/i.test(req.headers["content-type"] || "")) throw new HttpError(415, "Send the request as JSON.");
     const chunks = [];
@@ -74,17 +70,14 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       throw new HttpError(400, "The request could not be read.");
     }
   }
-
   const cookies = req => Object.fromEntries(String(req.headers.cookie || "").split(";").map(part => {
     const index = part.indexOf("=");
     return index < 0 ? ["", ""] : [part.slice(0, index).trim(), decodeURIComponent(part.slice(index + 1).trim())];
   }));
-
   function cookieHeader(value, maxAgeSeconds) {
     const s = config.session;
     return `${s.cookieName}=${encodeURIComponent(value)}; Path=/; HttpOnly; Max-Age=${maxAgeSeconds}; SameSite=${s.sameSite}${s.secure ? "; Secure" : ""}`;
   }
-
   const presentUser = row => ({
     id: row.id,
     name: row.name,
@@ -97,7 +90,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     hasPassword: Boolean(row.password_hash),
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at).replace(" ", "T") + "Z"
   });
-
   async function sessionUser(req) {
     const token = cookies(req)[config.session.cookieName];
     if (!token) return null;
@@ -112,7 +104,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     if (!user) throw new HttpError(401, "Please log in.");
     return user;
   };
-
   async function startSession(userId) {
     const token = newToken();
     const now = new Date();
@@ -122,12 +113,10 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     return cookieHeader(token, config.session.days * 24 * 60 * 60);
   }
   const clearCookie = () => cookieHeader("", 0);
-
   function makeReference(prefix) {
     const day = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     return `${prefix}-${day}-${crypto.randomBytes(3).toString("hex").slice(0, 4).toUpperCase()}`;
   }
-
   async function saveRecord(table, prefix, user, value) {
     for (let attempt = 0; attempt < 5; attempt++) {
       const ref = makeReference(prefix);
@@ -145,12 +134,10 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     }
     throw new HttpError(500, "The request could not be saved. Please try again.");
   }
-
   const siteBase = () => config.siteUrl || config.allowedOrigins[0] || "";
   const siteRedirect = path => `${siteBase()}/#${path}`;
   const OAUTH_COOKIE = "surgiciss_oauth";
   const oauthCookie = (value, maxAge) => `${OAUTH_COOKIE}=${encodeURIComponent(value)}; Path=/api/auth/oauth; HttpOnly; Max-Age=${maxAge}; SameSite=Lax${config.session.secure ? "; Secure" : ""}`;
-
   async function oauthStart(req, url, name) {
     limit(req, "oauth", 30, QUARTER_HOUR);
     const settings = providerSettings(config, name);
@@ -165,7 +152,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     );
     return {redirect: authorizeUrl(settings, config, {state, challenge}), cookies: [oauthCookie(state, 600)]};
   }
-
   async function userForOauth(name, profile, email) {
     const linked = (await db.query("SELECT user_id FROM oauth_identities WHERE provider = ? AND provider_user_id = ?", [name, profile.id]))[0];
     if (linked) return linked.user_id;
@@ -195,7 +181,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     }
     return user.id;
   }
-
   async function oauthCallback(req, url, name) {
     limit(req, "oauth", 30, QUARTER_HOUR);
     const clear = oauthCookie("", 0);
@@ -223,21 +208,17 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     const userId = await userForOauth(name, profile, email);
     return {redirect: siteRedirect(row.next_path), cookies: [clear, await startSession(userId)]};
   }
-
   const routes = {
     "GET /api/auth/oauth/providers": async () => ({body: {providers: enabledProviders(config)}}),
-
     "GET /api/health": async () => {
       let database = true;
       try { await db.query("SELECT 1 AS ok"); } catch { database = false; }
       return {status: database ? 200 : 503, body: {ok: database, database}};
     },
-
     "GET /api/auth/me": async req => {
       const user = await sessionUser(req);
       return {body: {user: user ? presentUser(user) : null}};
     },
-
     "POST /api/auth/signup": async req => {
       limit(req, "signup", 5, HOUR);
       const input = cleanSignup(await readBody(req));
@@ -252,13 +233,13 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         );
       } catch (error) {
         if (isDuplicate(error)) throw new HttpError(409, "An account with that email already exists. Try logging in.");
-        throw error;
+        console.error("[signup INSERT failed]", error);
+        throw new HttpError(500, `DB Error: ${error.message} | Code: ${error.code} | SQL: ${error.sqlMessage || ""}`);
       }
       const cookie = await startSession(id);
       const row = (await db.query("SELECT * FROM users WHERE id = ?", [id]))[0];
       return {status: 201, cookie, body: {user: presentUser(row)}};
     },
-
     "POST /api/auth/login": async req => {
       const body = await readBody(req);
       const email = normaliseEmail(body.email);
@@ -269,13 +250,11 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       if (!row || !row.password_hash || !ok) throw new HttpError(401, "That email and password do not match an account.");
       return {cookie: await startSession(row.id), body: {user: presentUser(row)}};
     },
-
     "POST /api/auth/logout": async req => {
       const token = cookies(req)[config.session.cookieName];
       if (token) await db.execute("DELETE FROM sessions WHERE id = ?", [sha256(token)]);
       return {cookie: clearCookie(), body: {ok: true}};
     },
-
     "PATCH /api/auth/profile": async req => {
       const user = await requireUser(req);
       const profile = cleanProfile(await readBody(req));
@@ -287,7 +266,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       const row = (await db.query("SELECT * FROM users WHERE id = ?", [user.id]))[0];
       return {body: {user: presentUser(row)}};
     },
-
     "POST /api/auth/password": async req => {
       const user = await requireUser(req);
       limit(req, "password", 10, QUARTER_HOUR, user.id);
@@ -301,7 +279,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       await db.execute("DELETE FROM sessions WHERE user_id = ? AND id <> ?", [user.id, sha256(token)]);
       return {body: {ok: true}};
     },
-
     "POST /api/auth/delete": async req => {
       const user = await requireUser(req);
       limit(req, "delete", 5, QUARTER_HOUR, user.id);
@@ -314,7 +291,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       await db.execute("DELETE FROM users WHERE id = ?", [user.id]);
       return {cookie: clearCookie(), body: {ok: true}};
     },
-
     "POST /api/auth/forgot": async req => {
       limit(req, "forgot", 5, HOUR);
       const email = normaliseEmail((await readBody(req)).email);
@@ -342,7 +318,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       }
       return {body: {ok: true}};
     },
-
     "POST /api/auth/reset": async req => {
       limit(req, "reset", 10, HOUR);
       const body = await readBody(req);
@@ -356,7 +331,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       await db.execute("DELETE FROM sessions WHERE user_id = ?", [row.user_id]);
       return {body: {ok: true}};
     },
-
     "POST /api/submissions": async req => {
       limit(req, "submit", 15, HOUR);
       const body = await readBody(req);
@@ -373,13 +347,11 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       }
       throw new HttpError(400, "Unknown submission type.");
     },
-
     "GET /api/me/records": async req => {
       const user = await requireUser(req);
       const load = async table => (await db.query(`SELECT payload FROM ${table} WHERE user_id = ? ORDER BY created_at DESC LIMIT 200`, [user.id])).map(row => parseJson(row.payload));
       return {body: {quotes: await load("quotes"), enquiries: await load("enquiries")}};
     },
-
     "POST /api/newsletter": async req => {
       limit(req, "newsletter", 10, HOUR);
       const email = normaliseEmail((await readBody(req)).email);
@@ -392,10 +364,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       return {body: {ok: true}};
     }
   };
-
-  // FIX: Allow frontend to call /api/auth/register (same as signup) - saves to MySQL users table
   routes["POST /api/auth/register"] = routes["POST /api/auth/signup"];
-
   return async function handle(req, res) {
     const origin = String(req.headers.origin || "").replace(/\/+$/, "");
     const originAllowed = origin && config.allowedOrigins.includes(origin);
@@ -433,7 +402,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         return send(res, error.status, {error: error.message}, error.closeConnection ? {...corsHeaders, Connection: "close"} : corsHeaders);
       }
       console.error("[api]", error);
-      send(res, 500, {error: "Something went wrong on the server. Please try again."}, corsHeaders);
+      send(res, 500, {error: `DEBUG 500: ${error.message} | code=${error.code} | sql=${error.sqlMessage || ""}`}, corsHeaders);
     }
   };
 }
