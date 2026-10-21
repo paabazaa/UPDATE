@@ -16,6 +16,25 @@ if (problems.length) {
 }
 
 const db = createDatabase(config.database);
+
+// AUTO-CREATE TABLES IF NOT EXISTS (Fix for Aiven empty DB)
+try {
+  await db.script(`
+    CREATE TABLE IF NOT EXISTS users (
+      id VARCHAR(36) PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      name VARCHAR(255),
+      company VARCHAR(255),
+      password_hash VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_login TIMESTAMP NULL
+    );
+  `);
+  console.log("✅ users table ready");
+} catch (e) {
+  console.error("DB migration error:", e.message);
+}
+
 const handler = createApp({db, config, mailer: createMailer(config)});
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -56,22 +75,18 @@ const server = http.createServer(async (req, res) => {
     const key = url.searchParams.get("key");
     if (key !== "surgiciss2024") {
       res.writeHead(401, {"Content-Type": "application/json"});
-      res.end(JSON.stringify({error: "Wrong key. Use ?key=surgiciss1995"}));
+      res.end(JSON.stringify({error: "Wrong key. Use ?key=surgiciss2024"}));
       return;
     }
     try {
       let users = [];
-      if (config.database.type === 'mysql' || config.database.type === 'mysql2') {
-        const [rows] = await db.query("SELECT id, email, name, company, created_at, last_login FROM users ORDER BY created_at DESC LIMIT 100");
-        users = rows;
-      } else {
-        try { users = db.prepare("SELECT id, email, name, created_at FROM users ORDER BY created_at DESC LIMIT 100").all(); } catch(e){}
-        if (users.length === 0) {
-          try { users = db.prepare("SELECT * FROM customers ORDER BY created_at DESC LIMIT 100").all(); } catch(e){}
-        }
-        if (users.length === 0) {
-          try { users = db.prepare("SELECT * FROM accounts ORDER BY created_at DESC LIMIT 100").all(); } catch(e){}
-        }
+      const [rows] = await db.script("SELECT id, email, name, company, created_at, last_login FROM users ORDER BY created_at DESC LIMIT 100").then ? [] : [];
+      // Use query method for mysql
+      try {
+        const result = await db.query("SELECT id, email, name, company, created_at, last_login FROM users ORDER BY created_at DESC LIMIT 100");
+        users = Array.isArray(result) ? result : result.rows || [];
+      } catch(e) {
+        users = [];
       }
       res.writeHead(200, {"Content-Type": "application/json"});
       res.end(JSON.stringify({ count: users.length, users }, null, 2));
