@@ -1,7 +1,6 @@
 import mysql from "mysql2/promise";
 
 export function createDatabase(cfg) {
-  // If no config passed, read from ENV directly (Aiven)
   const c = cfg || {};
   const host = c.host || process.env.DB_HOST || process.env.MYSQL_HOST;
   const user = c.user || process.env.DB_USER || process.env.MYSQL_USER;
@@ -25,8 +24,15 @@ export function createDatabase(cfg) {
   });
 
   return {
-    query: (sql, params) => pool.execute(sql, params),
-    execute: (sql, params) => pool.execute(sql, params),
+    // FIXED: return rows only, not [rows, fields]
+    query: async (sql, params) => {
+      const [rows] = await pool.query(sql, params);
+      return rows;
+    },
+    execute: async (sql, params) => {
+      const [result] = await pool.execute(sql, params);
+      return result;
+    },
     script: (sql) => pool.query(sql),
     close: () => pool.end(),
     pool,
