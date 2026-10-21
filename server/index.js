@@ -60,7 +60,7 @@ async function start() {
       // Only for routes without extension (like / , /#/login ) -> return index.html
       const indexFile = path.join(staticDir, "index.html");
       if (fs.existsSync(indexFile)) {
-        res.writeHead(200, { "Content-Type": "text/html" });
+        res.writeHead(200, { "Content-Type": "text/html", "Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache" });
         fs.createReadStream(indexFile).pipe(res);
         return;
       }
