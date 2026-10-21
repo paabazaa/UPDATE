@@ -16,13 +16,14 @@ export function checkPassword(password, confirm) {
 }
 
 export function cleanProfile(input) {
+  const phoneRaw = input.phone ?? input.telephone ?? input.tel ?? input.mobile ?? "";
   return {
-    name: text(input.name, 255),
-    phone: text(input.phone, 255),
-    organisation: text(input.organisation, 255),
+    name: text(input.name ?? input.fullName ?? input.full_name, 255),
+    phone: text(phoneRaw, 255),
+    organisation: text(input.organisation ?? input.organization ?? "", 255),
     country: text(input.country, 255),
     city: text(input.city, 255),
-    deliveryLocation: text(input.deliveryLocation, 500)
+    deliveryLocation: text(input.deliveryLocation ?? input.delivery_location ?? input.deliveryLocation ?? "", 500)
   };
 }
 
@@ -31,17 +32,20 @@ export function cleanSignup(input) {
   const email = normaliseEmail(input.email);
   if (profile.name.length < 2) return fail("Please tell us your name.");
   if (!isEmail(email)) return fail("Please enter a valid email address.");
-  const passwordProblem = checkPassword(input.password, input.confirm);
+  // FIX: accept confirm, confirmPassword, confirm_password
+  const confirmVal = input.confirm ?? input.confirmPassword ?? input.confirm_password ?? input.confirmPass ?? "";
+  const passwordProblem = checkPassword(input.password, confirmVal);
   if (passwordProblem) return fail(passwordProblem);
   return {value: {...profile, email, password: input.password}};
 }
 
 function cleanContact(input, {needDelivery}) {
   const contact = input && typeof input === "object" ? input : {};
+  const phoneRaw = contact.phone ?? contact.telephone ?? "";
   const clean = {
     name: text(contact.name, 255),
     email: normaliseEmail(contact.email),
-    phone: text(contact.phone, 255),
+    phone: text(phoneRaw, 255),
     organisation: text(contact.organisation, 255),
     country: text(contact.country, 255),
     city: text(contact.city, 255),
