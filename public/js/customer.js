@@ -60,9 +60,7 @@ function deliveryCopy(record) {
   return "This request has not reached SURGICISS yet. Please try again later or use the contact page.";
 }
 function statusPill(record) {
-  if (record.delivered) return `<span class="pill ok">Sent</span>`;
-  if (record.deliveryError) return `<span class="pill bad">Not delivered</span>`;
-  return `<span class="pill wait">Not sent</span>`;
+  return `<span class="pill ok">Received</span>`;
 }
 function blankFields(fields) {
   const user = Accounts.current();
@@ -459,20 +457,49 @@ function resetPage() {
   </form>`);
 }
 
+const DASH_ICONS = {
+  overview: '<path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>',
+  profile: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  orders: '<path d="m7.5 4.3 9 5.2"/><path d="M21 8v8a2 2 0 0 1-1 1.7l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.7l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
+  quotes: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  enquiries: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  arrow: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  pin: '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>'
+};
+const dashIcon = name => `<svg class="di" viewBox="0 0 24 24" aria-hidden="true">${DASH_ICONS[name]}</svg>`;
+function initials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
 function accountShell(title, body) {
+  const user = Accounts.current() || {};
   const path = currentPath();
-  const link = (hrefPath, label) => `<a href="#${hrefPath}" class="${navOn(hrefPath, path) ? "active" : ""}">${label}</a>`;
-  const crumb = path === "/account" ? [{label: "Your account"}] : [{label: "Your account", to: "/account"}, {label: title}];
-  return banner(title, crumb) + `<section class="wrap sec"><div class="acct-layout"><nav class="acct-nav" aria-label="Account">
-      ${link("/account", "Overview")}
-      ${link("/account/profile", "My profile")}
-      ${link("/account/profile/edit", "Edit profile")}
-      ${link("/account/orders", "My orders")}
-      ${link("/account/quotes", "My quotes")}
-      ${link("/account/enquiries", "My enquiries")}
-      ${link("/account/settings", "Account settings")}
-      <button type="button" class="navitem" data-logout>Log out</button>
-    </nav><div>${body}</div></div></section>`;
+  const home = path === "/account";
+  const first = String(user.name || "").trim().split(/\s+/)[0] || "there";
+  const item = (hrefPath, label, icon) => `<a href="#${hrefPath}" class="${navOn(hrefPath, path) ? "active" : ""}"${navOn(hrefPath, path) ? ' aria-current="page"' : ""}>${dashIcon(icon)}<span>${label}</span></a>`;
+  const eyebrow = home ? "Your account" : `<a href="#/account">Your account</a><span aria-hidden="true"> / </span>${escapeHtml(title)}`;
+  const sub = [user.email, user.organisation].filter(Boolean).map(escapeHtml).join(" · ");
+  return `<section class="dash-hero"><div class="wrap dash-hero-in">
+      <span class="avatar lg" aria-hidden="true">${escapeHtml(initials(user.name))}</span>
+      <div class="dash-who"><p class="eyebrow">${eyebrow}</p><h1>${home ? `Welcome back, ${escapeHtml(first)}` : escapeHtml(title)}</h1><p class="sub">${sub}</p></div>
+      <div class="dash-actions"><a class="btn light" href="#/generate-quote">${dashIcon("plus")}Generate quote</a><a class="btn ghost" href="#/contact-us">Ask a question</a></div>
+    </div></section>
+    <section class="wrap dash"><nav class="dash-nav" aria-label="Account">
+      ${item("/account", "Overview", "overview")}
+      ${item("/account/quotes", "My quotes", "quotes")}
+      ${item("/account/enquiries", "My enquiries", "enquiries")}
+      ${item("/account/orders", "My orders", "orders")}
+      ${item("/account/profile", "My profile", "profile")}
+      ${item("/account/profile/edit", "Edit profile", "edit")}
+      ${item("/account/settings", "Account settings", "settings")}
+      <button type="button" class="navitem" data-logout>${dashIcon("logout")}<span>Log out</span></button>
+    </nav><div class="dash-main">${body}</div></section>`;
 }
 function navOn(hrefPath, path) {
   if (hrefPath === "/account") return path === "/account";
@@ -485,19 +512,30 @@ function accountHome() {
   const quotes = Records.quotesFor(user.id);
   const enquiries = Records.enquiriesFor(user.id);
   const notice = state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : "";
-  return accountShell("Your account", `${notice}${localNotice()}
-    <div class="statgrid">
-      <div class="stat"><b>${quotes.length}</b><span>${"Quotes"}</span></div>
-      <div class="stat"><b>${enquiries.length}</b><span>${"Enquiries"}</span></div>
-      <div class="stat"><b>—</b><span>Orders are not listed here</span></div>
+  const activity = [
+    ...quotes.map(q => ({when: q.createdAt, href: `#/account/quotes/${encodeURIComponent(q.id)}`, icon: "quotes", title: `Quote request ${q.id}`, meta: `${q.lines.length} item${q.lines.length === 1 ? "" : "s"}`})),
+    ...enquiries.map(n => ({when: n.createdAt, href: `#/account/enquiries/${encodeURIComponent(n.id)}`, icon: "enquiries", title: n.subject || "Enquiry", meta: n.id}))
+  ].sort((a, b) => String(b.when).localeCompare(String(a.when))).slice(0, 5);
+  const activityHtml = activity.length
+    ? `<ul class="activity">${activity.map(a => `<li><a href="${a.href}"><span class="act-ico">${dashIcon(a.icon)}</span><span class="act-text"><b>${escapeHtml(a.title)}</b><small>${escapeHtml(a.meta)} · ${escapeHtml(formatWhen(a.when))}</small></span><span class="pill ok">Received</span></a></li>`).join("")}</ul>`
+    : `<div class="act-empty"><p><b>No activity yet</b></p><p>Quote requests and enquiries you send while signed in will appear here.</p><p><a class="btn" href="#/generate-quote">Generate a quote</a></p></div>`;
+  const where = [user.city, user.country].filter(Boolean).map(escapeHtml).join(", ");
+  const row = (icon, label, value) => `<li>${dashIcon(icon)}<span><small>${label}</small>${value ? escapeHtml(value) : '<em>Not provided</em>'}</span></li>`;
+  return accountShell("Your account", `${notice}
+    <div class="statgrid dash-stats">
+      <a class="stat" href="#/account/quotes"><span class="stat-ico">${dashIcon("quotes")}</span><b>${quotes.length}</b><span class="stat-label">Quote requests</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="#/account/enquiries"><span class="stat-ico">${dashIcon("enquiries")}</span><b>${enquiries.length}</b><span class="stat-label">Enquiries</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="#/account/orders"><span class="stat-ico">${dashIcon("orders")}</span><b>—</b><span class="stat-label">Orders</span><span class="stat-go">Not available yet</span></a>
     </div>
-    <div class="box" style="margin-top:20px"><h2 class="h-sec">Signed in as</h2>
-        <p style="margin-top:12px">${escapeHtml(user.name)}</p><p>${escapeHtml(user.email)}</p><p>${escapeHtml(user.organisation || "No organisation on the profile yet.")}</p>
-      <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn" href="#/generate-quote">Generate quote</a><a class="btn line" href="#/contact-us">Ask a question</a></div>
-    </div>
-    <div class="box" style="margin-top:16px"><h2 class="h-sec">Orders</h2>
-      <p>Order history is not available here yet. A quote request is not an order.</p>
-      </div>`);
+    <div class="dash-cols">
+      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Recent activity</h2></div>${activityHtml}</div>
+      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Your details</h2><a class="tlink" href="#/account/profile/edit">Edit</a></div>
+        <ul class="detail-list">
+          ${row("profile", "Name", user.name)}${row("quotes", "Organisation", user.organisation)}${row("pin", "Location", where)}${row("phone", "Telephone", user.phone)}
+        </ul>
+        <p class="dash-email">${escapeHtml(user.email)}</p>
+      </div>
+    </div>`);
 }
 function profileList(user) {
   const row = (label, value) => `<div><dt>${label}</dt><dd>${escapeHtml(value || "Not provided")}</dd></div>`;
