@@ -34,6 +34,11 @@ const catName = s => (productCategories.find(c => c.slug === s) || {}).name || s
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 // Inline SVG icons used across the page templates.
 const icons = {
+  tick: '<svg class="ico" style="margin:0;width:18px;height:18px" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>',
+  arrow: '<svg class="ico" style="margin:0;width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>',
+  plus: '<svg class="ico" style="margin:0;width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  layers: '<svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 12 10 5 10-5M2 17l10 5 10-5"/></svg>',
+  box: '<svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8v8a2 2 0 0 1-1 1.7l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.7l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>',
   pin: '<svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
   phone: '<svg class="ico" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg>',
   mail: '<svg class="ico" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>',
@@ -69,16 +74,23 @@ const crumbs = list => {
   return `<nav aria-label="Breadcrumb" class="crumbs" style="margin-top:16px"><ol class="crumbs" style="margin:0">${items.join("")}</ol></nav>`;
 };
 const banner = (title, cr = [], lead = "") => `<div class="banner"><div class="wrap"><h1>${escapeHtml(title)}</h1>${lead ? `<p class="lead">${escapeHtml(lead)}</p>` : ""}${crumbs(cr)}</div></div>`;
+// Banner with a wide product or software picture behind the title.
+const imageBanner = (title, cr, lead, img, kind) => `<div class="banner imgbanner"><img class="ib-pic" src="${imageUrl(img)}" alt="" aria-hidden="true" width="1600" height="700" fetchpriority="high"><div class="wrap"><figure class="ib-fig"><img src="${imageUrl(img)}" alt="${escapeHtml(title)}" width="1000" height="800" decoding="async"></figure><span class="ib-kind">${escapeHtml(kind)}</span><h1>${escapeHtml(title)}</h1>${lead ? `<p class="lead">${escapeHtml(lead)}</p>` : ""}${crumbs(cr)}</div></div>`;
 // Closing banner with the two main actions.
 const callToAction = (h, b) => `<section class="cta"><div class="wrap"><div><h2>${escapeHtml(h)}</h2><p>${escapeHtml(b)}</p>
   </div>
   <div class="row"><a class="btn" href="#/generate-quote">Generate quote</a><a class="btn ghost" href="#/contact-us">Ask a question</a></div>
   </div>
   </section>`;
-const productCard = p => `<article class="card"><a class="img" href="${href("/products/" + p.slug)}"><img src="${imageUrl(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" width="900" height="700"></a><div class="body"><h3 class="h-card"><a class="stretch" href="${href("/products/" + p.slug)}">${escapeHtml(p.name)}</a></h3><p>${escapeHtml(p.summary)}</p><div class="acts"><a class="btn" href="${quoteHref(p.name)}">Request a quote</a><a class="btn line" href="${href("/products/" + p.slug)}">Read more</a></div></div></article>`;
+const productCard = p => `<article class="card pcard"><a class="img" href="${href("/products/" + p.slug)}" tabindex="-1" aria-hidden="true"><img src="${imageUrl(p.image)}" alt="" loading="lazy" width="900" height="700"><span class="badge">${escapeHtml(catName(p.category))}</span></a><div class="body"><h3 class="h-card"><a class="stretch" href="${href("/products/" + p.slug)}">${escapeHtml(p.name)}</a></h3><p>${escapeHtml(p.summary)}</p>${tickList(p.features.slice(0, 2))}<div class="acts"><a class="btn" href="${quoteHref(p.name)}">Request a quote</a><a class="btn line" href="${href("/products/" + p.slug)}">Details${icons.arrow}</a></div></div></article>`;
 const serviceCard = s => `<article class="card"><a class="img" href="${href("/services/" + s.slug)}"><img src="${imageUrl(s.image)}" alt="${escapeHtml(s.name)}" width="900" height="640"></a><div class="body"><h3 class="h-card"><a class="stretch" href="${href("/services/" + s.slug)}">${escapeHtml(s.name)}</a></h3><p>${escapeHtml(s.summary)}</p><div class="acts"><a class="tlink" href="${href("/services/" + s.slug)}">Read more</a></div></div></article>`;
 const progCard = s => `<article class="card"><a class="img" href="${href("/programmes/" + s.slug)}"><img src="${imageUrl(s.image)}" alt="${escapeHtml(s.name)}" width="900" height="640"></a><div class="body"><h3 class="h-card"><a class="stretch" href="${href("/programmes/" + s.slug)}">${escapeHtml(s.name)}</a></h3><p>${escapeHtml(s.summary)}</p><div class="acts"><a class="tlink" href="${href("/programmes/" + s.slug)}">Read more</a></div></div></article>`;
-const swCard = s => `<article class="swcard"><h3><a class="stretch" href="${href("/software/" + s.slug)}">${escapeHtml(s.name)}</a></h3><p>${escapeHtml(s.summary)}</p><a class="btn" href="${href("/software/" + s.slug)}">Explore</a></article>`;
+const swCard = s => `<article class="swcard2"><a class="sw-shot" href="${href("/software/" + s.slug)}" tabindex="-1" aria-hidden="true"><img src="${imageUrl(s.image)}" alt="" loading="lazy" width="1600" height="900"></a><div class="sw-body"><span class="sw-tag">${s.modules.length} modules</span><h3><a class="stretch" href="${href("/software/" + s.slug)}">${escapeHtml(s.name)}</a></h3><p>${escapeHtml(s.summary)}</p>${chips(s.modules.slice(0, 3))}<div class="acts"><a class="btn" href="${href("/software/" + s.slug)}">Explore${icons.arrow}</a><a class="btn line" href="${quoteHref(s.name)}">Request a quote</a></div></div></article>`;
+const realValue = v => !/available on request|request for a quote/i.test(v || "");
+const tickList = a => `<ul class="ticks">${a.map(x => `<li><span class="tk">${icons.tick}</span><span>${escapeHtml(x)}</span></li>`).join("")}</ul>`;
+const chips = a => `<ul class="chips">${a.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
+const secHead = (title, note) => `<div class="pg-head"><h2>${escapeHtml(title)}</h2>${note ? `<p>${escapeHtml(note)}</p>` : ""}</div>`;
+
 const barList = a => `<ul class="bar-list">${a.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
 const paras = a => a.map(p => `<p>${escapeHtml(p)}</p>`).join("");
 
@@ -87,7 +99,7 @@ const isDark = () => document.documentElement.dataset.theme === "dark";
 function themeButton() {
   const sun = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   const moon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
-  return `<button type="button" class="theme" id="themebtn" aria-label="${isDark() ? "Switch to light mode" : "Switch to dark mode"}">${isDark() ? sun : moon}<span class="tt">${isDark() ? "Light" : "Dark"}</span></button>`;
+  return `<button type="button" class="theme" id="themebtn" aria-label="${isDark() ? "Switch to light mode" : "Switch to dark mode"}">${isDark() ? sun : moon}<span class="sr">${isDark() ? "Light mode" : "Dark mode"}</span></button>`;
 }
 function header() {
   const r = currentPath();
@@ -190,20 +202,20 @@ const pages = {
     const s = slides[state.slide];
     const featured = featuredSlugs.map(x => products.find(p => p.slug === x)).filter(Boolean);
     return `<section class="hero" id="hero" aria-label="Featured products, software and services"><h1 class="sr">SURGICISS LTD — Sterile Instrument Systems</h1>
-      <div class="slides">${slides.map((sl, i) => `<div class="slide${i === state.slide ? " on" : ""}${/^(software|product)/.test(sl.image) ? " lt" : ""}" aria-hidden="${i !== state.slide}"><img src="${imageUrl(sl.image)}" alt="" width="1600" height="900"><div class="in"><h2 class="st">${escapeHtml(sl.title)}</h2><p class="sb">${escapeHtml(sl.body)}</p><a class="btn hb" href="${href(sl.cta[1])}">${sl.cta[0]}</a></div></div>`).join("")}</div>
+      <div class="slides">${slides.map((sl, i) => `<div class="slide${i === state.slide ? " on" : ""}${/^(software|product)/.test(sl.image) ? " lt" : ""}" aria-hidden="${i !== state.slide}"><img src="${imageUrl(sl.image)}" alt="" width="1600" height="900"><div class="in"><h2 class="st">${escapeHtml(sl.title)}</h2><p class="sb">${escapeHtml(sl.body)}</p><a class="btn hb" href="${href(sl.cta[1])}">${sl.cta[0]}${icons.arrow}</a></div></div>`).join("")}</div>
       <button type="button" class="nav" style="left:0" aria-label="Previous slide" data-slide="-1">${icons.left}</button><button type="button" class="nav" style="right:0" aria-label="Next slide" data-slide="1">${icons.right}</button>
       <div class="dots">${slides.map((sl, i) => `<button type="button" aria-label="Show slide ${i + 1}: ${escapeHtml(sl.title)}" aria-current="${i === state.slide}" data-goto="${i}"></button>`).join("")}</div>
         </section>
-    <section class="sec tint" style="padding-block:0" aria-label="Software"><div class="wrap quick">${software.map(x => `<a href="${href("/software/" + x.slug)}">${escapeHtml(x.name)}</a>`).join("")}</div></section>
+    <section class="sec tint" style="padding-block:0" aria-label="Software"><div class="wrap quick">${software.map(x => `<a href="${href("/software/" + x.slug)}"><span class="q-ico">${icons.layers}</span><span class="q-text"><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.summary)}</small></span><span class="q-go">${icons.arrow}</span></a>`).join("")}</div></section>
     <section class="wrap sec intro"><h2>${company.name}</h2><h3>${company.tagline}</h3>
       <p>The problem with healthcare today is not the lack of advanced technologies and skilled hands, but the absence of simple innovations that help each pair of hands get the basics done right the first time. These seemingly trivial steps have led to failure, time and again, in even the most sophisticated operating rooms. For patient safety, SURGICISS LTD provides simple innovations that prevent error, minimise delay, reduce unnecessary cost and support real-time compliance in sterile processing departments and operating rooms.</p>
       </section>
-    <section class="wrap" style="padding-bottom:48px"><div class="grid g3" style="gap:32px">${services.map(x => `<article class="feat"><a href="${href("/services/" + x.slug)}" style="display:block;overflow:hidden;background:var(--tint)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/services/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${href("/services/" + x.slug)}">Read more</a></article>`).join("")}</div>
+    <section class="wrap" style="padding-bottom:48px"><div class="grid g3" style="gap:32px">${services.map(x => `<article class="feat"><a href="${href("/services/" + x.slug)}" style="display:block;overflow:hidden;background:var(--tint)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/services/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${href("/services/" + x.slug)}">Read more${icons.arrow}</a></article>`).join("")}</div>
       </section>
     <section class="sec tint"><div class="wrap intro"><h2>Products</h2>
       <p>Through research, development and the steady use of instrument processing products, software and methods in real departments, we work to support patient safety and the viability of the services that deliver it.</p>
-      <div class="grid g3" style="gap:32px;margin-top:32px;text-align:left">${featured.map(x => `<article class="feat"><a href="${href("/products/" + x.slug)}" style="display:block;overflow:hidden;background:var(--card)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/products/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${quoteHref(x.name)}">Request a quote</a></article>`).join("")}</div>
-      <div class="center" style="margin-top:40px"><a class="btn lg" href="#/products">All Products</a></div>
+      <div class="grid g3" style="gap:32px;margin-top:32px;text-align:left">${featured.map(x => `<article class="feat"><a href="${href("/products/" + x.slug)}" style="display:block;overflow:hidden;background:var(--card)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/products/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${quoteHref(x.name)}">Request a quote${icons.arrow}</a></article>`).join("")}</div>
+      <div class="center" style="margin-top:40px"><a class="btn lg" href="#/products">All Products${icons.arrow}</a></div>
         </div>
         </section>`;
   },
@@ -221,48 +233,54 @@ const pages = {
   },
   products() {
     return banner("Products", [{label: "Products"}], "Practical devices for the parts of the process that most often go wrong: protecting wrapped trays, keeping brushes and count sheets where they belong, and proving that checks were carried out.")
-      + `<section class="wrap sec"><div class="tags">${productCategories.map(c => `<a href="${href("/product-category/" + c.slug)}">${escapeHtml(c.name)}</a>`).join("")}</div><h2 class="sr">All products</h2><div class="grid g3" style="margin-top:40px">${products.map(productCard).join("")}</div></section>`
+      + `<section class="wrap sec"><div class="filterbar"><a class="chip on" href="#/products" aria-current="page">All products <b>${products.length}</b></a>${productCategories.map(c => `<a class="chip" href="${href("/product-category/" + c.slug)}">${escapeHtml(c.name)} <b>${products.filter(p => p.category === c.slug).length}</b></a>`).join("")}</div><h2 class="sr">All products</h2><div class="grid g3" style="margin-top:32px">${products.map(productCard).join("")}</div></section>`
       + callToAction("Need a quotation for several lines?", "Send one enquiry with the products and quantities and we will price it together.");
   },
   category(slug) {
     const c = productCategories.find(x => x.slug === slug); if (!c) return null;
     const list = products.filter(p => p.category === slug);
     return banner(c.name, [{label: "Products", to: "/products"}, {label: c.name}], c.description)
-      + `<section class="wrap sec">${list.length ? `<h2 class="sr">Products in this category</h2><div class="grid g3">${list.map(productCard).join("")}</div>` : `<p class="muted" style="font-size:14px">No products are listed in this category yet. <a style="color:var(--link)" href="#/contact-us">Contact us</a> for the current range.</p>`}<div style="margin-top:40px"><a class="btn outline lg" href="#/products">All products</a></div></section>`
+      + `<section class="wrap sec"><div class="filterbar"><a class="chip" href="#/products">All products <b>${products.length}</b></a>${productCategories.map(x => `<a class="chip${x.slug === slug ? " on" : ""}" href="${href("/product-category/" + x.slug)}"${x.slug === slug ? ' aria-current="page"' : ""}>${escapeHtml(x.name)} <b>${products.filter(p => p.category === x.slug).length}</b></a>`).join("")}</div>${list.length ? `<h2 class="sr">Products in this category</h2><div class="grid g3" style="margin-top:32px">${list.map(productCard).join("")}</div>` : `<p class="muted" style="font-size:14px;margin-top:24px">No products are listed in this category yet. <a style="color:var(--link)" href="#/contact-us">Contact us</a> for the current range.</p>`}</section>`
       + callToAction("Not sure which option suits your sets?", "Describe the trays and we will recommend a fit.");
   },
   product(slug) {
     const p = products.find(x => x.slug === slug); if (!p) return null;
     const related = products.filter(x => x.slug !== p.slug && x.category === p.category).slice(0, 3);
-    return banner(p.name, [{label: "Products", to: "/products"}, {label: p.name}])
-      + `<section class="wrap sec"><div class="two prod"><div><img class="pimg" src="${imageUrl(p.image)}" alt="${escapeHtml(p.name)}" width="1024" height="1024"><p class="muted" style="margin-top:16px;font-size:12px;text-transform:uppercase;letter-spacing:.03em">Category: <a style="color:var(--link)" href="${href("/product-category/" + p.category)}">${escapeHtml(catName(p.category))}</a></p></div>
-      <div><p style="font-size:16px;line-height:1.7">${escapeHtml(p.summary)}</p>
-      <div style="margin-top:24px;display:flex;flex-wrap:wrap;gap:12px"><a class="btn lg" href="${quoteHref(p.name)}">Request a quote</a><a class="btn line lg" href="#/contact-us">Ask a question</a></div>
-      <div class="rich" style="margin-top:32px">${paras(p.body)}</div>
-      <div class="grid g2" style="margin-top:40px;gap:32px"><div><h2 class="h-sec">Features</h2>${barList(p.features)}</div><div><h2 class="h-sec">Where it is used</h2>${barList(p.applications)}</div></div>
-      ${p.application ? `<h2 class="h-sec" style="margin-top:40px">Application</h2><p class="rich" style="margin-top:12px">${escapeHtml(p.application)}</p>` : ""}
-      <h2 class="h-sec" style="margin-top:40px">Specification</h2>
-        <div class="tbl-wrap"><table class="spec"><tbody>${p.specifications.map(s => `<tr><th scope="row">${escapeHtml(s.label)}</th><td>${escapeHtml(s.value)}</td></tr>`).join("")}</tbody></table></div>${p.faq ? `<h2 class="h-sec" style="margin-top:40px">Frequently asked questions</h2>
-        <dl class="faq" style="margin-top:12px">${p.faq.map(f => `<div><dt>${escapeHtml(f[0])}</dt><dd>${escapeHtml(f[1])}</dd></div>`).join("")}</dl>` : ""}</div></div>
-      ${related.length ? `<div style="margin-top:64px"><h2 class="section-title">Related products</h2>
-        <div class="grid g3" style="margin-top:24px">${related.map(productCard).join("")}</div></div>` : ""}</section>`
+    const facts = p.specifications.filter(x => realValue(x.value)).slice(0, 3);
+    return imageBanner(p.name, [{label: "Products", to: "/products"}, {label: p.name}], "", p.image, catName(p.category))
+      + `<section class="wrap sec"><div class="pd">
+      <aside class="pd-media"><div class="pd-photo"><img class="pimg" src="${imageUrl(p.image)}" alt="${escapeHtml(p.name)}" width="1024" height="1024"><span class="badge"><a href="${href("/product-category/" + p.category)}">${escapeHtml(catName(p.category))}</a></span></div>
+        <div class="pd-buy"><a class="btn lg" href="${quoteHref(p.name)}">Request a quote${icons.arrow}</a><a class="btn line lg" href="#/contact-us">Ask a question</a><p>Prices are given by quotation, not shown on the page.</p></div></aside>
+      <div class="pd-main">
+        <p class="pd-lead">${escapeHtml(p.summary)}</p>
+        ${facts.length ? `<dl class="facts">${facts.map(f => `<div><dt>${escapeHtml(f.label)}</dt><dd>${escapeHtml(f.value)}</dd></div>`).join("")}</dl>` : ""}
+        <section class="pd-sec">${secHead("Overview")}<div class="rich">${paras(p.body)}</div></section>
+        <section class="pd-sec">${secHead("Features")}${tickList(p.features)}</section>
+        <section class="pd-sec">${secHead("Where it is used")}${chips(p.applications)}</section>
+        ${p.application ? `<section class="pd-sec">${secHead("Application")}<p class="rich">${escapeHtml(p.application)}</p></section>` : ""}
+        <section class="pd-sec">${secHead("Specification")}<div class="tbl-wrap"><table class="spec"><tbody>${p.specifications.map(x => `<tr><th scope="row">${escapeHtml(x.label)}</th><td>${escapeHtml(x.value)}</td></tr>`).join("")}</tbody></table></div></section>
+        ${p.faq ? `<section class="pd-sec">${secHead("Frequently asked questions")}<dl class="faq">${p.faq.map(f => `<div><dt>${escapeHtml(f[0])}</dt><dd>${escapeHtml(f[1])}</dd></div>`).join("")}</dl></section>` : ""}
+      </div></div>
+      ${related.length ? `<div style="margin-top:72px"><h2 class="section-title">Related products</h2><div class="grid g3" style="margin-top:28px">${related.map(productCard).join("")}</div></div>` : ""}</section>`
       + callToAction("Quotation for " + p.name, "Tell us quantities and delivery point and we will price it.");
   },
   softwareIndex() {
     return banner("Software", [{label: "Software"}], "Four systems built around the way a sterile services department actually runs: sets in motion, trolleys due for checking, and records that have to stand up afterwards.")
-      + `<section class="wrap sec"><h2 class="sr">Software</h2><div class="grid g2">${software.map(swCard).join("")}</div></section>` + callToAction("Ask for a walkthrough", "We will show the system against your own workflow, not a demonstration dataset.");
+      + `<section class="wrap sec"><h2 class="sr">Software</h2><div class="grid g2 swgrid">${software.map(swCard).join("")}</div></section>` + callToAction("Ask for a walkthrough", "We will show the system against your own workflow, not a demonstration dataset.");
   },
   softwareItem(slug) {
     const s = software.find(x => x.slug === slug); if (!s) return null;
     const others = software.filter(x => x.slug !== slug);
-    return banner(s.name, [{label: "Software", to: "/software"}, {label: s.name}], s.summary)
-      + `<section class="wrap sec"><div class="two side"><div><img class="wideimg sw" src="${imageUrl(s.image)}" alt="${escapeHtml(s.name)} screens" width="1600" height="900" loading="lazy" decoding="async"><div class="rich" style="margin-top:32px">${paras(s.body)}</div>
-      <div class="grid g2" style="margin-top:40px;gap:32px"><div><h2 class="h-sec">Modules</h2>${barList(s.modules)}</div><div><h2 class="h-sec">What departments get from it</h2>${barList(s.benefits)}</div>
-        </div>
-        </div>
-      <aside style="display:grid;gap:24px;align-content:start"><div class="box tint"><h2 class="h-sec">Enquire about ${escapeHtml(s.name)}</h2>
+    return imageBanner(s.name, [{label: "Software", to: "/software"}, {label: s.name}], s.summary, s.image, "Software")
+      + `<section class="wrap sec"><div class="two side sw-page"><div>
+      <div class="browser"><div class="bar"><i></i><i></i><i></i><span>${escapeHtml(s.name)}</span></div><img src="${imageUrl(s.image)}" alt="${escapeHtml(s.name)} screens" width="1600" height="900" loading="lazy" decoding="async"></div>
+      <div class="glance"><div><b>${s.modules.length}</b><span>Modules</span></div><div><b>${s.benefits.length}</b><span>Department benefits</span></div><div><b>1</b><span>Walkthrough on your own workflow</span></div></div>
+      <section class="pd-sec">${secHead("What it does")}<div class="rich">${paras(s.body)}</div></section>
+      <section class="pd-sec">${secHead("Modules", "What the system is made of.")}<ol class="steps">${s.modules.map((m, i) => `<li><span class="n">${i + 1}</span><span>${escapeHtml(m)}</span></li>`).join("")}</ol></section>
+      <section class="pd-sec">${secHead("What departments get from it")}${tickList(s.benefits)}</section></div>
+      <aside class="sw-aside"><div class="box tint"><h2 class="h-sec">Enquire about ${escapeHtml(s.name)}</h2>
         <p>Tell us how many sets, trolleys or scopes you handle and we will scope the work against that.</p>
-        <a class="btn" href="${quoteHref(s.name)}">Request a quote</a></div>
+        <a class="btn" href="${quoteHref(s.name)}">Request a quote${icons.arrow}</a><a class="btn line" href="#/contact-us" style="margin-left:8px">Ask a question</a></div>
       <div class="box"><h2 class="h-sec">Other software</h2><ul class="links">${others.map(o => `<li><a href="${href("/software/" + o.slug)}">${escapeHtml(o.name)}</a></li>`).join("")}</ul></div></aside></div></section>`
       + callToAction("Considering " + s.name + "?", "We will talk you through what it does and what it does not do.");
   },
