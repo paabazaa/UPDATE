@@ -52,8 +52,7 @@ function goNext(fallback) {
   location.hash = "#" + safeNext(currentQuery().get("next") || fallback || "/account");
 }
 function localNotice() {
-  return `<div class="note info"><p><strong>Accounts are optional.</strong> You can read every public page without one. An account keeps your quotes and enquiries together so you can see them again from any device. Please choose a password you do not use for your email or hospital systems.</p>
-    </div>`;
+  return "";
 }
 function deliveryCopy(record) {
   if (record.delivered) return "SURGICISS has received this request.";
@@ -212,12 +211,10 @@ function quotePage() {
   const user = Accounts.current();
   const accountNote = user
     ? `<p class="muted">You are signed in as ${escapeHtml(user.email)}. ${"This request will be filed under My quotes."}</p>`
-    : `<p class="muted">You can prepare this request without an account. <a class="js-save-draft" href="#/login?next=${encodeURIComponent("/generate-quote")}">Log in</a> or <a class="js-save-draft" href="#/sign-up?next=${encodeURIComponent("/generate-quote")}">create an account</a> if you want it kept under My quotes. Your selections stay in place while you do that.</p>`;
+    : "";
   return banner("Generate a quote", [{label: "Generate a quote"}], "Choose the items and quantities you want priced. Nothing on this page is an order, and prices are not shown because each request is quoted on its own.")
     + `<section class="wrap sec"><div class="two quote"><div>
-      <div class="note info"><p>Browsing the catalogue does not need an account. Saving the request against your name, and seeing it again under My quotes, does. Submitting the form does not place an order.</p>
-      </div>
-      <div style="margin-top:16px">${accountNote}</div>
+      ${accountNote ? `<div style="margin-top:16px">${accountNote}</div>` : ""}
       <form class="enq" id="quote-form" novalidate style="margin-top:20px">
         ${state.errors.form ? `<p class="err login-error" role="alert">${escapeHtml(state.errors.form)}</p>` : ""}
         <h2 class="h-sec">Items</h2>
@@ -270,22 +267,23 @@ function quoteSummary(record) {
 function customerHeader() {
   const path = currentPath();
   const act = item => (item === "/" ? path === "/" : path === item || path.startsWith(item + "/")) ? " active" : "";
-  const dd = (key, label, links, allTo, allLabel) => `<div class="dd" data-dd="${key}"><a class="tl${act(allTo)}" href="${href(allTo)}">${label}</a><button type="button" class="tl" aria-label="Show ${label} menu" aria-expanded="false" data-toggle="${key}">${icons.down}</button><div class="panel">${links.map(link => `<a href="${href(link.to)}">${escapeHtml(link.label)}</a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}</a></div></div>`;
-  const softwareLinks = software.map(item => ({label: item.name, to: "/software/" + item.slug}));
-  const productLinks = products.map(item => ({label: item.name, to: "/products/" + item.slug}));
+  const dd = (key, label, links, allTo, allLabel) => `<div class="dd" data-dd="${key}"><a class="tl${act(allTo)}" href="${href(allTo)}">${label}</a><button type="button" class="tl" aria-label="Show ${label} menu" aria-expanded="false" data-toggle="${key}">${icons.down}</button><div class="panel">${links.map(link => `<a class="pi-link" href="${href(link.to)}"><span class="pi">${icons[link.icon || "layers"]}</span><span class="pt"><b>${escapeHtml(link.label)}</b>${link.summary ? `<small>${escapeHtml(link.summary)}</small>` : ""}</span></a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}${icons.arrow}</a></div></div>`;
+  const clip = text => (text.length > 70 ? text.slice(0, 67).replace(/\s+\S*$/, "") + "…" : text);
+  const softwareLinks = software.map(item => ({label: item.name, to: "/software/" + item.slug, summary: clip(item.summary), icon: "layers"}));
+  const productLinks = products.map(item => ({label: item.name, to: "/products/" + item.slug, summary: clip(item.summary), icon: "box"}));
   const mgroup = (label, links, allTo, allLabel) => `<div class="mg"><div class="mrow"><a href="${href(allTo)}">${label}</a><button type="button" class="mt" aria-label="Show ${label} menu" aria-expanded="false" data-mtoggle>${icons.down}</button></div><div class="msub" hidden>${links.map(link => `<a href="${href(link.to)}">${escapeHtml(link.label)}</a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}</a></div></div>`;
   const user = Accounts.current();
   const accountDesktop = user
-    ? `<a class="tl acct desk-only" href="#/account">My account</a><button type="button" class="tl acct desk-only" data-logout>Log out</button>`
-    : `<a class="tl acct desk-only${act("/login")}" href="#/login">Login</a><a class="tl acct desk-only${act("/sign-up")}" href="#/sign-up">Create account</a>`;
+    ? `<a class="hbtn solid-soft desk-only" href="#/account"><span class="avatar sm" aria-hidden="true">${escapeHtml(initials(user.name))}</span>My account</a><button type="button" class="hbtn plain desk-only" data-logout>Log out</button>`
+    : `<a class="hbtn plain desk-only${act("/login")}" href="#/login">Login</a><a class="hbtn outline desk-only${act("/sign-up")}" href="#/sign-up">Create account</a>`;
   const accountMobile = user
     ? `<a href="#/account">My account</a><a href="#/account/quotes">My quotes</a><a href="#/account/enquiries">My enquiries</a><a href="#/account/orders">My orders</a><button type="button" class="linkish" data-logout>Log out</button>`
     : `<a href="#/login">Login</a><a href="#/sign-up">Create account</a>`;
   return `<header class="site" id="hdr"><div class="wrap hbar">
     <a class="logo" href="#/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
     <div class="htools">
-      <a class="btn desk-only" href="#/generate-quote">Generate quote</a>
       ${accountDesktop}
+      <a class="hbtn primary desk-only" href="#/generate-quote">${icons.plus}Generate quote</a>
       <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav">${state.mobile ? icons.close : icons.menu}Menu</button>
       ${themeButton()}
     </div>
@@ -298,7 +296,7 @@ function customerHeader() {
       <a class="tl${act("/contact-us")}" href="#/contact-us">Contact Us</a>
     </nav>
         </div>
-    <div class="mobile-cta"><a href="#/generate-quote">Generate quote</a><a href="#/contact-us">Ask a question</a></div>
+    <div class="mobile-cta"><a class="mc-primary" href="#/generate-quote">${icons.plus}Generate quote</a><a class="mc-second" href="#/contact-us">Ask a question</a></div>
     ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="#/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", softwareLinks, "/software", "All Software")}${mgroup("Products", productLinks, "/products", "All Products")}<a href="#/count-sheet-holders">Instrument Count Sheet Holders</a><a href="#/services">Services</a><a href="#/programmes">Programmes</a><a href="#/about">About</a><a href="#/contact-us">Contact Us</a>${accountMobile}<a class="quote" href="#/generate-quote">Generate quote</a><a class="ask" href="#/contact-us">Ask a question</a></nav>
       </div>` : ""}
   </header>`;
@@ -354,7 +352,7 @@ function authSplit({title, heading, lead, perks, body, fine}) {
       <div class="login-main">
         <h2>${heading}</h2>
         ${body}
-        <p class="login-fine">${fine}</p>
+        ${fine ? `<p class="login-fine">${fine}</p>` : ""}
       </div>
     </div>
   </div></section>`;
@@ -364,7 +362,7 @@ function passwordField(id, label, autocomplete, extra = "", required = false) {
   return `<div class="fld"><div class="label-row"><label for="${id}">${label}${required ? ' <span class="req">*</span>' : ""}</label>${extra}</div>
     <div class="pw"><input id="${id}" name="${id}" type="password" autocomplete="${autocomplete}" maxlength="128">${EYE_BUTTON}</div>${fieldError(id)}</div>`;
 }
-const AUTH_FINE = () => "Accounts are optional. Every public page can be read without one. Please use a password you do not use for your email or hospital systems.";
+const AUTH_FINE = () => "";
 function loginPage() {
   const message = state.authError || socialError();
   const formError = message ? `<p class="err login-error" role="alert">${escapeHtml(message)}</p>` : "";
