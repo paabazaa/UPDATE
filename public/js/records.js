@@ -128,7 +128,7 @@ const Records = (() => {
   async function remove(kind, id) {
     if (Api.enabled) {
       const result = await Api.post("/me/records/delete", {kind, id});
-      if (!result.ok) return {ok: false, error: result.error};
+      if (!result.ok) return {ok: false, error: result.error, status: result.status};
       await sync();
       return {ok: true};
     }
