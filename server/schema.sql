@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   country VARCHAR(255) NOT NULL DEFAULT '',
   city VARCHAR(255) NOT NULL DEFAULT '',
   delivery_location VARCHAR(500) NOT NULL DEFAULT '',
+  avatar MEDIUMTEXT NULL,
   password_hash VARCHAR(255) NULL,
   email_verified TINYINT(1) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL,
