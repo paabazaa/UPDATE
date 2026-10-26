@@ -7,7 +7,7 @@ import {providerSettings, enabledProviders, newPkce, authorizeUrl, fetchProfile,
 import {text, normaliseEmail, isEmail, checkPassword, cleanProfile, cleanSignup, cleanQuote, cleanEnquiry} from "./validation.js";
 
 const MAX_BODY = 100 * 1024;
-const MAX_AVATAR = 90 * 1024; // characters of the data URL; the page resizes pictures to about 20-40 KB first
+const MAX_AVATAR = 90 * 1024;
 const HOUR = 60 * 60 * 1000;
 const QUARTER_HOUR = 15 * 60 * 1000;
 const sqlDate = (date = new Date()) => date.toISOString().slice(0, 19).replace("T", " ");
@@ -211,7 +211,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     return {redirect: siteRedirect(row.next_path), cookies: [clear, await startSession(userId)]};
   }
 
-  // --- ADMIN HELPER (ADDED, DOES NOT CHANGE EXISTING LOGIC) ---
   function getAdminKey() {
     return config.adminKey || config.ADMIN_KEY || process.env.ADMIN_KEY || "";
   }
@@ -407,8 +406,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       }
       return {body: {ok: true}};
     },
-
-    // === ADDED ADMIN ENDPOINTS - DO NOT REMOVE ===
     "GET /api/admin/users": async req => {
       const url = checkAdmin(req);
       const limitParam = Math.min(parseInt(url.searchParams.get("limit") || "200", 10) || 200, 1000);
@@ -438,6 +435,24 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       const active = (await db.query(`SELECT COUNT(*) as c FROM sessions WHERE expires_at > ?`, [sqlDate()]))[0]?.c || 0;
       const today = (await db.query(`SELECT COUNT(*) as c FROM users WHERE created_at >= ?`, [sqlDate(new Date(new Date().setHours(0,0,0,0)))]))[0]?.c || 0;
       return {body: {total_users: total, currently_logged_in: active, registered_today: today}};
+    },
+    // === NEW: RESET PASSWORD FOR ADMIN ===
+    "POST /api/admin/users/reset-password": async req => {
+      checkAdmin(req);
+      const body = await readBody(req);
+      const email = normaliseEmail(body.email || body.Email || "");
+      const newPassword = String(body.newPassword || body.new_password || body.password || "");
+      if (!isEmail(email)) throw new HttpError(400, "Provide a valid email: {\"email\":\"user@email.com\", \"newPassword\":\"...\"}");
+      if (!newPassword) throw new HttpError(400, "Provide newPassword");
+      const problem = checkPassword(newPassword, newPassword);
+      if (problem) throw new HttpError(400, problem);
+      const user = (await db.query("SELECT id, email, name FROM users WHERE email = ?", [email]))[0];
+      if (!user) throw new HttpError(404, "No user found with that email");
+      const hashed = await hashPassword(newPassword);
+      await db.execute("UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?", [hashed, sqlDate(), user.id]);
+      await db.execute("DELETE FROM sessions WHERE user_id = ?", [user.id]);
+      console.log(`[admin] Password reset for ${email} by admin`);
+      return {body: {ok: true, email: user.email, name: user.name, message: `Password for ${user.email} has been reset. User was logged out.`}};
     }
   };
   routes["POST /api/auth/register"] = routes["POST /api/auth/signup"];
