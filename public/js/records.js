@@ -47,16 +47,19 @@ const Records = (() => {
   }
   // Server mode keeps the signed-in customer's records here after loading them from the API.
   let fromServer = {quotes: [], enquiries: []};
+  // A request just sent from this page, kept so its confirmation can be shown. Lost when the page is reloaded.
+  let justSent = [];
+  function remember(record) {justSent.unshift(record);}
   async function sync() {
     const result = await Api.get("/me/records");
     if (result.ok) fromServer = {quotes: result.data.quotes || [], enquiries: result.data.enquiries || []};
   }
-  function reset() {fromServer = {quotes: [], enquiries: []};}
+  function reset() {fromServer = {quotes: [], enquiries: []}; justSent = [];}
 
   function quotesFor(userId) {return Api.enabled ? fromServer.quotes : read(QUOTES).filter(item => item.userId === userId);}
   function enquiriesFor(userId) {return Api.enabled ? fromServer.enquiries : read(ENQUIRIES).filter(item => item.userId === userId);}
   function visibleQuote(id, userId) {
-    if (Api.enabled && userId) return fromServer.quotes.find(item => item.id === id) || null;
+    if (Api.enabled) return fromServer.quotes.find(item => item.id === id) || justSent.find(item => item.id === id) || null;
     const quote = read(QUOTES).find(item => item.id === id);
     if (!quote) return null;
     if (userId && quote.userId === userId) return quote;
@@ -121,8 +124,20 @@ const Records = (() => {
       return {delivered: false, configured: true, failed: true};
     }
   }
+  // Deletes one of the signed-in customer's own quote requests or enquiries.
+  async function remove(kind, id) {
+    if (Api.enabled) {
+      const result = await Api.post("/me/records/delete", {kind, id});
+      if (!result.ok) return {ok: false, error: result.error};
+      await sync();
+      return {ok: true};
+    }
+    const key = kind === "quote" ? QUOTES : ENQUIRIES;
+    write(key, read(key).filter(item => item.id !== id));
+    return {ok: true};
+  }
   return {
-    sync, reset, stamp, saveQuote, saveEnquiry, quotesFor, enquiriesFor,
+    sync, reset, stamp, remember, remove, saveQuote, saveEnquiry, quotesFor, enquiriesFor,
     visibleQuote, visibleEnquiry, claim, purgeUser,
     loadDraft, saveDraft, clearDraft, deliver
   };
