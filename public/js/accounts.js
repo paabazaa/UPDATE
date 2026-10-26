@@ -122,6 +122,8 @@ const localAccounts = (() => {
   }
   return {
     current, register, login, logout, updateProfile, changePassword, removeAccount,
+    setAvatar: async () => ({ ok: false, error: "Profile pictures need the live server." }),
+    removeAvatar: async () => ({ ok: false, error: "Profile pictures need the live server." }),
     pending: () => false,
     providers: () => [],
     ready: Promise.resolve(),
@@ -188,6 +190,16 @@ const serverAccounts = (() => {
     async updateProfile(patch) {
       const result = await Api.patch("/auth/profile", patch);
       if (result.ok) { user = result.data.user; notify(); }
+      return plain(result);
+    },
+    async setAvatar(image) {
+      const result = await Api.post("/auth/avatar", {image});
+      if (result.ok) user = result.data.user;
+      return plain(result);
+    },
+    async removeAvatar() {
+      const result = await Api.post("/auth/avatar/remove", {});
+      if (result.ok) user = result.data.user;
       return plain(result);
     },
     async changePassword(currentPassword, nextPassword, confirm) {
