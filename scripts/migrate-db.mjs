@@ -58,6 +58,12 @@ try {
   for (const sql of statements) {
     if (sql) await conn.query(sql);
   }
+  // Databases created before profile pictures existed need the extra column.
+  const [hasAvatar] = await conn.query("SHOW COLUMNS FROM users LIKE 'avatar'");
+  if (!hasAvatar.length) {
+    await conn.query("ALTER TABLE users ADD COLUMN avatar MEDIUMTEXT NULL AFTER delivery_location");
+    console.log("Added users.avatar for profile pictures.");
+  }
   console.log(`Database ready: ${statements.length} statements OK`);
 } finally {
   await conn.end();
