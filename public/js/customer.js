@@ -8,6 +8,8 @@ function onBeforeRoute() {
   state.quoteHold = null;
   state.notice = "";
   state.authError = "";
+  state.deleteError = "";
+  state.pictureError = "";
   state.forgotSent = false;
   state.resetDone = false;
 }
@@ -501,7 +503,7 @@ function accountShell(title, body) {
       ${item("/account/settings", "Account settings", "settings")}
       <button type="button" class="navitem" data-logout>${dashIcon("logout")}<span>Log out</span></button>
       <a class="navitem-danger" href="#/account/settings?delete=1">${dashIcon("trash")}<span>Delete account</span></a>
-    </nav><div class="dash-main">${body}</div></section>`;
+    </nav><div class="dash-main">${state.pictureError ? `<div class="note warn" role="alert" style="margin-bottom:16px"><p>${escapeHtml(state.pictureError)}</p></div>` : ""}${body}</div></section>`;
 }
 function navOn(hrefPath, path) {
   if (hrefPath === "/account") return path === "/account";
@@ -516,6 +518,9 @@ function allActivity() {
     ...Records.enquiriesFor(user.id).map(n => ({kind: "enquiry", id: n.id, when: n.createdAt, href: `#/account/enquiries/${encodeURIComponent(n.id)}`, icon: "enquiries", title: n.subject || "Enquiry", meta: n.id}))
   ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
 }
+// Message shown above the lists that have delete buttons: what happened, or why a delete did not go through.
+const listMessage = () => (state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : "")
+  + (state.deleteError ? `<div class="note warn" role="alert" style="margin-bottom:16px"><p>${escapeHtml(state.deleteError)}</p></div>` : "");
 const deleteControl = (kind, id) => (state.confirmDelete === kind + ":" + id
   ? `<span class="act-actions" role="group" aria-label="Confirm delete"><span class="act-ask">Delete this?</span><button type="button" class="act-yes" data-del-yes="${kind}:${escapeHtml(id)}">Yes, delete</button><button type="button" class="act-no" data-del-no>Keep</button></span>`
   : `<span class="act-actions"><button type="button" class="act-del" data-del="${kind}:${escapeHtml(id)}" aria-label="Delete ${escapeHtml(id)}">${dashIcon("trash")}<span>Delete</span></button></span>`);
@@ -524,7 +529,7 @@ function accountHome() {
   const user = Accounts.current();
   const quotes = Records.quotesFor(user.id);
   const enquiries = Records.enquiriesFor(user.id);
-  const notice = state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : "";
+  const notice = listMessage();
   const activity = allActivity();
   const activityHtml = activity.length
     ? `<div class="act-scroll">${activityList(activity)}</div>`
@@ -580,7 +585,7 @@ function accountEdit() {
   </form>`);
 }
 function accountOrders() {
-  const notice = state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : "";
+  const notice = listMessage();
   const list = allActivity();
   if (!list.length) {
     return accountShell("My orders", `${notice}<div class="empty"><h2>No orders yet</h2>
@@ -600,7 +605,7 @@ function accountQuotes() {
       </div>`);
   }
   const rows = list.map(item => `<li><div class="listhead"><a href="#/account/quotes/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a>${statusPill(item)}${deleteControl("quote", item.id)}</div><p>${escapeHtml(formatWhen(item.createdAt))} · ${item.lines.length} item${item.lines.length === 1 ? "" : "s"} · ${escapeHtml(item.lines.map(line => line.name).join(", "))}</p></li>`).join("");
-  return accountShell("My quotes", `${state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : ""}<ul class="rec-list">${rows}</ul>`);
+  return accountShell("My quotes", `${listMessage()}<ul class="rec-list">${rows}</ul>`);
 }
 function accountQuoteDetail(id) {
   const user = Accounts.current();
@@ -620,7 +625,7 @@ function accountEnquiries() {
       </div>`);
   }
   const rows = list.map(item => `<li><div class="listhead"><a href="#/account/enquiries/${encodeURIComponent(item.id)}">${escapeHtml(item.subject || "Enquiry")}</a>${statusPill(item)}${deleteControl("enquiry", item.id)}</div><p>${escapeHtml(item.id)} · ${escapeHtml(formatWhen(item.createdAt))}</p></li>`).join("");
-  return accountShell("My enquiries", `${state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : ""}<ul class="rec-list">${rows}</ul>`);
+  return accountShell("My enquiries", `${listMessage()}<ul class="rec-list">${rows}</ul>`);
 }
 function accountEnquiryDetail(id) {
   const user = Accounts.current();
@@ -672,6 +677,7 @@ function accountSettings() {
     : `<div class="fld"><label for="deletePassword">Password</label>
     <input id="deletePassword" name="password" type="password" autocomplete="current-password" maxlength="128"></div>`}
       <label class="check"><input type="checkbox" name="confirmDelete" value="yes"> ${"I understand this cannot be undone."}</label>
+      ${state.deleteError ? `<p class="err" role="alert">${escapeHtml(state.deleteError)}</p>` : ""}
       <div><button class="btn danger" type="submit">${dashIcon("trash")}Delete account</button></div>
     </form>`);
 }
@@ -934,21 +940,30 @@ function installCustomer() {
     const delYes = event.target.closest("[data-del-yes]");
     const delNo = event.target.closest("[data-del-no]");
     const removePhoto = event.target.closest("[data-avatar-remove]");
-    if (del) {state.confirmDelete = del.dataset.del; state.notice = ""; refreshAccount(); return;}
+    if (del) {state.confirmDelete = del.dataset.del; state.notice = ""; state.deleteError = ""; refreshAccount(); return;}
     if (delNo) {state.confirmDelete = null; refreshAccount(); return;}
     if (delYes) {
       const [kind, ...rest] = delYes.dataset.delYes.split(":");
-      const result = await Records.remove(kind, rest.join(":"));
+      let result;
+      try {
+        result = typeof Records.remove === "function"
+          ? await Records.remove(kind, rest.join(":"))
+          : {ok: false, error: "This page is out of date. Please refresh it (Ctrl+F5) and try again."};
+      } catch (err) {
+        result = {ok: false, error: "The item could not be deleted. Please try again."};
+      }
       state.confirmDelete = null;
       state.notice = result.ok ? "Deleted. The list and the orders count are up to date." : "";
-      state.authError = result.ok ? "" : result.error;
+      state.deleteError = result.ok ? "" : (result.status === 404 || result.error === "Not found."
+        ? "That item could not be deleted. Please try again in a little while."
+        : (result.error || "The item could not be deleted. Please try again."));
       refreshAccount();
       return;
     }
     if (removePhoto) {
       const result = await Accounts.removeAvatar();
       state.notice = result.ok ? "Your profile picture has been removed." : "";
-      state.authError = result.ok ? "" : result.error;
+      state.pictureError = result.ok ? "" : pictureProblem(result.error);
       refreshAccount();
       return;
     }
@@ -1084,19 +1099,27 @@ async function submitPassword(form) {
   rerenderKeepScroll(accountSettings());
 }
 async function submitDelete(form) {
+  if (form.dataset.busy === "1") return;
   const data = Object.fromEntries(new FormData(form).entries());
-  if (data.confirmDelete !== "yes") {
-    state.authError = "Tick the box to confirm you want the account removed.";
+  // Shows why the account was not deleted next to the button, where the person is looking.
+  const refuse = message => {
+    state.deleteError = message;
     state.notice = "";
     rerenderKeepScroll(accountSettings());
-    return;
+    const box = document.getElementById("delete-form");
+    if (box) box.scrollIntoView({block: "center"});
+  };
+  state.deleteError = "";
+  if (data.confirmDelete !== "yes") return refuse("Tick the box to confirm you want the account removed.");
+  form.dataset.busy = "1";
+  let result;
+  try {
+    result = await Accounts.removeAccount(data.password || "", data.confirmText || "");
+  } catch (err) {
+    result = {ok: false, error: "The account could not be deleted. Please try again."};
   }
-  const result = await Accounts.removeAccount(data.password || "", data.confirmText || "");
-  if (!result.ok) {
-    state.authError = result.error;
-    rerenderKeepScroll(accountSettings());
-    return;
-  }
+  form.dataset.busy = "";
+  if (!result.ok) return refuse(result.error || "The account could not be deleted. Please try again.");
   try {sessionStorage.setItem("surgiciss-flash", "Your account has been removed. You are back on the public site.");}
   catch (err) { /* ignore */}
   location.hash = "#/";
@@ -1122,23 +1145,28 @@ function pictureToDataUrl(file) {
     img.src = url;
   });
 }
+// Server messages that are meant for the customer are shown as they are; anything technical becomes a plain sentence.
+const pictureProblem = text => (/^(Please|That file|That picture|Too many)/.test(String(text || ""))
+  ? text
+  : "The picture could not be saved right now. Please try again in a little while.");
 document.addEventListener("change", async event => {
   const input = event.target.closest && event.target.closest("#avatar-file");
   if (!input || !input.files || !input.files[0]) return;
   const file = input.files[0];
   input.value = "";
-  state.notice = ""; state.authError = "";
-  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) state.authError = "Please choose a JPEG, PNG or WebP picture.";
-  else if (file.size > 10 * 1024 * 1024) state.authError = "That picture is larger than 10 MB. Please choose a smaller one.";
+  state.notice = ""; state.authError = ""; state.pictureError = "";
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) state.pictureError = "Please choose a JPEG, PNG or WebP picture.";
+  else if (file.size > 10 * 1024 * 1024) state.pictureError = "That picture is larger than 10 MB. Please choose a smaller one.";
   else {
     try {
       const result = await Accounts.setAvatar(await pictureToDataUrl(file));
-      if (result.ok) state.notice = "Your profile picture has been updated."; else state.authError = result.error;
+      if (result.ok) state.notice = "Your profile picture has been updated."; else state.pictureError = pictureProblem(result.error);
     } catch (err) {
-      state.authError = "That file could not be read as a picture. Please choose another.";
+      state.pictureError = "That file could not be read as a picture. Please choose another.";
     }
   }
   rerenderKeepScroll(accountView(currentPath()));
+  window.scrollTo({top: 0, behavior: "smooth"});
 });
 document.addEventListener("keydown", event => {
   if ((event.key === "Enter" || event.key === " ") && event.target.matches && event.target.matches("label[for=avatar-file]")) {
