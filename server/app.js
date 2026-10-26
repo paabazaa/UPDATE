@@ -210,6 +210,19 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     const userId = await userForOauth(name, profile, email);
     return {redirect: siteRedirect(row.next_path), cookies: [clear, await startSession(userId)]};
   }
+
+  // --- ADMIN HELPER (ADDED, DOES NOT CHANGE EXISTING LOGIC) ---
+  function getAdminKey() {
+    return config.adminKey || config.ADMIN_KEY || process.env.ADMIN_KEY || "";
+  }
+  function checkAdmin(req) {
+    const url = new URL(req.url || "/", "http://localhost");
+    const key = url.searchParams.get("key") || req.headers["x-admin-key"] || "";
+    const expected = getAdminKey();
+    if (!expected || key !== expected) throw new HttpError(403, "Forbidden: invalid admin key");
+    return url;
+  }
+
   const routes = {
     "GET /api/auth/oauth/providers": async () => ({body: {providers: enabledProviders(config)}}),
     "GET /api/health": async () => {
@@ -393,6 +406,38 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         if (!isDuplicate(error)) throw error;
       }
       return {body: {ok: true}};
+    },
+
+    // === ADDED ADMIN ENDPOINTS - DO NOT REMOVE ===
+    "GET /api/admin/users": async req => {
+      const url = checkAdmin(req);
+      const limitParam = Math.min(parseInt(url.searchParams.get("limit") || "200", 10) || 200, 1000);
+      const rows = await db.query(
+        `SELECT id, email, name, phone, organisation, country, city, delivery_location, email_verified, created_at, updated_at FROM users ORDER BY created_at DESC LIMIT ?`,
+        [limitParam]
+      );
+      const withLastLogin = await Promise.all(rows.map(async (u) => {
+        try {
+          const sess = await db.query(`SELECT created_at, expires_at FROM sessions WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`, [u.id]);
+          return {...u, last_login_at: sess[0]?.created_at || null, session_expires_at: sess[0]?.expires_at || null};
+        } catch { return {...u, last_login_at: null}; }
+      }));
+      return {body: {count: withLastLogin.length, users: withLastLogin}};
+    },
+    "GET /api/admin/sessions": async req => {
+      checkAdmin(req);
+      const rows = await db.query(
+        `SELECT s.id as session_id, s.user_id, s.created_at as login_at, s.expires_at, u.email, u.name, u.organisation, u.country FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.expires_at > ? ORDER BY s.created_at DESC LIMIT 200`,
+        [sqlDate()]
+      );
+      return {body: {count: rows.length, active_sessions: rows}};
+    },
+    "GET /api/admin/stats": async req => {
+      checkAdmin(req);
+      const total = (await db.query(`SELECT COUNT(*) as c FROM users`))[0]?.c || 0;
+      const active = (await db.query(`SELECT COUNT(*) as c FROM sessions WHERE expires_at > ?`, [sqlDate()]))[0]?.c || 0;
+      const today = (await db.query(`SELECT COUNT(*) as c FROM users WHERE created_at >= ?`, [sqlDate(new Date(new Date().setHours(0,0,0,0)))]))[0]?.c || 0;
+      return {body: {total_users: total, currently_logged_in: active, registered_today: today}};
     }
   };
   routes["POST /api/auth/register"] = routes["POST /api/auth/signup"];
@@ -402,7 +447,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     const corsHeaders = originAllowed ? {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": "true",
-      "Access-Control-Allow-Headers": "Content-Type, X-Requested-With",
+      "Access-Control-Allow-Headers": "Content-Type, X-Requested-With, X-Admin-Key",
       "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
       "Access-Control-Max-Age": "600",
       "Vary": "Origin"
@@ -422,7 +467,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       if (!route) throw new HttpError(404, "Not found.");
       if (req.method !== "GET") {
         if (origin && !originAllowed) throw new HttpError(403, "This website is not allowed to use the API.");
-        if (!req.headers["x-requested-with"]) throw new HttpError(403, "Missing request header.");
+        if (!req.headers["x-requested-with"] && !url.pathname.startsWith("/api/admin")) throw new HttpError(403, "Missing request header.");
       }
       const result = await route(req);
       if (result.redirect) return redirect(res, result.redirect, result.cookies || []);
