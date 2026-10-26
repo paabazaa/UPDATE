@@ -7,6 +7,7 @@ import {providerSettings, enabledProviders, newPkce, authorizeUrl, fetchProfile,
 import {text, normaliseEmail, isEmail, checkPassword, cleanProfile, cleanSignup, cleanQuote, cleanEnquiry} from "./validation.js";
 
 const MAX_BODY = 100 * 1024;
+const MAX_AVATAR = 90 * 1024; // characters of the data URL; the page resizes pictures to about 20-40 KB first
 const HOUR = 60 * 60 * 1000;
 const QUARTER_HOUR = 15 * 60 * 1000;
 const sqlDate = (date = new Date()) => date.toISOString().slice(0, 19).replace("T", " ");
@@ -87,6 +88,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     country: row.country || "",
     city: row.city || "",
     deliveryLocation: row.delivery_location || "",
+    avatar: row.avatar || "",
     hasPassword: Boolean(row.password_hash),
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at).replace(" ", "T") + "Z"
   });
@@ -279,6 +281,25 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       await db.execute("DELETE FROM sessions WHERE user_id = ? AND id <> ?", [user.id, sha256(token)]);
       return {body: {ok: true}};
     },
+    "POST /api/auth/avatar": async req => {
+      const user = await requireUser(req);
+      limit(req, "avatar", 20, HOUR, user.id);
+      const image = String((await readBody(req)).image || "");
+      const match = image.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
+      if (!match || image.length > MAX_AVATAR) throw new HttpError(400, "Please choose a JPEG, PNG or WebP picture. It is resized to fit before it is sent.");
+      const head = Buffer.from(match[2].slice(0, 24), "base64");
+      const real = (match[1] === "jpeg" && head[0] === 0xff && head[1] === 0xd8) || (match[1] === "png" && head.slice(1, 4).toString() === "PNG") || (match[1] === "webp" && head.slice(0, 4).toString() === "RIFF");
+      if (!real) throw new HttpError(400, "That file does not look like a picture. Please choose another.");
+      await db.execute("UPDATE users SET avatar = ?, updated_at = ? WHERE id = ?", [image, sqlDate(), user.id]);
+      const row = (await db.query("SELECT * FROM users WHERE id = ?", [user.id]))[0];
+      return {body: {user: presentUser(row)}};
+    },
+    "POST /api/auth/avatar/remove": async req => {
+      const user = await requireUser(req);
+      await db.execute("UPDATE users SET avatar = NULL, updated_at = ? WHERE id = ?", [sqlDate(), user.id]);
+      const row = (await db.query("SELECT * FROM users WHERE id = ?", [user.id]))[0];
+      return {body: {user: presentUser(row)}};
+    },
     "POST /api/auth/delete": async req => {
       const user = await requireUser(req);
       limit(req, "delete", 5, QUARTER_HOUR, user.id);
@@ -351,6 +372,16 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       const user = await requireUser(req);
       const load = async table => (await db.query(`SELECT payload FROM ${table} WHERE user_id = ? ORDER BY created_at DESC LIMIT 200`, [user.id])).map(row => parseJson(row.payload));
       return {body: {quotes: await load("quotes"), enquiries: await load("enquiries")}};
+    },
+    "POST /api/me/records/delete": async req => {
+      const user = await requireUser(req);
+      limit(req, "record-delete", 60, HOUR, user.id);
+      const body = await readBody(req);
+      const table = body.kind === "quote" ? "quotes" : body.kind === "enquiry" ? "enquiries" : null;
+      if (!table) throw new HttpError(400, "Unknown record type.");
+      const result = await db.execute(`DELETE FROM ${table} WHERE user_id = ? AND reference = ?`, [user.id, String(body.id || "").slice(0, 40)]);
+      if (!result.affectedRows) throw new HttpError(404, "That item was not found on your account.");
+      return {body: {ok: true}};
     },
     "POST /api/newsletter": async req => {
       limit(req, "newsletter", 10, HOUR);
