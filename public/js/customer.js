@@ -274,7 +274,7 @@ function customerHeader() {
   const mgroup = (label, links, allTo, allLabel) => `<div class="mg"><div class="mrow"><a href="${href(allTo)}">${label}</a><button type="button" class="mt" aria-label="Show ${label} menu" aria-expanded="false" data-mtoggle>${icons.down}</button></div><div class="msub" hidden>${links.map(link => `<a href="${href(link.to)}">${escapeHtml(link.label)}</a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}</a></div></div>`;
   const user = Accounts.current();
   const accountDesktop = user
-    ? `<a class="hbtn solid-soft desk-only" href="#/account"><span class="avatar sm" aria-hidden="true">${escapeHtml(initials(user.name))}</span>My account</a><button type="button" class="hbtn plain desk-only" data-logout>Log out</button>`
+    ? `<a class="hbtn solid-soft desk-only" href="#/account">${avatarHtml(user, "sm")}My account</a><button type="button" class="hbtn plain desk-only" data-logout>Log out</button>`
     : `<a class="hbtn plain desk-only${act("/login")}" href="#/login">Login</a><a class="hbtn outline desk-only${act("/sign-up")}" href="#/sign-up">Create account</a>`;
   const accountMobile = user
     ? `<a href="#/account">My account</a><a href="#/account/quotes">My quotes</a><a href="#/account/enquiries">My enquiries</a><a href="#/account/orders">My orders</a><button type="button" class="linkish" data-logout>Log out</button>`
@@ -465,11 +465,14 @@ const DASH_ICONS = {
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   arrow: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  trash: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   pin: '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
   phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>'
 };
 const dashIcon = name => `<svg class="di" viewBox="0 0 24 24" aria-hidden="true">${DASH_ICONS[name]}</svg>`;
+const avatarHtml = (user, size) => `<span class="avatar ${size}${user.avatar ? " has-photo" : ""}" aria-hidden="true">${user.avatar ? `<img src="${escapeHtml(user.avatar)}" alt="">` : escapeHtml(initials(user.name))}</span>`;
 function initials(name) {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "?";
@@ -484,7 +487,7 @@ function accountShell(title, body) {
   const eyebrow = home ? "Your account" : `<a href="#/account">Your account</a><span aria-hidden="true"> / </span>${escapeHtml(title)}`;
   const sub = [user.email, user.organisation].filter(Boolean).map(escapeHtml).join(" · ");
   return `<section class="dash-hero"><div class="wrap dash-hero-in">
-      <span class="avatar lg" aria-hidden="true">${escapeHtml(initials(user.name))}</span>
+      <span class="avatar-wrap">${avatarHtml(user, "lg")}<label class="avatar-cam" for="avatar-file" title="Upload a profile picture" aria-label="Upload a profile picture">${dashIcon("camera")}</label><input type="file" id="avatar-file" accept="image/png,image/jpeg,image/webp" hidden></span>
       <div class="dash-who"><p class="eyebrow">${eyebrow}</p><h1>${home ? `Welcome back, ${escapeHtml(first)}` : escapeHtml(title)}</h1><p class="sub">${sub}</p></div>
       <div class="dash-actions"><a class="btn light" href="#/generate-quote">${dashIcon("plus")}Generate quote</a><a class="btn ghost" href="#/contact-us">Ask a question</a></div>
     </div></section>
@@ -497,6 +500,7 @@ function accountShell(title, body) {
       ${item("/account/profile/edit", "Edit profile", "edit")}
       ${item("/account/settings", "Account settings", "settings")}
       <button type="button" class="navitem" data-logout>${dashIcon("logout")}<span>Log out</span></button>
+      <a class="navitem-danger" href="#/account/settings?delete=1">${dashIcon("trash")}<span>Delete account</span></a>
     </nav><div class="dash-main">${body}</div></section>`;
 }
 function navOn(hrefPath, path) {
@@ -505,17 +509,25 @@ function navOn(hrefPath, path) {
   if (hrefPath === "/account/profile/edit") return path === "/account/profile/edit";
   return path === hrefPath || path.startsWith(hrefPath + "/");
 }
+function allActivity() {
+  const user = Accounts.current();
+  return [
+    ...Records.quotesFor(user.id).map(q => ({kind: "quote", id: q.id, when: q.createdAt, href: `#/account/quotes/${encodeURIComponent(q.id)}`, icon: "quotes", title: `Quote request ${q.id}`, meta: `${q.lines.length} item${q.lines.length === 1 ? "" : "s"}`})),
+    ...Records.enquiriesFor(user.id).map(n => ({kind: "enquiry", id: n.id, when: n.createdAt, href: `#/account/enquiries/${encodeURIComponent(n.id)}`, icon: "enquiries", title: n.subject || "Enquiry", meta: n.id}))
+  ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
+}
+const deleteControl = (kind, id) => (state.confirmDelete === kind + ":" + id
+  ? `<span class="act-actions" role="group" aria-label="Confirm delete"><span class="act-ask">Delete this?</span><button type="button" class="act-yes" data-del-yes="${kind}:${escapeHtml(id)}">Yes, delete</button><button type="button" class="act-no" data-del-no>Keep</button></span>`
+  : `<span class="act-actions"><button type="button" class="act-del" data-del="${kind}:${escapeHtml(id)}" aria-label="Delete ${escapeHtml(id)}">${dashIcon("trash")}<span>Delete</span></button></span>`);
+const activityList = list => `<ul class="activity">${list.map(a => `<li><a href="${a.href}"><span class="act-ico">${dashIcon(a.icon)}</span><span class="act-text"><b>${escapeHtml(a.title)}</b><small>${escapeHtml(a.meta)} · ${escapeHtml(formatWhen(a.when))}</small></span><span class="pill ok">Received</span></a>${deleteControl(a.kind, a.id)}</li>`).join("")}</ul>`;
 function accountHome() {
   const user = Accounts.current();
   const quotes = Records.quotesFor(user.id);
   const enquiries = Records.enquiriesFor(user.id);
   const notice = state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : "";
-  const activity = [
-    ...quotes.map(q => ({when: q.createdAt, href: `#/account/quotes/${encodeURIComponent(q.id)}`, icon: "quotes", title: `Quote request ${q.id}`, meta: `${q.lines.length} item${q.lines.length === 1 ? "" : "s"}`})),
-    ...enquiries.map(n => ({when: n.createdAt, href: `#/account/enquiries/${encodeURIComponent(n.id)}`, icon: "enquiries", title: n.subject || "Enquiry", meta: n.id}))
-  ].sort((a, b) => String(b.when).localeCompare(String(a.when))).slice(0, 5);
+  const activity = allActivity();
   const activityHtml = activity.length
-    ? `<ul class="activity">${activity.map(a => `<li><a href="${a.href}"><span class="act-ico">${dashIcon(a.icon)}</span><span class="act-text"><b>${escapeHtml(a.title)}</b><small>${escapeHtml(a.meta)} · ${escapeHtml(formatWhen(a.when))}</small></span><span class="pill ok">Received</span></a></li>`).join("")}</ul>`
+    ? `<div class="act-scroll">${activityList(activity)}</div>`
     : `<div class="act-empty"><p><b>No activity yet</b></p><p>Quote requests and enquiries you send while signed in will appear here.</p><p><a class="btn" href="#/generate-quote">Generate a quote</a></p></div>`;
   const where = [user.city, user.country].filter(Boolean).map(escapeHtml).join(", ");
   const row = (icon, label, value) => `<li>${dashIcon(icon)}<span><small>${label}</small>${value ? escapeHtml(value) : '<em>Not provided</em>'}</span></li>`;
@@ -523,10 +535,10 @@ function accountHome() {
     <div class="statgrid dash-stats">
       <a class="stat" href="#/account/quotes"><span class="stat-ico">${dashIcon("quotes")}</span><b>${quotes.length}</b><span class="stat-label">Quote requests</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
       <a class="stat" href="#/account/enquiries"><span class="stat-ico">${dashIcon("enquiries")}</span><b>${enquiries.length}</b><span class="stat-label">Enquiries</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
-      <a class="stat" href="#/account/orders"><span class="stat-ico">${dashIcon("orders")}</span><b>—</b><span class="stat-label">Orders</span><span class="stat-go">Not available yet</span></a>
+      <a class="stat" href="#/account/orders"><span class="stat-ico">${dashIcon("orders")}</span><b>${activity.length}</b><span class="stat-label">Orders</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
     </div>
     <div class="dash-cols">
-      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Recent activity</h2></div>${activityHtml}</div>
+      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Recent activity</h2><span class="count-badge">${activity.length}</span></div>${activityHtml}</div>
       <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Your details</h2><a class="tlink" href="#/account/profile/edit">Edit</a></div>
         <ul class="detail-list">
           ${row("profile", "Name", user.name)}${row("quotes", "Organisation", user.organisation)}${row("pin", "Location", where)}${row("phone", "Telephone", user.phone)}
@@ -548,8 +560,8 @@ function accountEdit() {
   const user = Accounts.current();
   const notice = state.notice ? `<div class="note info" role="status"><p>${escapeHtml(state.notice)}</p></div>` : "";
   const error = state.authError ? `<p class="err" role="alert">${escapeHtml(state.authError)}</p>` : "";
-  return accountShell("Edit profile", `${notice}<form class="enq" id="profile-form" novalidate>
-    ${error}
+  const photo = `<div class="photo-card"><div class="photo-preview">${avatarHtml(user, "xl")}</div><div class="photo-text"><h2 class="h-sec">Profile picture</h2><p class="muted">JPEG, PNG or WebP. The picture is resized to fit and stored with your account.</p><div class="photo-actions"><label class="btn" for="avatar-file" role="button" tabindex="0">${dashIcon("camera")}${user.avatar ? "Change picture" : "Upload picture"}</label>${user.avatar ? `<button type="button" class="btn line" data-avatar-remove>Remove picture</button>` : ""}</div></div></div>`;
+  return accountShell("Edit profile", `${notice}${error}${photo}<form class="enq" id="profile-form" novalidate>
     <div class="fields">
       <div class="fld"><label for="name">Full name <span class="req">*</span></label>
       <input id="name" name="name" maxlength="255" autocomplete="name" value="${escapeHtml(user.name)}">${fieldError("name")}</div>
@@ -568,10 +580,15 @@ function accountEdit() {
   </form>`);
 }
 function accountOrders() {
-  return accountShell("My orders", `<div class="empty"><h2>No orders to show</h2>
-    <p>Order history is not available on this page yet. Quotations you prepare are listed under My quotes, and a quotation is not an order.</p>
-    <p style="margin-top:16px"><a class="btn" href="#/account/quotes">Go to my quotes</a></p>
-    </div>`);
+  const notice = state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : "";
+  const list = allActivity();
+  if (!list.length) {
+    return accountShell("My orders", `${notice}<div class="empty"><h2>No orders yet</h2>
+      <p>Quote requests and enquiries you send while signed in are listed here.</p>
+      <p style="margin-top:16px"><a class="btn" href="#/generate-quote">Generate quote</a></p>
+      </div>`);
+  }
+  return accountShell("My orders", `${notice}<div class="box dash-card"><div class="card-head"><h2 class="h-sec">All orders</h2><span class="count-badge">${list.length}</span></div>${activityList(list)}</div>`);
 }
 function accountQuotes() {
   const user = Accounts.current();
@@ -582,8 +599,8 @@ function accountQuotes() {
       <p style="margin-top:16px"><a class="btn" href="#/generate-quote">Generate quote</a></p>
       </div>`);
   }
-  const rows = list.map(item => `<li><div class="listhead"><a href="#/account/quotes/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a>${statusPill(item)}</div><p>${escapeHtml(formatWhen(item.createdAt))} · ${item.lines.length} item${item.lines.length === 1 ? "" : "s"} · ${escapeHtml(item.lines.map(line => line.name).join(", "))}</p></li>`).join("");
-  return accountShell("My quotes", `<ul class="rec-list">${rows}</ul>`);
+  const rows = list.map(item => `<li><div class="listhead"><a href="#/account/quotes/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a>${statusPill(item)}${deleteControl("quote", item.id)}</div><p>${escapeHtml(formatWhen(item.createdAt))} · ${item.lines.length} item${item.lines.length === 1 ? "" : "s"} · ${escapeHtml(item.lines.map(line => line.name).join(", "))}</p></li>`).join("");
+  return accountShell("My quotes", `${state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : ""}<ul class="rec-list">${rows}</ul>`);
 }
 function accountQuoteDetail(id) {
   const user = Accounts.current();
@@ -602,8 +619,8 @@ function accountEnquiries() {
       <p style="margin-top:16px"><a class="btn" href="#/contact-us">Ask a question</a></p>
       </div>`);
   }
-  const rows = list.map(item => `<li><div class="listhead"><a href="#/account/enquiries/${encodeURIComponent(item.id)}">${escapeHtml(item.subject || "Enquiry")}</a>${statusPill(item)}</div><p>${escapeHtml(item.id)} · ${escapeHtml(formatWhen(item.createdAt))}</p></li>`).join("");
-  return accountShell("My enquiries", `<ul class="rec-list">${rows}</ul>`);
+  const rows = list.map(item => `<li><div class="listhead"><a href="#/account/enquiries/${encodeURIComponent(item.id)}">${escapeHtml(item.subject || "Enquiry")}</a>${statusPill(item)}${deleteControl("enquiry", item.id)}</div><p>${escapeHtml(item.id)} · ${escapeHtml(formatWhen(item.createdAt))}</p></li>`).join("");
+  return accountShell("My enquiries", `${state.notice ? `<div class="note info" role="status" style="margin-bottom:16px"><p>${escapeHtml(state.notice)}</p></div>` : ""}<ul class="rec-list">${rows}</ul>`);
 }
 function accountEnquiryDetail(id) {
   const user = Accounts.current();
@@ -617,6 +634,13 @@ function accountEnquiryDetail(id) {
     <dl class="kv"><div><dt>Relates to</dt><dd>${escapeHtml(record.interest || "Not given")}</dd></div><div><dt>Message</dt><dd>${escapeHtml(record.message || "")}</dd></div><div><dt>Contact</dt><dd>${escapeHtml(record.contact.name)} · ${escapeHtml(record.contact.email)}</dd></div><div><dt>Organisation</dt><dd>${escapeHtml(record.contact.organisation || "Not given")}</dd></div><div><dt>Telephone</dt><dd>${escapeHtml(record.contact.phone || "Not given")}</dd></div><div><dt>Preferred contact</dt><dd>${escapeHtml(record.contact.preferredContact || "Email")}</dd></div></dl></div>`);
 }
 function accountSettings() {
+  if (currentQuery().get("delete")) setTimeout(() => {
+    const form = document.getElementById("delete-form");
+    if (!form) return;
+    form.scrollIntoView({behavior: "smooth", block: "center"});
+    const field = form.querySelector("input");
+    if (field) field.focus({preventScroll: true});
+  }, 60);
   const notice = state.notice ? `<div class="note info" role="status"><p>${escapeHtml(state.notice)}</p></div>` : "";
   const error = state.authError ? `<p class="err" role="alert">${escapeHtml(state.authError)}</p>` : "";
   const user = Accounts.current();
@@ -648,7 +672,7 @@ function accountSettings() {
     : `<div class="fld"><label for="deletePassword">Password</label>
     <input id="deletePassword" name="password" type="password" autocomplete="current-password" maxlength="128"></div>`}
       <label class="check"><input type="checkbox" name="confirmDelete" value="yes"> ${"I understand this cannot be undone."}</label>
-      <div><button class="btn line" type="submit">Delete account</button></div>
+      <div><button class="btn danger" type="submit">${dashIcon("trash")}Delete account</button></div>
     </form>`);
 }
 
@@ -904,7 +928,30 @@ function installCustomer() {
     baseRoute();
   };
 
-  document.addEventListener("click", event => {
+  const refreshAccount = () => rerenderKeepScroll(accountView(currentPath()));
+  document.addEventListener("click", async event => {
+    const del = event.target.closest("[data-del]");
+    const delYes = event.target.closest("[data-del-yes]");
+    const delNo = event.target.closest("[data-del-no]");
+    const removePhoto = event.target.closest("[data-avatar-remove]");
+    if (del) {state.confirmDelete = del.dataset.del; state.notice = ""; refreshAccount(); return;}
+    if (delNo) {state.confirmDelete = null; refreshAccount(); return;}
+    if (delYes) {
+      const [kind, ...rest] = delYes.dataset.delYes.split(":");
+      const result = await Records.remove(kind, rest.join(":"));
+      state.confirmDelete = null;
+      state.notice = result.ok ? "Deleted. The list and the orders count are up to date." : "";
+      state.authError = result.ok ? "" : result.error;
+      refreshAccount();
+      return;
+    }
+    if (removePhoto) {
+      const result = await Accounts.removeAvatar();
+      state.notice = result.ok ? "Your profile picture has been removed." : "";
+      state.authError = result.ok ? "" : result.error;
+      refreshAccount();
+      return;
+    }
     const add = event.target.closest("#add-line");
     const remove = event.target.closest("[data-remove-line]");
     const download = event.target.closest("[data-download]");
@@ -1054,3 +1101,49 @@ async function submitDelete(form) {
   catch (err) { /* ignore */}
   location.hash = "#/";
 }
+
+// Profile picture: the chosen file is cropped to a square and shrunk in the page before it is sent to the server.
+function pictureToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const size = 256, side = Math.min(img.naturalWidth, img.naturalHeight);
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {URL.revokeObjectURL(url); reject(new Error("unreadable"));};
+    img.src = url;
+  });
+}
+document.addEventListener("change", async event => {
+  const input = event.target.closest && event.target.closest("#avatar-file");
+  if (!input || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  input.value = "";
+  state.notice = ""; state.authError = "";
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) state.authError = "Please choose a JPEG, PNG or WebP picture.";
+  else if (file.size > 10 * 1024 * 1024) state.authError = "That picture is larger than 10 MB. Please choose a smaller one.";
+  else {
+    try {
+      const result = await Accounts.setAvatar(await pictureToDataUrl(file));
+      if (result.ok) state.notice = "Your profile picture has been updated."; else state.authError = result.error;
+    } catch (err) {
+      state.authError = "That file could not be read as a picture. Please choose another.";
+    }
+  }
+  rerenderKeepScroll(accountView(currentPath()));
+});
+document.addEventListener("keydown", event => {
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches && event.target.matches("label[for=avatar-file]")) {
+    event.preventDefault();
+    const input = document.getElementById("avatar-file");
+    if (input) input.click();
+  }
+});
