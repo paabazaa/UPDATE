@@ -868,3 +868,44 @@ ol.steps .n{display:inline-grid;place-items:center;width:34px;height:34px;flex:n
 .ib-fig{overflow:hidden}
 .ib-fig{grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr)}
 .ib-fig img{min-height:0;min-width:0;aspect-ratio:auto}
+
+/* ===== v8: profile picture, delete buttons and order counts ===== */
+.avatar{overflow:hidden;position:relative}
+.avatar img{display:block;width:100%;height:100%;object-fit:cover}
+.avatar.xl{width:96px;height:96px;font-size:32px;background:var(--primary);color:#fff;border-color:var(--accent-bg)}
+.avatar.sm.has-photo{margin-left:-8px}
+.avatar-wrap{position:relative;display:inline-flex;flex:none}
+.avatar.lg.has-photo{border-color:#fff}
+.avatar-cam{position:absolute;right:-6px;bottom:-6px;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff;color:oklch(0.42 0.21 290);box-shadow:0 6px 12px -6px rgb(0 0 0 / 60%);cursor:pointer;transition:transform .15s}
+.avatar-cam:hover{transform:scale(1.1)}
+.avatar-cam .di{width:16px;height:16px;margin:0}
+.photo-card{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:28px;padding:22px 24px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--accent-bg),var(--card));box-shadow:var(--shadow-card)}
+.photo-text{flex:1;min-width:220px}
+.photo-text p{margin-top:6px;font-size:13.5px}
+.photo-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.photo-actions .btn{cursor:pointer}
+.photo-actions .btn .di{width:18px;height:18px}
+.btn.danger{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,oklch(0.6 0.22 25),oklch(0.5 0.22 25));color:#fff;border:0;box-shadow:0 10px 20px -12px oklch(0.5 0.22 25 / 85%)}
+.btn.danger:hover{filter:brightness(1.08)}
+.btn.danger .di{width:18px;height:18px}
+.dash-nav .navitem-danger{display:inline-flex;align-items:center;gap:10px;flex:none;min-height:44px;padding:0 14px;border-radius:8px;color:var(--danger);font:500 14px/1 var(--font)}
+.dash-nav .navitem-danger:hover{background:color-mix(in oklch,var(--danger) 10%,transparent);color:var(--danger)}
+.dash-nav .navitem-danger .di{width:20px;height:20px}
+@media(min-width:900px){.dash-nav .navitem-danger{width:100%}}
+.count-badge{display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 10px;border-radius:999px;background:linear-gradient(135deg,oklch(0.62 0.22 290),oklch(0.46 0.22 290));color:#fff;font-size:13px;font-weight:700}
+.card-head .count-badge{margin-left:auto}
+.card-head .tlink+.count-badge{margin-left:12px}
+.act-scroll{max-height:460px;overflow-y:auto}
+.activity li{display:flex;align-items:center}
+.activity li>a{flex:1;min-width:0}
+.act-actions{display:flex;align-items:center;gap:8px;flex:none;padding-right:16px}
+.act-del,.act-yes,.act-no{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--muted-fg);font:600 12.5px/1 var(--font);cursor:pointer;transition:all .15s}
+.act-del .di{width:16px;height:16px}
+.act-del:hover{border-color:var(--danger);color:var(--danger);background:color-mix(in oklch,var(--danger) 8%,var(--card))}
+.act-yes{border-color:var(--danger);background:var(--danger);color:#fff}
+.act-yes:hover{filter:brightness(1.1)}
+.act-no:hover{border-color:var(--primary);color:var(--link)}
+.act-ask{font-size:12.5px;font-weight:600;color:var(--danger)}
+@media(max-width:560px){.activity li{flex-wrap:wrap}.activity li>a{flex-basis:100%}.act-actions{padding:0 20px 14px;width:100%;justify-content:flex-end}.act-del span{display:none}.act-del{width:36px;padding:0;justify-content:center}}
+.listhead .act-actions{padding-right:0;margin-left:auto}
+.rec-list .listhead{flex-wrap:wrap}
