@@ -202,7 +202,7 @@ const pages = {
     const s = slides[state.slide];
     const featured = featuredSlugs.map(x => products.find(p => p.slug === x)).filter(Boolean);
     return `<section class="hero" id="hero" aria-label="Featured products, software and services"><h1 class="sr">SURGICISS LTD — Sterile Instrument Systems</h1>
-      <div class="slides">${slides.map((sl, i) => `<div class="slide${i === state.slide ? " on" : ""}${/^(software|product)/.test(sl.image) ? " lt" : ""}" aria-hidden="${i !== state.slide}"><img src="${imageUrl(sl.image)}" alt="" width="1600" height="900"><div class="in"><h2 class="st">${escapeHtml(sl.title)}</h2><p class="sb">${escapeHtml(sl.body)}</p><a class="btn hb" href="${href(sl.cta[1])}">${sl.cta[0]}${icons.arrow}</a></div></div>`).join("")}</div>
+      <div class="slides">${slides.map((sl, i) => `<div class="slide${i === state.slide ? " on" : ""}${/^(software|product)/.test(sl.image) ? " lt" : ""}" aria-hidden="${i !== state.slide}"><img ${i < 2 ? `src="${imageUrl(sl.image)}"` : `data-src="${imageUrl(sl.image)}"`} alt="" width="1600" height="900"${i === 0 ? ' fetchpriority="high"' : ' decoding="async"'}><div class="in"><h2 class="st">${escapeHtml(sl.title)}</h2><p class="sb">${escapeHtml(sl.body)}</p><a class="btn hb" href="${href(sl.cta[1])}">${sl.cta[0]}${icons.arrow}</a></div></div>`).join("")}</div>
       <button type="button" class="nav" style="left:0" aria-label="Previous slide" data-slide="-1">${icons.left}</button><button type="button" class="nav" style="right:0" aria-label="Next slide" data-slide="1">${icons.right}</button>
       <div class="dots">${slides.map((sl, i) => `<button type="button" aria-label="Show slide ${i + 1}: ${escapeHtml(sl.title)}" aria-current="${i === state.slide}" data-goto="${i}"></button>`).join("")}</div>
         </section>
@@ -485,9 +485,15 @@ document.addEventListener("click", e => {
   else if (t.id === "again") {state.submitted = false; state.errors = {}; route();}
   else if (t.id === "totop") scrollTo({top: 0, behavior: "smooth"});
 });
+// Slide pictures are fetched only when they are about to be shown, so the home page does not download all of them at once.
+function loadSlide(i) {
+  const img = document.querySelectorAll("#hero .slide img")[(i + slides.length) % slides.length];
+  if (img && !img.getAttribute("src") && img.dataset.src) img.src = img.dataset.src;
+}
 function setSlide(n) {
   state.slide = (n + slides.length) % slides.length;
   const h = document.getElementById("hero"); if (!h) return;
+  loadSlide(state.slide); loadSlide(state.slide + 1);
   h.querySelectorAll(".slide").forEach((el, i) => {const on = i === state.slide; el.classList.toggle("on", on); el.setAttribute("aria-hidden", String(!on));});
   h.querySelectorAll(".dots button").forEach((b, i) => b.setAttribute("aria-current", String(i === state.slide)));
 }
@@ -540,6 +546,15 @@ document.addEventListener("click", e => {
 });
 try {const s = localStorage.getItem("surgiciss-theme"); if (s === "dark" || s === "light") document.documentElement.dataset.theme = s;} catch (e) {}
 if (window.installCustomer) installCustomer();
-// With the API on, wait briefly to learn whether the visitor is signed in before drawing the first page.
-if (window.Accounts && Accounts.pending()) Accounts.ready.then(route);
-else route();
+// With the API on, pages that depend on the account wait to learn whether the visitor is signed in. Every other page is drawn
+// straight away, and the header is refreshed afterwards if the visitor turns out to be signed in.
+if (window.Accounts && Accounts.pending()) {
+  if (/^\/(account|login|sign-up|forgot-password|reset-password|generate-quote|request-quote)(\/|$)/.test(currentPath())) Accounts.ready.then(route);
+  else {
+    route();
+    Accounts.ready.then(() => {
+      const bar = document.getElementById("hdr");
+      if (bar && Accounts.current()) bar.outerHTML = header();
+    });
+  }
+} else route();
