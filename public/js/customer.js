@@ -10,6 +10,7 @@ function onBeforeRoute() {
   state.authError = "";
   state.deleteError = "";
   state.pictureError = "";
+  state.passwordMsg = null;
   state.forgotSent = false;
   state.resetDone = false;
 }
@@ -556,10 +557,31 @@ function profileList(user) {
   const row = (label, value) => `<div><dt>${label}</dt><dd>${escapeHtml(value || "Not provided")}</dd></div>`;
   return `<dl class="kv">${row("Name", user.name)}${row("Email", user.email)}${row("Telephone", user.phone)}${row("Organisation", user.organisation)}${row("Country", user.country)}${row("City", user.city)}${row("Usual delivery location", user.deliveryLocation)}${row("Account created", formatWhen(user.createdAt))}</dl>`;
 }
+// Change-password card, shown on My profile and on Account settings. Messages appear inside the card, next to the button.
+function passwordCard() {
+  const user = Accounts.current();
+  if (user && user.hasPassword === false) {
+    return `<div class="box" id="password-card"><h2 class="h-sec">Password</h2>
+      <p class="muted" style="font-size:14px;margin-top:8px">You sign in with Google or Facebook, so this account has no password. If you would also like to sign in with an email and password, <a href="#/forgot-password">request a link to set one</a>.</p></div>`;
+  }
+  const msg = state.passwordMsg;
+  const note = msg ? (msg.ok
+    ? `<div class="note info" role="status" style="margin-top:12px"><p>${escapeHtml(msg.text)}</p></div>`
+    : `<p class="err" role="alert" style="margin-top:12px">${escapeHtml(msg.text)}</p>`) : "";
+  return `<div class="box" id="password-card"><form class="enq" id="password-form" novalidate>
+    <h2 class="h-sec">Change password</h2>
+    <p class="muted" style="font-size:14px">Changing your password signs you out on your other devices. Use at least 8 characters that you do not use anywhere else.</p>
+    ${passwordField("currentPassword", "Current password", "current-password")}
+    <div class="fields">${passwordField("nextPassword", "New password", "new-password")}${passwordField("confirmPassword", "Confirm new password", "new-password")}</div>
+    ${note}
+    <div><button class="btn lg" type="submit">Update password</button></div>
+  </form></div>`;
+}
 function accountProfile() {
   const user = Accounts.current();
   return accountShell("My profile", `<div class="box"><h2 class="h-sec">Profile</h2>
-    <p class="muted" style="margin-top:8px;font-size:14px">The email address is the sign-in name and cannot be changed here.</p>${profileList(user)}<a class="btn" href="#/account/profile/edit" style="margin-top:16px">Edit profile</a></div>`);
+    <p class="muted" style="margin-top:8px;font-size:14px">The email address is the sign-in name and cannot be changed here.</p>${profileList(user)}<a class="btn" href="#/account/profile/edit" style="margin-top:16px">Edit profile</a></div>
+    <div style="margin-top:24px">${passwordCard()}</div>`);
 }
 function accountEdit() {
   const user = Accounts.current();
@@ -650,24 +672,8 @@ function accountSettings() {
   const error = state.authError ? `<p class="err" role="alert">${escapeHtml(state.authError)}</p>` : "";
   const user = Accounts.current();
   const noPassword = Boolean(user && user.hasPassword === false);
-  const passwordSection = noPassword
-    ? `<section><h2 class="h-sec">Password</h2>
-      <p class="muted" style="font-size:14px">You sign in with Google or Facebook, so this account has no password. If you would also like to sign in with an email and password, <a href="#/forgot-password">request a link to set one</a>.</p></section>`
-    : `<form class="enq" id="password-form" novalidate>
-      <h2 class="h-sec">Change password</h2>
-      <p class="muted" style="font-size:14px">${"Changing your password signs you out on your other devices."}</p>
-      <div class="fld"><label for="currentPassword">Current password</label>
-    <input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" maxlength="128"></div>
-      <div class="fields">
-        <div class="fld"><label for="nextPassword">New password</label>
-    <input id="nextPassword" name="nextPassword" type="password" autocomplete="new-password" maxlength="128"></div>
-        <div class="fld"><label for="confirmPassword">Confirm new password</label>
-    <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" maxlength="128"></div>
-      </div>
-      <div><button class="btn lg" type="submit">Update password</button></div>
-    </form>`;
   return accountShell("Account settings", `${notice}${error}
-    ${passwordSection}
+    ${passwordCard()}
     <form class="enq" id="delete-form" novalidate style="margin-top:32px">
       <h2 class="h-sec">${"Delete account"}</h2>
       <p class="muted" style="font-size:14px">${"This permanently deletes your account and the quotes and enquiries filed under it. Requests you sent without signing in are not affected. This cannot be undone."}</p>
@@ -1092,11 +1098,31 @@ async function submitProfile(form) {
   rerenderKeepScroll(accountEdit());
 }
 async function submitPassword(form) {
+  if (form.dataset.busy === "1") return;
   const data = Object.fromEntries(new FormData(form).entries());
-  const result = await Accounts.changePassword(data.currentPassword, data.nextPassword, data.confirmPassword);
-  state.notice = result.ok ? "Your password has been updated." : "";
-  state.authError = result.ok ? "" : result.error;
-  rerenderKeepScroll(accountSettings());
+  const show = (ok, text) => {
+    state.passwordMsg = {ok, text};
+    rerenderKeepScroll(accountView(currentPath()));
+    const card = document.getElementById("password-card");
+    if (card) card.scrollIntoView({block: "center"});
+  };
+  const current = String(data.currentPassword || ""), next = String(data.nextPassword || "");
+  if (!current) return show(false, "Enter your current password.");
+  if (next.length < 8) return show(false, "Use at least 8 characters for the new password.");
+  if (next.length > 128) return show(false, "Use no more than 128 characters for the new password.");
+  if (next !== String(data.confirmPassword || "")) return show(false, "The two new passwords do not match.");
+  if (next === current) return show(false, "Choose a new password that is different from the current one.");
+  form.dataset.busy = "1";
+  const button = form.querySelector("button[type=submit]");
+  if (button) {button.disabled = true; button.textContent = "Updating…";}
+  let result;
+  try {
+    result = await Accounts.changePassword(current, next, data.confirmPassword);
+  } catch (err) {
+    result = {ok: false, error: "The password could not be changed. Please try again."};
+  }
+  if (result.ok) show(true, "Your password has been updated.");
+  else show(false, result.error || "The password could not be changed. Please try again.");
 }
 async function submitDelete(form) {
   if (form.dataset.busy === "1") return;
@@ -1131,7 +1157,7 @@ function pictureToDataUrl(file) {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const size = 256, side = Math.min(img.naturalWidth, img.naturalHeight);
+      const size = 192, side = Math.min(img.naturalWidth, img.naturalHeight);
       const canvas = document.createElement("canvas");
       canvas.width = canvas.height = size;
       const ctx = canvas.getContext("2d");
@@ -1139,7 +1165,7 @@ function pictureToDataUrl(file) {
       ctx.fillRect(0, 0, size, size);
       ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
       URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/jpeg", 0.85));
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
     };
     img.onerror = () => {URL.revokeObjectURL(url); reject(new Error("unreadable"));};
     img.src = url;
