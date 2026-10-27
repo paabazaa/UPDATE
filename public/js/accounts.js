@@ -145,9 +145,8 @@ const serverAccounts = (() => {
 
   const ready = (async () => {
     try {
-      const offered = await Api.get("/auth/oauth/providers", 6000);
+      const [offered, me] = await Promise.all([Api.get("/auth/oauth/providers", 6000), Api.get("/auth/me", 6000)]);
       if (offered.ok) providers = offered.data.providers || [];
-      const me = await Api.get("/auth/me", 6000);
       if (me.ok && me.data.user) {
         user = me.data.user;
         await Records.sync();
