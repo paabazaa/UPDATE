@@ -7,7 +7,7 @@ import {providerSettings, enabledProviders, newPkce, authorizeUrl, fetchProfile,
 import {text, normaliseEmail, isEmail, checkPassword, cleanProfile, cleanSignup, cleanQuote, cleanEnquiry} from "./validation.js";
 
 const MAX_BODY = 100 * 1024;
-const MAX_AVATAR = 90 * 1024;
+const MAX_AVATAR = 90 * 1024; // characters of the data URL; the page resizes pictures to about 20-40 KB first
 const HOUR = 60 * 60 * 1000;
 const QUARTER_HOUR = 15 * 60 * 1000;
 const sqlDate = (date = new Date()) => date.toISOString().slice(0, 19).replace("T", " ");
@@ -24,7 +24,8 @@ class HttpError extends Error {
 export function createApp({db, config, mailer, fetchImpl = fetch}) {
   const allow = createRateLimiter();
   function clientIp(req) {
-    if (config.trustProxy) {
+    // Hosts such as Render put every visitor behind one proxy address. Without this, all visitors would share one rate-limit counter.
+    if (config.trustProxy || process.env.RENDER) {
       const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
       if (forwarded) return forwarded;
     }
@@ -96,7 +97,8 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     const token = cookies(req)[config.session.cookieName];
     if (!token) return null;
     const rows = await db.query(
-      "SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.expires_at > ?",
+      // The profile picture can be large, so it is not read on every request; has_avatar says whether one exists.
+      "SELECT u.id, u.email, u.name, u.phone, u.organisation, u.country, u.city, u.delivery_location, u.password_hash, u.email_verified, u.created_at, u.updated_at, (u.avatar IS NOT NULL) AS has_avatar FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.expires_at > ?",
       [sha256(token), sqlDate()]
     );
     return rows[0] || null;
@@ -106,11 +108,15 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     if (!user) throw new HttpError(401, "Please log in.");
     return user;
   };
+  let lastSessionSweep = 0;
   async function startSession(userId) {
     const token = newToken();
     const now = new Date();
     const expires = new Date(now.getTime() + config.session.days * 24 * HOUR);
-    await db.execute("DELETE FROM sessions WHERE expires_at < ?", [sqlDate(now)]);
+    if (now.getTime() - lastSessionSweep > 60 * 1000) {
+      lastSessionSweep = now.getTime();
+      await db.execute("DELETE FROM sessions WHERE expires_at < ?", [sqlDate(now)]);
+    }
     await db.execute("INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [sha256(token), userId, sqlDate(now), sqlDate(expires)]);
     return cookieHeader(token, config.session.days * 24 * 60 * 60);
   }
@@ -210,18 +216,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     const userId = await userForOauth(name, profile, email);
     return {redirect: siteRedirect(row.next_path), cookies: [clear, await startSession(userId)]};
   }
-
-  function getAdminKey() {
-    return config.adminKey || config.ADMIN_KEY || process.env.ADMIN_KEY || "";
-  }
-  function checkAdmin(req) {
-    const url = new URL(req.url || "/", "http://localhost");
-    const key = url.searchParams.get("key") || req.headers["x-admin-key"] || "";
-    const expected = getAdminKey();
-    if (!expected || key !== expected) throw new HttpError(403, "Forbidden: invalid admin key");
-    return url;
-  }
-
   const routes = {
     "GET /api/auth/oauth/providers": async () => ({body: {providers: enabledProviders(config)}}),
     "GET /api/health": async () => {
@@ -231,10 +225,14 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     },
     "GET /api/auth/me": async req => {
       const user = await sessionUser(req);
+      if (user && user.has_avatar) {
+        const picture = (await db.query("SELECT avatar FROM users WHERE id = ?", [user.id]))[0];
+        user.avatar = picture ? picture.avatar : "";
+      }
       return {body: {user: user ? presentUser(user) : null}};
     },
     "POST /api/auth/signup": async req => {
-      limit(req, "signup", 5, HOUR);
+      limit(req, "signup", 20, HOUR);
       const input = cleanSignup(await readBody(req));
       if (input.error) throw new HttpError(400, input.error);
       const user = input.value;
@@ -257,7 +255,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     "POST /api/auth/login": async req => {
       const body = await readBody(req);
       const email = normaliseEmail(body.email);
-      limit(req, "login", 10, QUARTER_HOUR);
+      limit(req, "login", 60, QUARTER_HOUR);
       limit(req, "login-email", 5, QUARTER_HOUR, email);
       const row = (await db.query("SELECT * FROM users WHERE email = ?", [email]))[0];
       const ok = await verifyPassword(String(body.password || "").slice(0, 128), row && row.password_hash ? row.password_hash : DUMMY_HASH);
@@ -365,7 +363,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       return {body: {ok: true}};
     },
     "POST /api/submissions": async req => {
-      limit(req, "submit", 15, HOUR);
+      limit(req, "submit", 40, HOUR);
       const body = await readBody(req);
       const user = await sessionUser(req);
       if (body.kind === "quote") {
@@ -405,54 +403,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         if (!isDuplicate(error)) throw error;
       }
       return {body: {ok: true}};
-    },
-    "GET /api/admin/users": async req => {
-      const url = checkAdmin(req);
-      const limitParam = Math.min(parseInt(url.searchParams.get("limit") || "200", 10) || 200, 1000);
-      const rows = await db.query(
-        `SELECT id, email, name, phone, organisation, country, city, delivery_location, email_verified, created_at, updated_at FROM users ORDER BY created_at DESC LIMIT ?`,
-        [limitParam]
-      );
-      const withLastLogin = await Promise.all(rows.map(async (u) => {
-        try {
-          const sess = await db.query(`SELECT created_at, expires_at FROM sessions WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`, [u.id]);
-          return {...u, last_login_at: sess[0]?.created_at || null, session_expires_at: sess[0]?.expires_at || null};
-        } catch { return {...u, last_login_at: null}; }
-      }));
-      return {body: {count: withLastLogin.length, users: withLastLogin}};
-    },
-    "GET /api/admin/sessions": async req => {
-      checkAdmin(req);
-      const rows = await db.query(
-        `SELECT s.id as session_id, s.user_id, s.created_at as login_at, s.expires_at, u.email, u.name, u.organisation, u.country FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.expires_at > ? ORDER BY s.created_at DESC LIMIT 200`,
-        [sqlDate()]
-      );
-      return {body: {count: rows.length, active_sessions: rows}};
-    },
-    "GET /api/admin/stats": async req => {
-      checkAdmin(req);
-      const total = (await db.query(`SELECT COUNT(*) as c FROM users`))[0]?.c || 0;
-      const active = (await db.query(`SELECT COUNT(*) as c FROM sessions WHERE expires_at > ?`, [sqlDate()]))[0]?.c || 0;
-      const today = (await db.query(`SELECT COUNT(*) as c FROM users WHERE created_at >= ?`, [sqlDate(new Date(new Date().setHours(0,0,0,0)))]))[0]?.c || 0;
-      return {body: {total_users: total, currently_logged_in: active, registered_today: today}};
-    },
-    // === NEW: RESET PASSWORD FOR ADMIN ===
-    "POST /api/admin/users/reset-password": async req => {
-      checkAdmin(req);
-      const body = await readBody(req);
-      const email = normaliseEmail(body.email || body.Email || "");
-      const newPassword = String(body.newPassword || body.new_password || body.password || "");
-      if (!isEmail(email)) throw new HttpError(400, "Provide a valid email: {\"email\":\"user@email.com\", \"newPassword\":\"...\"}");
-      if (!newPassword) throw new HttpError(400, "Provide newPassword");
-      const problem = checkPassword(newPassword, newPassword);
-      if (problem) throw new HttpError(400, problem);
-      const user = (await db.query("SELECT id, email, name FROM users WHERE email = ?", [email]))[0];
-      if (!user) throw new HttpError(404, "No user found with that email");
-      const hashed = await hashPassword(newPassword);
-      await db.execute("UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?", [hashed, sqlDate(), user.id]);
-      await db.execute("DELETE FROM sessions WHERE user_id = ?", [user.id]);
-      console.log(`[admin] Password reset for ${email} by admin`);
-      return {body: {ok: true, email: user.email, name: user.name, message: `Password for ${user.email} has been reset. User was logged out.`}};
     }
   };
   routes["POST /api/auth/register"] = routes["POST /api/auth/signup"];
@@ -462,7 +412,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     const corsHeaders = originAllowed ? {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": "true",
-      "Access-Control-Allow-Headers": "Content-Type, X-Requested-With, X-Admin-Key",
+      "Access-Control-Allow-Headers": "Content-Type, X-Requested-With",
       "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
       "Access-Control-Max-Age": "600",
       "Vary": "Origin"
@@ -482,7 +432,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       if (!route) throw new HttpError(404, "Not found.");
       if (req.method !== "GET") {
         if (origin && !originAllowed) throw new HttpError(403, "This website is not allowed to use the API.");
-        if (!req.headers["x-requested-with"] && !url.pathname.startsWith("/api/admin")) throw new HttpError(403, "Missing request header.");
+        if (!req.headers["x-requested-with"]) throw new HttpError(403, "Missing request header.");
       }
       const result = await route(req);
       if (result.redirect) return redirect(res, result.redirect, result.cookies || []);
