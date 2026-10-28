@@ -93,12 +93,44 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     hasPassword: Boolean(row.password_hash),
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at).replace(" ", "T") + "Z"
   });
+  // The profile-picture column is newer than the first database. The server must keep working on a database that does not have it
+  // yet, so it checks once, tries to add it, and otherwise carries on without profile pictures instead of failing requests.
+  let avatarColumn = null;
+  let avatarCheck = null;
+  const missingColumn = error => error && (error.code === "ER_BAD_FIELD_ERROR" || error.errno === 1054 || /no such column|unknown column/i.test(String(error.message)));
+  function avatarReady() {
+    if (avatarColumn !== null) return Promise.resolve(avatarColumn);
+    if (!avatarCheck) {
+      avatarCheck = (async () => {
+        try {
+          await db.query("SELECT avatar FROM users LIMIT 1");
+          avatarColumn = true;
+        } catch (error) {
+          if (!missingColumn(error)) return false; // a passing database problem: do not remember it, ask again next time
+          try {
+            await db.execute("ALTER TABLE users ADD COLUMN avatar MEDIUMTEXT NULL");
+            avatarColumn = true;
+            console.log("[db] Added the users.avatar column for profile pictures.");
+          } catch (alterError) {
+            avatarColumn = false;
+            console.error("[db] users.avatar is missing and could not be added. Run: npm run db:migrate", alterError.message);
+          }
+        }
+        return avatarColumn;
+      })().finally(() => { avatarCheck = null; });
+    }
+    return avatarCheck;
+  }
+  const needAvatarColumn = async () => {
+    if (!(await avatarReady())) throw new HttpError(503, "Profile pictures are not available just yet. Please try again later.");
+  };
   async function sessionUser(req) {
     const token = cookies(req)[config.session.cookieName];
     if (!token) return null;
+    const withAvatar = await avatarReady();
     const rows = await db.query(
       // The profile picture can be large, so it is not read on every request; has_avatar says whether one exists.
-      "SELECT u.id, u.email, u.name, u.phone, u.organisation, u.country, u.city, u.delivery_location, u.password_hash, u.email_verified, u.created_at, u.updated_at, (u.avatar IS NOT NULL) AS has_avatar FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.expires_at > ?",
+      `SELECT u.id, u.email, u.name, u.phone, u.organisation, u.country, u.city, u.delivery_location, u.password_hash, u.email_verified, u.created_at, u.updated_at, ${withAvatar ? "(u.avatar IS NOT NULL)" : "0"} AS has_avatar FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.expires_at > ?`,
       [sha256(token), sqlDate()]
     );
     return rows[0] || null;
@@ -246,7 +278,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       } catch (error) {
         if (isDuplicate(error)) throw new HttpError(409, "An account with that email already exists. Try logging in.");
         console.error("[signup INSERT failed]", error);
-        throw new HttpError(500, `DB Error: ${error.message} | Code: ${error.code} | SQL: ${error.sqlMessage || ""}`);
+        throw new HttpError(500, process.env.DEBUG_ERRORS === "true" ? `DB Error: ${error.message} | Code: ${error.code} | SQL: ${error.sqlMessage || ""}` : "Your account could not be created right now. Please try again in a little while.");
       }
       const cookie = await startSession(id);
       const row = (await db.query("SELECT * FROM users WHERE id = ?", [id]))[0];
@@ -293,6 +325,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     },
     "POST /api/auth/avatar": async req => {
       const user = await requireUser(req);
+      await needAvatarColumn();
       limit(req, "avatar", 20, HOUR, user.id);
       const image = String((await readBody(req)).image || "");
       const match = image.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
@@ -306,6 +339,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     },
     "POST /api/auth/avatar/remove": async req => {
       const user = await requireUser(req);
+      await needAvatarColumn();
       await db.execute("UPDATE users SET avatar = NULL, updated_at = ? WHERE id = ?", [sqlDate(), user.id]);
       const row = (await db.query("SELECT * FROM users WHERE id = ?", [user.id]))[0];
       return {body: {user: presentUser(row)}};
@@ -443,7 +477,8 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         return send(res, error.status, {error: error.message}, error.closeConnection ? {...corsHeaders, Connection: "close"} : corsHeaders);
       }
       console.error("[api]", error);
-      send(res, 500, {error: `DEBUG 500: ${error.message} | code=${error.code} | sql=${error.sqlMessage || ""}`}, corsHeaders);
+      // The details are in the server log. Set DEBUG_ERRORS=true on the host only while testing to see them in the page.
+      send(res, 500, {error: process.env.DEBUG_ERRORS === "true" ? `DEBUG 500: ${error.message} | code=${error.code} | sql=${error.sqlMessage || ""}` : "Something went wrong on our side. Please try again in a little while."}, corsHeaders);
     }
   };
 }
