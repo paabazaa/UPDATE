@@ -938,3 +938,24 @@ ol.steps .n{display:inline-grid;place-items:center;width:34px;height:34px;flex:n
 .hist-dl .di{width:16px;height:16px}
 .hist-month+.hist-month{margin-top:16px}
 :root[data-theme="dark"] .hist-dl{color:oklch(0.8 0.12 295)}
+
+/* ===== v12: no slide dots; profile picture pop-up ===== */
+.hero .dots{display:none}
+.avatar.xxl{width:160px;height:160px;font-size:54px;background:var(--primary);color:#fff;border:4px solid var(--accent-bg)}
+.avatar-open{display:inline-flex;padding:0;border:0;background:none;border-radius:50%;cursor:pointer;font:inherit;color:inherit}
+.avatar-open:hover .avatar,.avatar-open:focus-visible .avatar{box-shadow:0 0 0 4px rgb(255 255 255 / 35%)}
+.avatar-open:focus-visible{outline:3px solid oklch(0.7 0.2 295);outline-offset:3px}
+html.modal-open{overflow:hidden}
+.modal-back{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:rgb(10 10 14 / 62%);backdrop-filter:blur(3px);animation:modalfade .18s ease-out}
+.modal-card{position:relative;width:min(420px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:36px 28px 28px;border-radius:20px;background:var(--bg);color:var(--fg);text-align:center;box-shadow:0 30px 70px -20px rgb(0 0 0 / 60%);animation:modalpop .22s ease-out}
+.modal-x{position:absolute;top:10px;right:10px;width:40px;height:40px;border:0;border-radius:50%;background:var(--tint);color:var(--fg);font-size:26px;line-height:1;cursor:pointer}
+.modal-x:hover{background:var(--accent-bg)}
+.modal-pic{display:flex;justify-content:center;margin-bottom:18px}
+.modal-pic .avatar img{width:100%;height:100%;object-fit:cover}
+.modal-card h2{margin:0;font-size:22px;font-weight:700;color:var(--heading)}
+.modal-sub{margin:6px 0 0;font-size:14px;color:var(--muted-fg);overflow-wrap:anywhere}
+.modal-actions{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.modal-actions .btn{justify-content:center}
+@keyframes modalfade{from{opacity:0}to{opacity:1}}
+@keyframes modalpop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.modal-back,.modal-card{animation:none}}
