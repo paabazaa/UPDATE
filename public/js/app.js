@@ -204,7 +204,6 @@ const pages = {
     return `<section class="hero" id="hero" aria-label="Featured products, software and services"><h1 class="sr">SURGICISS LTD — Sterile Instrument Systems</h1>
       <div class="slides">${slides.map((sl, i) => `<div class="slide${i === state.slide ? " on" : ""}${/^(software|product)/.test(sl.image) ? " lt" : ""}" aria-hidden="${i !== state.slide}"><img ${i < 2 ? `src="${imageUrl(sl.image)}"` : `data-src="${imageUrl(sl.image)}"`} alt="" width="1600" height="900"${i === 0 ? ' fetchpriority="high"' : ' decoding="async"'}><div class="in"><h2 class="st">${escapeHtml(sl.title)}</h2><p class="sb">${escapeHtml(sl.body)}</p><a class="btn hb" href="${href(sl.cta[1])}">${sl.cta[0]}${icons.arrow}</a></div></div>`).join("")}</div>
       <button type="button" class="nav" style="left:0" aria-label="Previous slide" data-slide="-1">${icons.left}</button><button type="button" class="nav" style="right:0" aria-label="Next slide" data-slide="1">${icons.right}</button>
-      <div class="dots">${slides.map((sl, i) => `<button type="button" aria-label="Show slide ${i + 1}: ${escapeHtml(sl.title)}" aria-current="${i === state.slide}" data-goto="${i}"></button>`).join("")}</div>
         </section>
     <section class="sec tint" style="padding-block:0" aria-label="Software"><div class="wrap quick">${software.map(x => `<a href="${href("/software/" + x.slug)}"><span class="q-ico">${icons.layers}</span><span class="q-text"><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.summary)}</small></span><span class="q-go">${icons.arrow}</span></a>`).join("")}</div></section>
     <section class="wrap sec intro"><h2>${company.name}</h2><h3>${company.tagline}</h3>
@@ -495,7 +494,6 @@ function setSlide(n) {
   const h = document.getElementById("hero"); if (!h) return;
   loadSlide(state.slide); loadSlide(state.slide + 1);
   h.querySelectorAll(".slide").forEach((el, i) => {const on = i === state.slide; el.classList.toggle("on", on); el.setAttribute("aria-hidden", String(!on));});
-  h.querySelectorAll(".dots button").forEach((b, i) => b.setAttribute("aria-current", String(i === state.slide)));
 }
 function rerenderMain() {if (currentPath() === "/") rerenderKeepScroll(pages.home());}
 document.addEventListener("keydown", e => {if (e.key === "Escape") {document.querySelectorAll(".dd.open").forEach(x => x.classList.remove("open")); if (state.mobile) {state.mobile = false; rerenderKeepScroll();} } });
