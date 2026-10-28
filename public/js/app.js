@@ -489,7 +489,8 @@ function loadSlide(i) {
   const img = document.querySelectorAll("#hero .slide img")[(i + slides.length) % slides.length];
   if (img && !img.getAttribute("src") && img.dataset.src) img.src = img.dataset.src;
 }
-function setSlide(n) {
+function setSlide(n, auto) {
+  if (!auto && typeof startSlider === "function") startSlider();
   state.slide = (n + slides.length) % slides.length;
   const h = document.getElementById("hero"); if (!h) return;
   loadSlide(state.slide); loadSlide(state.slide + 1);
@@ -528,12 +529,13 @@ addEventListener("scroll", () => {
 addEventListener("hashchange", () => {state.submitted = false; state.errors = {}; state.submitResult = null; if (window.onBeforeRoute) onBeforeRoute(); route(); scrollTo(0, 0);});
 // The hero slides advance on their own, except for visitors who ask for reduced motion, and they pause while the
 // pointer or keyboard focus is on the slider.
-const calm = matchMedia("(prefers-reduced-motion: reduce)");
-let sliderHeld = false;
-document.addEventListener("pointerover", e => {sliderHeld = !!e.target.closest(".hero");});
-document.addEventListener("focusin", e => {sliderHeld = !!e.target.closest(".hero");});
-document.addEventListener("focusout", () => {sliderHeld = false;});
-setInterval(() => {if (!calm.matches && !sliderHeld && currentPath() === "/" && !document.hidden && !state.mobile) setSlide(state.slide + 1);}, 5500);
+// The home-page pictures change every 5 seconds, whether or not the pointer is over them. Using an arrow restarts the 5 seconds.
+let sliderTimer = null;
+function startSlider() {
+  clearInterval(sliderTimer);
+  sliderTimer = setInterval(() => {if (currentPath() === "/" && !document.hidden) setSlide(state.slide + 1, true);}, 5000);
+}
+startSlider();
 // "Skip to main content" link: a hash link would be read as a page route, so focus the content directly.
 document.addEventListener("click", e => {
   const skip = e.target.closest(".skip");
