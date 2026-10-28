@@ -491,7 +491,7 @@ function accountShell(title, body) {
   const eyebrow = home ? "Your account" : `<a href="#/account">Your account</a><span aria-hidden="true"> / </span>${escapeHtml(title)}`;
   const sub = [user.email, user.organisation].filter(Boolean).map(escapeHtml).join(" · ");
   return `<section class="dash-hero"><div class="wrap dash-hero-in">
-      <span class="avatar-wrap">${avatarHtml(user, "lg")}<label class="avatar-cam" for="avatar-file" title="Upload a profile picture" aria-label="Upload a profile picture">${dashIcon("camera")}</label><input type="file" id="avatar-file" accept="image/png,image/jpeg,image/webp" hidden></span>
+      <span class="avatar-wrap"><button type="button" class="avatar-open" data-avatar-open aria-label="View profile picture">${avatarHtml(user, "lg")}</button><label class="avatar-cam" for="avatar-file" title="Upload a profile picture" aria-label="Upload a profile picture">${dashIcon("camera")}</label><input type="file" id="avatar-file" accept="image/png,image/jpeg,image/webp" hidden></span>
       <div class="dash-who"><p class="eyebrow">${eyebrow}</p><h1>${home ? `Welcome back, ${escapeHtml(first)}` : escapeHtml(title)}</h1><p class="sub">${sub}</p></div>
       <div class="dash-actions"><a class="btn light" href="#/generate-quote">${dashIcon("plus")}Generate quote</a><a class="btn ghost" href="#/contact-us">Ask a question</a></div>
     </div></section>
@@ -589,7 +589,7 @@ function accountEdit() {
   const user = Accounts.current();
   const notice = state.notice ? `<div class="note info" role="status"><p>${escapeHtml(state.notice)}</p></div>` : "";
   const error = state.authError ? `<p class="err" role="alert">${escapeHtml(state.authError)}</p>` : "";
-  const photo = `<div class="photo-card"><div class="photo-preview">${avatarHtml(user, "xl")}</div><div class="photo-text"><h2 class="h-sec">Profile picture</h2><p class="muted">JPEG, PNG or WebP. The picture is resized to fit and stored with your account.</p><div class="photo-actions"><label class="btn" for="avatar-file" role="button" tabindex="0">${dashIcon("camera")}${user.avatar ? "Change picture" : "Upload picture"}</label>${user.avatar ? `<button type="button" class="btn line" data-avatar-remove>Remove picture</button>` : ""}</div></div></div>`;
+  const photo = `<div class="photo-card"><div class="photo-preview"><button type="button" class="avatar-open" data-avatar-open aria-label="View profile picture">${avatarHtml(user, "xl")}</button></div><div class="photo-text"><h2 class="h-sec">Profile picture</h2><p class="muted">JPEG, PNG or WebP. The picture is resized to fit and stored with your account.</p><div class="photo-actions"><label class="btn" for="avatar-file" role="button" tabindex="0">${dashIcon("camera")}${user.avatar ? "Change picture" : "Upload picture"}</label>${user.avatar ? `<button type="button" class="btn line" data-avatar-remove>Remove picture</button>` : ""}</div></div></div>`;
   return accountShell("Edit profile", `${notice}${error}${photo}<form class="enq" id="profile-form" novalidate>
     <div class="fields">
       <div class="fld"><label for="name">Full name <span class="req">*</span></label>
@@ -619,6 +619,48 @@ function accountOrders() {
   }
   return accountShell("My orders", `${notice}<div class="box dash-card"><div class="card-head"><h2 class="h-sec">All orders</h2><span class="count-badge">${list.length}</span></div>${activityList(list)}</div>`);
 }
+// Pop-up shown when the profile picture is clicked: the picture, who it belongs to, and an Update button.
+function closeAvatarModal() {
+  const modal = document.getElementById("avatar-modal");
+  if (!modal) return;
+  const opener = modal._opener;
+  modal.remove();
+  document.documentElement.classList.remove("modal-open");
+  if (opener && document.contains(opener)) opener.focus();
+}
+function openAvatarModal() {
+  const user = Accounts.current();
+  if (!user || document.getElementById("avatar-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "avatar-modal";
+  modal.className = "modal-back";
+  modal._opener = document.activeElement;
+  modal.innerHTML = `<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="avatar-modal-title">
+    <button type="button" class="modal-x" data-modal-close aria-label="Close">&times;</button>
+    <div class="modal-pic">${avatarHtml(user, "xxl")}</div>
+    <h2 id="avatar-modal-title">${escapeHtml(user.name || "Your profile")}</h2>
+    <p class="modal-sub">${[user.email, user.organisation].filter(Boolean).map(escapeHtml).join(" · ")}</p>
+    <div class="modal-actions"><button type="button" class="btn lg" data-modal-update>${dashIcon("camera")}${user.avatar ? "Update picture" : "Add picture"}</button>${user.avatar ? '<button type="button" class="btn line" data-avatar-remove>Remove picture</button>' : ""}</div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.documentElement.classList.add("modal-open");
+  const first = modal.querySelector("[data-modal-update]");
+  if (first) first.focus();
+}
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeAvatarModal();
+  if (event.key === "Tab") {
+    const modal = document.getElementById("avatar-modal");
+    if (!modal) return;
+    const items = [...modal.querySelectorAll("button")];
+    const at = items.indexOf(document.activeElement);
+    if (event.shiftKey && at <= 0) { event.preventDefault(); items[items.length - 1].focus(); }
+    else if (!event.shiftKey && at === items.length - 1) { event.preventDefault(); items[0].focus(); }
+  }
+});
+document.addEventListener("click", event => {
+  if (event.target.id === "avatar-modal") closeAvatarModal();
+});
 function historyCsv(filter) {
   const cell = value => '"' + String(value == null ? "" : value).replace(/"/g, '""') + '"';
   const rows = allActivity().filter(a => filter !== "quote" && filter !== "enquiry" ? true : a.kind === filter);
@@ -983,6 +1025,15 @@ function installCustomer() {
     const delNo = event.target.closest("[data-del-no]");
     const removePhoto = event.target.closest("[data-avatar-remove]");
     const csvButton = event.target.closest("[data-hist-csv]");
+    if (event.target.closest("[data-avatar-open]")) { openAvatarModal(); return; }
+    if (event.target.closest("[data-modal-close]")) { closeAvatarModal(); return; }
+    if (event.target.closest("[data-modal-update]")) {
+      const input = document.getElementById("avatar-file");
+      closeAvatarModal();
+      if (input) input.click();
+      return;
+    }
+    if (removePhoto) closeAvatarModal();
     if (csvButton) {
       const url = URL.createObjectURL(new Blob([historyCsv(csvButton.dataset.histCsv)], {type: "text/csv;charset=utf-8"}));
       const link = document.createElement("a");
