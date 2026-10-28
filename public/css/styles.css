@@ -913,3 +913,28 @@ ol.steps .n{display:inline-grid;place-items:center;width:34px;height:34px;flex:n
 /* ===== v10: dark-mode menu row, visible form errors ===== */
 .navrow{background:var(--bg)}
 .enq>.err{margin-top:10px;font-size:14px;font-weight:500;color:var(--danger)}
+
+/* ===== v11: photos keep their own colours; purple stays on buttons and options only ===== */
+.hero{background:#0c0c0e}
+.hero .slide img,.hero .slide.lt img{opacity:1;filter:none}
+.hero .slide::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgb(0 0 0 / 22%) 0%,rgb(0 0 0 / 38%) 55%,rgb(0 0 0 / 55%) 100%)}
+.hero .in{z-index:2}
+.imgbanner{background:#0c0c0e}
+.imgbanner .ib-pic{filter:none;transform:scale(1.02);opacity:1}
+.imgbanner::after{background:linear-gradient(90deg,rgb(0 0 0 / 68%) 0%,rgb(0 0 0 / 40%) 50%,rgb(0 0 0 / 8%) 100%),linear-gradient(0deg,rgb(0 0 0 / 35%),transparent 50%)}
+.ib-fig{background:rgb(0 0 0 / 18%)}
+@media(max-width:820px){.imgbanner::after{background:linear-gradient(180deg,rgb(0 0 0 / 55%),rgb(0 0 0 / 35%))}}
+
+/* ===== v11: order history ===== */
+.hist-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.hist-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.hist-tab{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 16px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--fg);font-size:14px;font-weight:600;text-decoration:none}
+.hist-tab span{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--tint);font-size:12px}
+.hist-tab:hover{border-color:oklch(0.5 0.24 295)}
+.hist-tab[aria-current="page"]{background:linear-gradient(135deg,oklch(0.5 0.24 295),oklch(0.42 0.2 300));border-color:transparent;color:#fff}
+.hist-tab[aria-current="page"] span{background:oklch(1 0 0 / 22%);color:#fff}
+.hist-dl{background:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 16px;border-radius:999px;border:1px solid oklch(0.5 0.24 295);color:oklch(0.45 0.22 295);font-size:14px;font-weight:600;text-decoration:none}
+.hist-dl:hover{background:var(--tint)}
+.hist-dl .di{width:16px;height:16px}
+.hist-month+.hist-month{margin-top:16px}
+:root[data-theme="dark"] .hist-dl{color:oklch(0.8 0.12 295)}
