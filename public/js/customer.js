@@ -463,6 +463,7 @@ const DASH_ICONS = {
   profile: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
   orders: '<path d="m7.5 4.3 9 5.2"/><path d="M21 8v8a2 2 0 0 1-1 1.7l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.7l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
+  history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   quotes: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
   enquiries: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
@@ -499,6 +500,7 @@ function accountShell(title, body) {
       ${item("/account/quotes", "My quotes", "quotes")}
       ${item("/account/enquiries", "My enquiries", "enquiries")}
       ${item("/account/orders", "My orders", "orders")}
+      ${item("/account/history", "Order history", "history")}
       ${item("/account/profile", "My profile", "profile")}
       ${item("/account/profile/edit", "Edit profile", "edit")}
       ${item("/account/settings", "Account settings", "settings")}
@@ -617,6 +619,38 @@ function accountOrders() {
   }
   return accountShell("My orders", `${notice}<div class="box dash-card"><div class="card-head"><h2 class="h-sec">All orders</h2><span class="count-badge">${list.length}</span></div>${activityList(list)}</div>`);
 }
+function historyCsv(filter) {
+  const cell = value => '"' + String(value == null ? "" : value).replace(/"/g, '""') + '"';
+  const rows = allActivity().filter(a => filter !== "quote" && filter !== "enquiry" ? true : a.kind === filter);
+  return "\ufeffReference,Type,Details,Date,Status\r\n" + rows.map(a => [a.id, a.kind === "quote" ? "Quote request" : "Enquiry", a.kind === "quote" ? a.meta : a.title, a.when, "Received"].map(cell).join(",")).join("\r\n");
+}
+function accountHistory() {
+  const all = allActivity();
+  const show = currentQuery().get("show");
+  const filter = show === "quote" || show === "enquiry" ? show : "all";
+  const list = filter === "all" ? all : all.filter(a => a.kind === filter);
+  const counts = {all: all.length, quote: all.filter(a => a.kind === "quote").length, enquiry: all.filter(a => a.kind === "enquiry").length};
+  const tab = (key, label) => `<a class="hist-tab" href="#/account/history${key === "all" ? "" : "?show=" + key}" ${filter === key ? 'aria-current="page"' : ""}>${label}<span>${counts[key]}</span></a>`;
+  if (!all.length) {
+    return accountShell("Order history", `<div class="empty"><h2>No history yet</h2>
+      <p>Every quote request and enquiry you send while signed in is kept here, newest first.</p>
+      <p style="margin-top:16px"><a class="btn" href="#/generate-quote">Generate quote</a></p></div>`);
+  }
+  const monthOf = when => {
+    const d = new Date(when);
+    return Number.isNaN(d.getTime()) ? "Earlier" : d.toLocaleDateString("en-GB", {month: "long", year: "numeric"});
+  };
+  const groups = [];
+  list.forEach(item => {
+    const label = monthOf(item.when);
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(item); else groups.push({label, items: [item]});
+  });
+  const body = groups.length
+    ? groups.map(g => `<div class="box dash-card hist-month"><div class="card-head"><h2 class="h-sec">${escapeHtml(g.label)}</h2><span class="count-badge">${g.items.length}</span></div>${activityList(g.items)}</div>`).join("")
+    : `<div class="empty"><h2>Nothing here</h2><p>You have no ${filter === "quote" ? "quote requests" : "enquiries"} in your history.</p></div>`;
+  return accountShell("Order history", `${listMessage()}<div class="hist-bar"><nav class="hist-tabs" aria-label="Filter history">${tab("all", "All")}${tab("quote", "Quote requests")}${tab("enquiry", "Enquiries")}</nav><button type="button" class="hist-dl" data-hist-csv="${filter}">${dashIcon("arrow")}<span>Download CSV</span></button></div>${body}`);
+}
 function accountQuotes() {
   const user = Accounts.current();
   const list = Records.quotesFor(user.id);
@@ -713,6 +747,7 @@ function accountView(path) {
   if (path === "/account/profile") return accountProfile();
   if (path === "/account/profile/edit") return accountEdit();
   if (path === "/account/orders") return accountOrders();
+  if (path === "/account/history") return accountHistory();
   if (path === "/account/quotes") return accountQuotes();
   if (path === "/account/enquiries") return accountEnquiries();
   if (path === "/account/settings") return accountSettings();
@@ -730,6 +765,7 @@ function accountTitle(path) {
     "/account/profile": "My profile — SURGICISS LTD",
     "/account/profile/edit": "Edit profile — SURGICISS LTD",
     "/account/orders": "My orders — SURGICISS LTD",
+    "/account/history": "Order history — SURGICISS LTD",
     "/account/quotes": "My quotes — SURGICISS LTD",
     "/account/enquiries": "My enquiries — SURGICISS LTD",
     "/account/settings": "Account settings — SURGICISS LTD"
@@ -946,6 +982,15 @@ function installCustomer() {
     const delYes = event.target.closest("[data-del-yes]");
     const delNo = event.target.closest("[data-del-no]");
     const removePhoto = event.target.closest("[data-avatar-remove]");
+    const csvButton = event.target.closest("[data-hist-csv]");
+    if (csvButton) {
+      const url = URL.createObjectURL(new Blob([historyCsv(csvButton.dataset.histCsv)], {type: "text/csv;charset=utf-8"}));
+      const link = document.createElement("a");
+      link.href = url; link.download = "surgiciss-order-history.csv";
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      return;
+    }
     if (del) {state.confirmDelete = del.dataset.del; state.notice = ""; state.deleteError = ""; refreshAccount(); return;}
     if (delNo) {state.confirmDelete = null; refreshAccount(); return;}
     if (delYes) {
