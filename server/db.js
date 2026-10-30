@@ -1,4 +1,5 @@
 import mysql from "mysql2/promise";
+import { readFileSync } from "node:fs";
 
 export function createDatabase(cfg) {
   const c = cfg || {};
@@ -12,6 +13,19 @@ export function createDatabase(cfg) {
     throw new Error("DB config missing host - check ENV");
   }
 
+  // Load Aiven's trusted CA certificate
+  const caFile = process.env.DB_SSL_CA_FILE || "/etc/secrets/aiven-ca.pem";
+
+  let caCertificate;
+
+  try {
+    caCertificate = readFileSync(caFile);
+  } catch (error) {
+    throw new Error(
+      `Unable to load database SSL CA certificate from ${caFile}: ${error.message}`
+    );
+  }
+
   const pool = mysql.createPool({
     host,
     port: Number(port),
@@ -20,11 +34,14 @@ export function createDatabase(cfg) {
     database,
     waitForConnections: true,
     connectionLimit: 10,
-    ssl: { rejectUnauthorized: true },
+    ssl: {
+      ca: caCertificate,
+      rejectUnauthorized: true,
+    },
   });
 
   return {
-    // FIXED: return rows only, not [rows, fields]
+    // Return rows only, not [rows, fields]
     query: async (sql, params) => {
       const [rows] = await pool.query(sql, params);
       return rows;
