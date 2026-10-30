@@ -114,13 +114,13 @@ test("login is rate limited", async () => {
   await s.close();
 });
 
-test("guest submissions are stored and not tied to an account", async () => {
+test("guests cannot request quotes but can submit public enquiries", async () => {
   const s = await start(); const guest = s.client();
   const q = await guest("POST", "/api/submissions", {kind: "quote", record: quoteRecord()});
-  assert.equal(q.status, 201); assert.match(q.data.id, /^Q-\d{8}-[0-9A-F]{4}$/);
+  assert.equal(q.status, 401);
+  assert.equal(s.db.sqlite.prepare("SELECT COUNT(*) AS n FROM quotes").get().n, 0);
   const e = await guest("POST", "/api/submissions", {kind: "enquiry", record: enquiryRecord});
   assert.equal(e.status, 201); assert.match(e.data.id, /^E-/);
-  assert.equal(s.db.sqlite.prepare("SELECT user_id FROM quotes").get().user_id, null);
   assert.equal((await guest("GET", "/api/me/records")).status, 401);
   await s.close();
 });
@@ -142,6 +142,7 @@ test("signed-in submissions appear only in that customer's records", async () =>
 
 test("submission validation", async () => {
   const s = await start(); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
   const bad = async record => (await api("POST", "/api/submissions", {kind: "quote", record})).status;
   assert.equal(await bad({...quoteRecord(), lines: []}), 400);
   assert.equal(await bad({...quoteRecord(), lines: [{ref: "x", quantity: 0}]}), 400);
