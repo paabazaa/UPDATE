@@ -20,7 +20,7 @@ export function createDatabase(cfg) {
     database,
     waitForConnections: true,
     connectionLimit: 10,
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: true },
   });
 
   return {
