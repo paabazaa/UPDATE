@@ -278,7 +278,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       } catch (error) {
         if (isDuplicate(error)) throw new HttpError(409, "An account with that email already exists. Try logging in.");
         console.error("[signup INSERT failed]", error);
-        throw new HttpError(500, process.env.DEBUG_ERRORS === "true" ? `DB Error: ${error.message} | Code: ${error.code} | SQL: ${error.sqlMessage || ""}` : "Your account could not be created right now. Please try again in a little while.");
+        throw new HttpError(500, "Your account could not be created right now. Please try again in a little while.");
       }
       const cookie = await startSession(id);
       const row = (await db.query("SELECT * FROM users WHERE id = ?", [id]))[0];
@@ -367,7 +367,6 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
           await db.execute("DELETE FROM password_resets WHERE user_id = ?", [row.id]);
           await db.execute("INSERT INTO password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [sha256(token), row.id, sqlDate(now), sqlDate(new Date(now.getTime() + HOUR))]);
           const base = config.siteUrl || config.allowedOrigins[0] || "";
-          console.log(`\n[DEV RESET LINK] For ${email}:\n${base}/#/reset-password?token=${token}\n`);
           try {
             await mailer.send({
               to: email,
@@ -375,7 +374,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
               text: `Use this link within one hour to choose a new password:\n\n${base}/#/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.`
             });
           } catch (error) {
-            console.error("[mail] Could not send reset email (using dev link above):", error.message);
+            console.error("[mail] Could not send password-reset email.");
           }
         } else {
           console.log(`[forgot] No account for ${email} - nothing to send`);
@@ -401,6 +400,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       const body = await readBody(req);
       const user = await sessionUser(req);
       if (body.kind === "quote") {
+        if (!user) throw new HttpError(401, "Please sign in or create an account before requesting a quote.");
         const input = cleanQuote(body.record);
         if (input.error) throw new HttpError(400, input.error);
         return {status: 201, body: {ok: true, id: await saveRecord("quotes", "Q", user, input.value)}};
