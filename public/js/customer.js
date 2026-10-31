@@ -619,6 +619,36 @@ function accountOrders() {
   }
   return accountShell("My orders", `${notice}<div class="box dash-card"><div class="card-head"><h2 class="h-sec">All orders</h2><span class="count-badge">${list.length}</span></div>${activityList(list)}</div>`);
 }
+// Pop-up shown after a quote request or an enquiry has been sent and saved.
+function closeThanksModal() {
+  const modal = document.getElementById("thanks-modal");
+  if (!modal) return;
+  modal.remove();
+  document.documentElement.classList.remove("modal-open");
+}
+function openThanksModal() {
+  if (document.getElementById("thanks-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "thanks-modal";
+  modal.className = "modal-back";
+  modal.innerHTML = `<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="thanks-title" aria-describedby="thanks-text">
+    <button type="button" class="modal-x" data-thanks-close aria-label="Close">&times;</button>
+    <div class="modal-pic"><span class="thanks-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span></div>
+    <h2 id="thanks-title">Thank You!</h2>
+    <p id="thanks-text" class="modal-sub">Your request has been successfully received and is currently being processed. You will be notified shortly</p>
+    <div class="modal-actions"><button type="button" class="btn lg" data-thanks-close>OK</button></div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.documentElement.classList.add("modal-open");
+  const ok = modal.querySelector(".btn");
+  if (ok) ok.focus();
+}
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeThanksModal();
+});
+document.addEventListener("click", event => {
+  if (event.target.closest("[data-thanks-close]") || event.target.id === "thanks-modal") closeThanksModal();
+});
 // Pop-up shown when the profile picture is clicked: the picture, who it belongs to, and an Update button.
 function closeAvatarModal() {
   const modal = document.getElementById("avatar-modal");
@@ -881,6 +911,7 @@ async function handleEnquirySubmit(event) {
   window.scrollTo(0, 0);
   const done = document.querySelector(".done");
   if (done) {done.setAttribute("tabindex", "-1"); done.focus({preventScroll: true});}
+  openThanksModal();
 }
 
 async function submitQuote(form) {
@@ -947,6 +978,7 @@ async function submitQuote(form) {
   window.scrollTo(0, 0);
   const done = document.querySelector(".done");
   if (done) {done.setAttribute("tabindex", "-1"); done.focus({preventScroll: true});}
+  openThanksModal();
 }
 
 function downloadQuote(id) {
