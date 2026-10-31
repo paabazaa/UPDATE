@@ -31,6 +31,7 @@ const company = {
   tagline: "We're dedicated to best surgical outcomes.",
   address: companyConfig.location || "Bolgatanga, Upper East Region, Ghana",
   phone: companyConfig.telephone || "+233542205201",
+  whatsapp: companyConfig.whatsapp || "+233542205201",
   email: companyConfig.email || "surgiciss@gmail.com",
   registration: "",
   hours: "",
@@ -48,6 +49,7 @@ const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": 
 // Safe telephone and email link helpers.
 const phoneLink = () => `<a href="tel:${escapeHtml(company.phone)}">${escapeHtml(company.phone)}</a>`;
 const emailLink = () => `<a href="mailto:${escapeHtml(company.email)}">${escapeHtml(company.email)}</a>`;
+const whatsappLink = () => `<a href="https://wa.me/${escapeHtml(company.whatsapp.replace(/\D/g, ""))}" target="_blank" rel="noopener noreferrer">${escapeHtml(company.whatsapp)}</a>`;
 
 // Inline SVG icons used across the page templates.
 const icons = {
@@ -58,6 +60,7 @@ const icons = {
   box: '<svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8v8a2 2 0 0 1-1 1.7l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.7l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>',
   pin: '<svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
   phone: '<svg class="ico" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg>',
+  whatsapp: '<svg class="ico" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.3A8.4 8.4 0 1 1 21 11.5Z"/><path d="M9 8.8c.3 2.6 2.4 4.7 5.2 5.4l1.2-1.3-1.9-.9-.8.6a4.2 4.2 0 0 1-1.9-1.9l.6-.8-.9-1.9Z"/></svg>',
   mail: '<svg class="ico" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>',
   down: '<svg class="ico" style="margin:0" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
   left: '<svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
@@ -152,6 +155,7 @@ function footer() {
       <li>${icons.pin}<span>${escapeHtml(company.address)}</span></li>
       <li>${icons.phone}${phoneLink()}</li>
       <li>${icons.mail}${emailLink()}</li>
+      <li>${icons.whatsapp}${whatsappLink()}</li>
     </ul>
       <a class="go" href="#/contact-us">Send an enquiry</a></div>
     <div><h2>Software</h2>
@@ -352,6 +356,7 @@ const pages = {
         <div><dt>Address</dt><dd>${escapeHtml(company.address)}</dd></div>
         <div><dt>Telephone</dt><dd>${phoneLink()}</dd></div>
         <div><dt>Email</dt><dd>${emailLink()}</dd></div>
+        <div><dt>WhatsApp</dt><dd>${whatsappLink()}</dd></div>
         <div><dt>Office hours</dt><dd>${escapeHtml(detail(company.hours))}</dd></div>
         <div><dt>Company registration</dt><dd>${escapeHtml(detail(company.registration))}</dd></div>
         </dl></div>
@@ -375,6 +380,7 @@ const pages = {
       <div class="box"><h2 class="h-sec">Prefer to speak to us?</h2>
         <p>${phoneLink()}</p>
         <p style="margin-top:0">${emailLink()}</p>
+        <p style="margin-top:0">${whatsappLink()}</p>
         <p style="margin-top:8px">${escapeHtml(detail(company.hours, "Opening hours available on request"))}</p>
       </div></aside></div></section>`;
   },
