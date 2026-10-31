@@ -9,6 +9,7 @@ const SURGICISS_CONFIG = {
   company: {
     name: "SURGICISS LTD",
     telephone: "+233542205201",
+    whatsapp: "+233542205201",
     email: "surgiciss@gmail.com",
     location: "Bolgatanga, Upper East Region, Ghana"
   }
