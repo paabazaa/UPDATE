@@ -21,17 +21,34 @@ const IMAGES = {
   "heroSterileProcessing": "images/hero-sterile-services.jpg",
   "logo": "images/logo.png"
 };
+
+// Official SURGICISS LTD contact information.
+// Values are read from config.js, with fallbacks.
+const companyConfig = window.SURGICISS_CONFIG?.company || {};
+
 const company = {
-  name: "SURGICISS LTD", tagline: "We're dedicated to best surgical outcomes.",
-  address: "", phone: "", email: "", registration: "", hours: "",
+  name: "SURGICISS LTD",
+  tagline: "We're dedicated to best surgical outcomes.",
+  address: companyConfig.location || "Bolgatanga, Upper East Region, Ghana",
+  phone: companyConfig.telephone || "+233542205201",
+  email: companyConfig.email || "surgiciss@gmail.com",
+  registration: "",
+  hours: "",
   intro: "SURGICISS LTD works with hospitals, surgery centres and sterile services departments to support the consistent delivery of clean, sterile, functional and relevant surgical instruments, equipment and supplies — on time and on budget."
 };
+
 const detail = (v, fb = "Available on request") => (v && v.trim() ? v : fb);
 const {productCategories, products, software, services, programmes} = DATA;
 const imageUrl = k => IMAGES[k];
 const catName = s => (productCategories.find(c => c.slug === s) || {}).name || s;
+
 // Escapes text before it is placed inside an HTML template.
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+
+// Safe telephone and email link helpers.
+const phoneLink = () => `<a href="tel:${escapeHtml(company.phone)}">${escapeHtml(company.phone)}</a>`;
+const emailLink = () => `<a href="mailto:${escapeHtml(company.email)}">${escapeHtml(company.email)}</a>`;
+
 // Inline SVG icons used across the page templates.
 const icons = {
   tick: '<svg class="ico" style="margin:0;width:18px;height:18px" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>',
@@ -74,8 +91,10 @@ const crumbs = list => {
   return `<nav aria-label="Breadcrumb" class="crumbs" style="margin-top:16px"><ol class="crumbs" style="margin:0">${items.join("")}</ol></nav>`;
 };
 const banner = (title, cr = [], lead = "") => `<div class="banner"><div class="wrap"><h1>${escapeHtml(title)}</h1>${lead ? `<p class="lead">${escapeHtml(lead)}</p>` : ""}${crumbs(cr)}</div></div>`;
+
 // Banner with a wide product or software picture behind the title.
 const imageBanner = (title, cr, lead, img, kind) => `<div class="banner imgbanner"><img class="ib-pic" src="${imageUrl(img)}" alt="" aria-hidden="true" width="1600" height="700" fetchpriority="high"><div class="wrap"><figure class="ib-fig"><img src="${imageUrl(img)}" alt="${escapeHtml(title)}" width="1000" height="800" decoding="async"></figure><span class="ib-kind">${escapeHtml(kind)}</span><h1>${escapeHtml(title)}</h1>${lead ? `<p class="lead">${escapeHtml(lead)}</p>` : ""}${crumbs(cr)}</div></div>`;
+
 // Closing banner with the two main actions.
 const callToAction = (h, b) => `<section class="cta"><div class="wrap"><div><h2>${escapeHtml(h)}</h2><p>${escapeHtml(b)}</p>
   </div>
@@ -130,10 +149,10 @@ function footer() {
     <div><h2>Contact Us</h2>
     <div class="rule"></div>
     <ul>
-      <li>${icons.pin}<span>${escapeHtml(detail(company.address, "Address available on request"))}</span></li>
-      <li>${icons.phone}<span>${escapeHtml(detail(company.phone, "Telephone available on request"))}</span></li>
-      <li>${icons.mail}<span>${escapeHtml(detail(company.email, "Use the enquiry form"))}</span></li>
-        </ul>
+      <li>${icons.pin}<span>${escapeHtml(company.address)}</span></li>
+      <li>${icons.phone}${phoneLink()}</li>
+      <li>${icons.mail}${emailLink()}</li>
+    </ul>
       <a class="go" href="#/contact-us">Send an enquiry</a></div>
     <div><h2>Software</h2>
         <div class="rule"></div>
@@ -226,7 +245,7 @@ const pages = {
       <h3>How we work</h3>
       <p>Every recommendation we make should be defensible: traceable to the department's own records, achievable with the staff and equipment available, and measurable once it is in place. Where we do not yet hold information — a specification, a certification, a lead time — we say so rather than fill the gap.</p>
       <h3>Company details</h3>
-      <dl class="kv cols"><div><dt>Registered name</dt><dd>${company.name}</dd></div><div><dt>Company registration</dt><dd>${escapeHtml(detail(company.registration))}</dd></div><div><dt>Registered address</dt><dd>${escapeHtml(detail(company.address))}</dd></div><div><dt>Office hours</dt><dd>${escapeHtml(detail(company.hours))}</dd></div></dl></div>
+      <dl class="kv cols"><div><dt>Registered name</dt><dd>${company.name}</dd></div><div><dt>Company registration</dt><dd>${escapeHtml(detail(company.registration))}</dd></div><div><dt>Registered address</dt><dd>${escapeHtml(company.address)}</dd></div><div><dt>Office hours</dt><dd>${escapeHtml(detail(company.hours))}</dd></div></dl></div>
       <div><img class="wideimg" style="aspect-ratio:1920/1000" src="${imageUrl("heroSterileProcessing")}" alt="Sterile services technicians at work" width="1349" height="403" loading="lazy" decoding="async"></div></div></section>`
       + callToAction("Considering a change in your department?", "Send us the detail and we will tell you honestly whether we can help.");
   },
@@ -330,7 +349,12 @@ const pages = {
     return banner("Contact us", [{label: "Contact us"}], "Tell us what your department is dealing with. We answer enquiries ourselves rather than routing them through a call centre.")
       + `<section class="wrap sec"><div class="two contact"><aside style="display:grid;gap:24px;align-content:start"><div class="box tint"><h2 class="h-sec">SURGICISS LTD</h2>
         <dl class="kv">
-        <div><dt>Address</dt><dd>${escapeHtml(detail(company.address, "Address available on request"))}</dd></div><div><dt>Telephone</dt><dd>${escapeHtml(detail(company.phone, "Telephone available on request"))}</dd></div><div><dt>Email</dt><dd>${escapeHtml(detail(company.email, "Use the enquiry form"))}</dd></div><div><dt>Office hours</dt><dd>${escapeHtml(detail(company.hours))}</dd></div><div><dt>Company registration</dt><dd>${escapeHtml(detail(company.registration))}</dd></div></dl></div>
+        <div><dt>Address</dt><dd>${escapeHtml(company.address)}</dd></div>
+        <div><dt>Telephone</dt><dd>${phoneLink()}</dd></div>
+        <div><dt>Email</dt><dd>${emailLink()}</dd></div>
+        <div><dt>Office hours</dt><dd>${escapeHtml(detail(company.hours))}</dd></div>
+        <div><dt>Company registration</dt><dd>${escapeHtml(detail(company.registration))}</dd></div>
+        </dl></div>
         <div class="box"><h2 class="h-sec">Who we work with</h2><p>${escapeHtml(company.intro)}</p>
           </div>
           </aside>
@@ -349,7 +373,10 @@ const pages = {
         </ol>
         </div>
       <div class="box"><h2 class="h-sec">Prefer to speak to us?</h2>
-        <p>${escapeHtml(detail(company.phone, "Telephone available on request"))}</p><p style="margin-top:0">${escapeHtml(detail(company.email, "Use the form on this page"))}</p><p style="margin-top:8px">${escapeHtml(detail(company.hours, "Opening hours available on request"))}</p></div></aside></div></section>`;
+        <p>${phoneLink()}</p>
+        <p style="margin-top:0">${emailLink()}</p>
+        <p style="margin-top:8px">${escapeHtml(detail(company.hours, "Opening hours available on request"))}</p>
+      </div></aside></div></section>`;
   },
   faq() {
     const faqs = [
@@ -403,7 +430,7 @@ const pages = {
   terms() {
     return banner("Terms of use", [{label: "Terms of use"}]) + `<section class="wrap narrow sec"><div class="rich">
       <h2 class="lt">About this site</h2>
-      <p>This website is operated by ${company.name}, company registration ${escapeHtml(detail(company.registration))}, registered at ${escapeHtml(detail(company.address))}. By using the site you accept these terms.</p>
+      <p>This website is operated by ${company.name}, company registration ${escapeHtml(detail(company.registration))}, registered at ${escapeHtml(company.address)}. By using the site you accept these terms.</p>
       <h2 class="lt">Product information</h2>
         <p>Descriptions, specifications and images are provided as a guide. Where a specification is marked as pending it has not yet been confirmed and must not be relied on. Always confirm the current specification with us before ordering or writing a device into a local procedure.</p>
       <h2 class="lt">Not clinical advice</h2>
@@ -426,6 +453,7 @@ const pages = {
       </section>`;
   }
 };
+
 function searchResults(idx) {
   const term = state.q.trim().toLowerCase();
   if (term.length < 2) return `<p class="muted" style="font-size:14px">Type at least two characters to search.</p>`;
@@ -456,6 +484,7 @@ function route() {
   state.menu = null; state.mobile = false;
   render(html);
 }
+
 let lastMain = "";
 function render(main) {
   if (main !== undefined) lastMain = main;
@@ -484,6 +513,7 @@ document.addEventListener("click", e => {
   else if (t.id === "again") {state.submitted = false; state.errors = {}; route();}
   else if (t.id === "totop") scrollTo({top: 0, behavior: "smooth"});
 });
+
 // Slide pictures are fetched only when they are about to be shown, so the home page does not download all of them at once.
 function loadSlide(i) {
   const img = document.querySelectorAll("#hero .slide img")[(i + slides.length) % slides.length];
@@ -497,7 +527,9 @@ function setSlide(n, auto) {
   h.querySelectorAll(".slide").forEach((el, i) => {const on = i === state.slide; el.classList.toggle("on", on); el.setAttribute("aria-hidden", String(!on));});
 }
 function rerenderMain() {if (currentPath() === "/") rerenderKeepScroll(pages.home());}
+
 document.addEventListener("keydown", e => {if (e.key === "Escape") {document.querySelectorAll(".dd.open").forEach(x => x.classList.remove("open")); if (state.mobile) {state.mobile = false; rerenderKeepScroll();} } });
+
 document.addEventListener("submit", e => {
   e.preventDefault();
   if (e.target.id === "newsletter") {
@@ -515,6 +547,7 @@ document.addEventListener("submit", e => {
     handleEnquirySubmit(e);
   }
 });
+
 document.addEventListener("input", e => {
   if (e.target.id === "site-search") {
     state.q = e.target.value;
@@ -522,11 +555,14 @@ document.addEventListener("input", e => {
     document.getElementById("results").innerHTML = searchResults(idx);
   }
 });
+
 addEventListener("scroll", () => {
   const h = document.getElementById("hdr"); if (h) h.classList.toggle("stuck", scrollY > 8);
   document.getElementById("totop").hidden = scrollY < 400;
 }, {passive: true});
+
 addEventListener("hashchange", () => {state.submitted = false; state.errors = {}; state.submitResult = null; if (window.onBeforeRoute) onBeforeRoute(); route(); scrollTo(0, 0);});
+
 // The hero slides advance on their own, except for visitors who ask for reduced motion, and they pause while the
 // pointer or keyboard focus is on the slider.
 // The home-page pictures change every 5 seconds, whether or not the pointer is over them. Using an arrow restarts the 5 seconds.
@@ -536,6 +572,7 @@ function startSlider() {
   sliderTimer = setInterval(() => {if (currentPath() === "/" && !document.hidden) setSlide(state.slide + 1, true);}, 5000);
 }
 startSlider();
+
 // "Skip to main content" link: a hash link would be read as a page route, so focus the content directly.
 document.addEventListener("click", e => {
   const skip = e.target.closest(".skip");
@@ -544,8 +581,10 @@ document.addEventListener("click", e => {
   const main = document.getElementById("main");
   if (main) {main.focus(); main.scrollIntoView();}
 });
+
 try {const s = localStorage.getItem("surgiciss-theme"); if (s === "dark" || s === "light") document.documentElement.dataset.theme = s;} catch (e) {}
 if (window.installCustomer) installCustomer();
+
 // With the API on, pages that depend on the account wait to learn whether the visitor is signed in. Every other page is drawn
 // straight away, and the header is refreshed afterwards if the visitor turns out to be signed in.
 if (window.Accounts && Accounts.pending()) {
