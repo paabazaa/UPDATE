@@ -878,6 +878,9 @@ async function handleEnquirySubmit(event) {
   state.submitted = true;
   state.submitResult = {delivered: true, id: result.id || record.id};
   route();
+  window.scrollTo(0, 0);
+  const done = document.querySelector(".done");
+  if (done) {done.setAttribute("tabindex", "-1"); done.focus({preventScroll: true});}
 }
 
 async function submitQuote(form) {
@@ -941,6 +944,9 @@ async function submitQuote(form) {
   state.submitted = true;
   state.lastQuoteId = record.id;
   route();
+  window.scrollTo(0, 0);
+  const done = document.querySelector(".done");
+  if (done) {done.setAttribute("tabindex", "-1"); done.focus({preventScroll: true});}
 }
 
 function downloadQuote(id) {
