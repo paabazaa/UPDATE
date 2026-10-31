@@ -39,7 +39,11 @@ export function loadConfig(env = process.env) {
       port: Number(env.SMTP_PORT || 587),
       user: env.SMTP_USER || "",
       password: env.SMTP_PASSWORD || "",
-      secure: toBool(env.SMTP_SECURE, false)
+      secure: toBool(env.SMTP_SECURE, false),
+      // Where new quote requests and enquiries are announced. Set NOTIFY_EMAIL to change it.
+      notifyTo: env.NOTIFY_EMAIL || "surgiciss@gmail.com",
+      // Optional: send mail through Resend's web API instead of SMTP (hosts such as Render's free plan block SMTP ports).
+      resendKey: env.RESEND_API_KEY || ""
     }
   };
 }
