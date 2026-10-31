@@ -20,9 +20,16 @@ async function initDb() {
     `CREATE TABLE IF NOT EXISTS enquiries (id VARCHAR(36) PRIMARY KEY, reference VARCHAR(50) NOT NULL UNIQUE, user_id VARCHAR(36) NULL, contact_email VARCHAR(254) NOT NULL, status VARCHAR(50) NOT NULL, payload JSON NOT NULL, created_at DATETIME NOT NULL)`,
     `CREATE TABLE IF NOT EXISTS newsletter_subscribers (email VARCHAR(254) PRIMARY KEY, created_at DATETIME NOT NULL)`
   ];
+
   for (const sql of tables) {
-    try { await db.execute(sql); console.log("[initDb] OK"); } catch (e) { console.log("[initDb] err", e.message); }
+    try {
+      await db.execute(sql);
+      console.log("[initDb] OK");
+    } catch (e) {
+      console.log("[initDb] err", e.message);
+    }
   }
+
   try {
     await db.execute("ALTER TABLE users MODIFY phone VARCHAR(255) NULL DEFAULT ''");
     await db.execute("ALTER TABLE users MODIFY organisation VARCHAR(255) NULL DEFAULT ''");
@@ -30,6 +37,7 @@ async function initDb() {
     await db.execute("ALTER TABLE users MODIFY city VARCHAR(255) NULL DEFAULT ''");
     await db.execute("ALTER TABLE users MODIFY delivery_location TEXT NULL");
   } catch {}
+
   console.log("[initDb] Database ready!");
 }
 
@@ -42,47 +50,212 @@ const clientPaths = [
   path.join(process.cwd(), "public"),
   path.join(process.cwd(), "client", "build")
 ];
+
 let clientDist = null;
+
 for (const p of clientPaths) {
-  if (fs.existsSync(p) && fs.existsSync(path.join(p, "index.html"))) {
-    clientDist = p;
+  if (
+    fs.existsSync(p) &&
+    fs.existsSync(path.join(p, "index.html"))
+  ) {
+    clientDist = path.resolve(p);
     break;
   }
 }
-console.log("[static] Serving client from:", clientDist || "NOT FOUND - using API only");
+
+console.log(
+  "[static] Serving client from:",
+  clientDist || "NOT FOUND - using API only"
+);
+
+// Static file MIME types
+const contentTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".htm": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
+  ".pdf": "application/pdf"
+};
+
+// Apply baseline HTTP security headers
+function applySecurityHeaders(req, res) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()"
+  );
+
+  // Enable HSTS only in production over HTTPS.
+  // This supports deployments behind HTTPS reverse proxies.
+  const forwardedProto = (
+    req.headers["x-forwarded-proto"] || ""
+  ).split(",")[0].trim().toLowerCase();
+
+  if (
+    config.nodeEnv === "production" &&
+    forwardedProto === "https"
+  ) {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000"
+    );
+  }
+}
+
+// Determine appropriate caching for static files
+function setStaticCacheHeaders(res, filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+
+  if (ext === ".html" || ext === ".htm") {
+    res.setHeader("Cache-Control", "no-cache, must-revalidate");
+    return;
+  }
+
+  res.setHeader(
+    "Cache-Control",
+    "public, max-age=86400"
+  );
+}
 
 const server = http.createServer((req, res) => {
-  res.setHeader("Cache-Control", "no-store");
+  applySecurityHeaders(req, res);
 
-  // If /api/* or /auth/* -> go to API
-  if (req.url.startsWith("/api/") || req.url.startsWith("/auth/")) {
+  // API and authentication requests must not be cached.
+  if (
+    req.url.startsWith("/api/") ||
+    req.url.startsWith("/auth/")
+  ) {
+    res.setHeader("Cache-Control", "no-store");
     return apiApp(req, res);
   }
 
-  // If client exists, try to serve static file
-  if (clientDist) {
-    let filePath = path.join(clientDist, req.url === "/" ? "index.html" : req.url.split("?")[0]);
-    // If file is a directory or has no extension, serve index.html (for Vue/React hash router)
-    if (!path.extname(filePath) || req.url.includes("#") || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-      filePath = path.join(clientDist, "index.html");
+  // Serve static website files.
+  if (clientDist && (req.method === "GET" || req.method === "HEAD")) {
+    let pathname;
+
+    try {
+      pathname = decodeURIComponent(
+        new URL(req.url, "http://localhost").pathname
+      );
+    } catch {
+      res.writeHead(400, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+
+      return res.end("Bad Request");
     }
-    if (fs.existsSync(filePath)) {
-      const ext = path.extname(filePath);
-      const types = { ".html": "text/html", ".js": "application/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml" };
-      res.setHeader("Content-Type", types[ext] || "application/octet-stream");
-      return fs.createReadStream(filePath).pipe(res);
+
+    // Resolve the requested file safely inside the client directory.
+    const requestedPath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+
+    const filePath = path.resolve(clientDist, requestedPath);
+
+    // Prevent directory traversal outside the client directory.
+    if (
+      filePath !== clientDist &&
+      !filePath.startsWith(clientDist + path.sep)
+    ) {
+      res.writeHead(403, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+
+      return res.end("Forbidden");
+    }
+
+    let finalPath = filePath;
+
+    // Check whether the requested file exists.
+    let fileExists = false;
+
+    try {
+      fileExists =
+        fs.existsSync(finalPath) &&
+        fs.statSync(finalPath).isFile();
+    } catch {
+      fileExists = false;
+    }
+
+    // Support frontend routes without file extensions.
+    if (!fileExists) {
+      const hasExtension = Boolean(path.extname(pathname));
+
+      if (!hasExtension || pathname === "/") {
+        finalPath = path.join(clientDist, "index.html");
+        fileExists = fs.existsSync(finalPath);
+      }
+    }
+
+    if (fileExists) {
+      const ext = path.extname(finalPath).toLowerCase();
+
+      res.setHeader(
+        "Content-Type",
+        contentTypes[ext] || "application/octet-stream"
+      );
+
+      setStaticCacheHeaders(res, finalPath);
+
+      if (req.method === "HEAD") {
+        res.writeHead(200);
+        return res.end();
+      }
+
+      const stream = fs.createReadStream(finalPath);
+
+      stream.on("error", () => {
+        if (!res.headersSent) {
+          res.writeHead(500, {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-store"
+          });
+        }
+
+        if (!res.writableEnded) {
+          res.end("Internal Server Error");
+        }
+      });
+
+      return stream.pipe(res);
     }
   }
 
-  // Fallback to API for other routes
+  // Fallback to API for other routes.
+  res.setHeader("Cache-Control", "no-store");
   return apiApp(req, res);
 });
 
 const port = config.port || Number(process.env.PORT) || 10000;
 
-initDb().then(() => {
-  server.listen(port, () => console.log(`SURGICISS full stack running on port ${port}`));
-}).catch(err => {
-  console.error("initDb failed", err);
-  server.listen(port, () => console.log(`Running on port ${port} despite DB init error`));
-});
+initDb()
+  .then(() => {
+    server.listen(port, () => {
+      console.log(`SURGICISS full stack running on port ${port}`);
+    });
+  })
+  .catch(err => {
+    console.error("initDb failed", err);
+
+    server.listen(port, () => {
+      console.log(`Running on port ${port} despite DB init error`);
+    });
+  });
