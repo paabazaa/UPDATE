@@ -619,6 +619,54 @@ function accountOrders() {
   }
   return accountShell("My orders", `${notice}<div class="box dash-card"><div class="card-head"><h2 class="h-sec">All orders</h2><span class="count-badge">${list.length}</span></div>${activityList(list)}</div>`);
 }
+// Asks "Are you sure?" before logging out. Yes logs out and opens the homepage; No (or Esc, or a click outside) changes nothing.
+function closeLogoutModal() {
+  const modal = document.getElementById("logout-modal");
+  if (!modal) return;
+  const opener = modal._opener;
+  modal.remove();
+  document.documentElement.classList.remove("modal-open");
+  if (opener && document.contains(opener)) opener.focus();
+}
+function openLogoutModal() {
+  if (document.getElementById("logout-modal")) return;
+  const modal = document.createElement("div");
+  modal.id = "logout-modal";
+  modal.className = "modal-back";
+  modal._opener = document.activeElement;
+  modal.innerHTML = `<div class="modal-card" role="alertdialog" aria-modal="true" aria-labelledby="logout-title" aria-describedby="logout-text">
+    <div class="modal-pic"><span class="thanks-tick logout-ico" aria-hidden="true">${dashIcon("logout")}</span></div>
+    <h2 id="logout-title">Log out?</h2>
+    <p id="logout-text" class="modal-sub">Are you sure you want to log out?</p>
+    <div class="modal-actions row"><button type="button" class="btn lg" data-logout-yes>Yes</button><button type="button" class="btn lg line" data-logout-no>No</button></div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.documentElement.classList.add("modal-open");
+  modal.querySelector("[data-logout-no]").focus();
+}
+function confirmLogout() {
+  closeLogoutModal();
+  Accounts.logout();
+  const home = location.hash === "" || location.hash === "#" || location.hash === "#/";
+  location.hash = "#/";
+  if (home) route();
+  window.scrollTo(0, 0);
+}
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeLogoutModal();
+  if (event.key === "Tab") {
+    const modal = document.getElementById("logout-modal");
+    if (!modal) return;
+    const items = [...modal.querySelectorAll("button")];
+    const at = items.indexOf(document.activeElement);
+    if (event.shiftKey && at <= 0) { event.preventDefault(); items[items.length - 1].focus(); }
+    else if (!event.shiftKey && at === items.length - 1) { event.preventDefault(); items[0].focus(); }
+  }
+});
+document.addEventListener("click", event => {
+  if (event.target.closest("[data-logout-yes]")) confirmLogout();
+  else if (event.target.closest("[data-logout-no]") || event.target.id === "logout-modal") closeLogoutModal();
+});
 // Pop-up shown after a quote request or an enquiry has been sent and saved.
 function closeThanksModal() {
   const modal = document.getElementById("thanks-modal");
@@ -1135,8 +1183,7 @@ function installCustomer() {
     } else if (download) {
       downloadQuote(download.dataset.download);
     } else if (logout) {
-      Accounts.logout();
-      location.hash = "#/";
+      openLogoutModal();
     }
   });
 
