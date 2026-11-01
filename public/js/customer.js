@@ -204,12 +204,25 @@ function quoteText(record) {
     record.requirements || "None given"
   ].join("\n");
 }
+// Generating a quote needs an account and a login. Asking a question does not.
+function quoteGate() {
+  const item = state.quoteItem || currentQuery().get("item") || "";
+  const next = encodeURIComponent("/generate-quote" + (item ? "?item=" + encodeURIComponent(item) : ""));
+  return banner("Generate a quote", [{label: "Generate a quote"}], "Quote requests are kept under your account so you can follow them up.")
+    + `<section class="wrap narrow sec"><div class="box tint quote-gate" role="region" aria-labelledby="gate-title">
+      <h2 class="h-sec" id="gate-title">Please log in to generate a quote</h2>
+      <p style="margin-top:12px">You need an account, and to be logged in, before you can generate a quote. It takes a minute to create one.${item ? ` Your choice, <strong>${escapeHtml(item)}</strong>, will be waiting for you.` : ""}</p>
+      <div class="row" style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn lg" href="#/login?next=${next}">Log in</a><a class="btn lg line" href="#/sign-up?next=${next}">Create account</a></div>
+      <p class="muted" style="margin-top:20px;font-size:14px">Only have a question? You can <a href="#/contact-us">ask us without an account</a>.</p>
+    </div></section>`;
+}
 function quotePage() {
   if (state.submitted && state.lastQuoteId) {
     const user = Accounts.current();
     const record = Records.visibleQuote(state.lastQuoteId, user && user.id);
     if (record) return quoteDone(record);
   }
+  if (!Accounts.current()) return quoteGate();
   const model = buildQuoteModel();
   const user = Accounts.current();
   const accountNote = user
@@ -964,6 +977,7 @@ async function handleEnquirySubmit(event) {
 
 async function submitQuote(form) {
   if (form.dataset.busy === "1") return;
+  if (!Accounts.current()) { rerenderKeepScroll(pages.quote()); return; }
   const model = readQuoteForm(form);
   const errors = validateQuote(model);
   state.quoteHold = model;
