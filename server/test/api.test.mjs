@@ -421,3 +421,69 @@ test("a Google-only account has no password to change, deletes by typing DELETE,
   assert.equal(s2.db.sqlite.prepare("SELECT COUNT(*) AS n FROM oauth_identities").get().n, 0);
   await s2.close();
 });
+
+// ---- Staff notification emails ---------------------------------------------------------------
+const settle = () => new Promise(resolve => setTimeout(resolve, 50));
+
+test("a new quote request and a new enquiry are emailed to the business", async () => {
+  const s = await start(); const api = s.client(); const guest = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  s.outbox.length = 0;
+  const q = await api("POST", "/api/submissions", {kind: "quote", record: quoteRecord()});
+  await settle();
+  assert.equal(q.status, 201); assert.equal(s.outbox.length, 1);
+  const mail = s.outbox[0];
+  assert.equal(mail.to, "surgiciss@gmail.com"); assert.equal(mail.replyTo, "ama@example.com");
+  assert.ok(mail.subject.includes(q.data.id)); assert.match(mail.text, /Master Wrap x 3/); assert.match(mail.text, /Theatre 1/);
+  const e = await guest("POST", "/api/submissions", {kind: "enquiry", record: enquiryRecord});
+  await settle();
+  assert.equal(e.status, 201); assert.equal(s.outbox.length, 2);
+  assert.ok(s.outbox[1].subject.includes(e.data.id)); assert.match(s.outbox[1].text, /Please send more information/); assert.equal(s.outbox[1].replyTo, "kofi@example.com");
+  await s.close();
+});
+
+test("NOTIFY_EMAIL changes the recipient", async () => {
+  const s = await start({NOTIFY_EMAIL: "sales@example.org"}); const guest = s.client();
+  await guest("POST", "/api/submissions", {kind: "enquiry", record: enquiryRecord}); await settle();
+  assert.equal(s.outbox[0].to, "sales@example.org");
+  await s.close();
+});
+
+test("a mail failure never fails a saved request", async () => {
+  const db = sqliteDatabase();
+  const config = loadConfig({ALLOWED_ORIGINS: ORIGIN, SITE_URL: ORIGIN + "/html", COOKIE_SECURE: "true"});
+  const handler = createApp({db, config, mailer: {send: async () => { throw new Error("smtp down"); }}});
+  const server = http.createServer(handler);
+  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  const response = await fetch(`http://127.0.0.1:${server.address().port}/api/submissions`, {method: "POST", headers: {"Content-Type": "application/json", "X-Requested-With": "t", Origin: ORIGIN}, body: JSON.stringify({kind: "enquiry", record: enquiryRecord})});
+  await settle();
+  assert.equal(response.status, 201);
+  assert.equal(db.sqlite.prepare("SELECT COUNT(*) AS n FROM enquiries").get().n, 1);
+  await new Promise(resolve => server.close(resolve));
+});
+
+test("the mailer uses the Resend web API when a key is set", async () => {
+  const {createMailer} = await import("../mailer.js");
+  const calls = [];
+  const fakeFetch = async (url, options) => { calls.push({url, options}); return new Response("{}", {status: 200}); };
+  const mailer = createMailer({mail: {resendKey: "rk_test", from: "SURGICISS LTD <onboarding@resend.dev>", host: ""}}, fakeFetch);
+  assert.equal(await mailer.send({to: "surgiciss@gmail.com", subject: "Hi", text: "Body", replyTo: "ama@example.com"}), true);
+  assert.equal(calls[0].url, "https://api.resend.com/emails");
+  assert.equal(calls[0].options.headers.Authorization, "Bearer rk_test");
+  const sent = JSON.parse(calls[0].options.body);
+  assert.deepEqual(sent.to, ["surgiciss@gmail.com"]); assert.equal(sent.reply_to, "ama@example.com");
+  const failing = createMailer({mail: {resendKey: "rk_test", from: "x", host: ""}}, async () => new Response("no", {status: 403}));
+  await assert.rejects(() => failing.send({to: "a@b.co", subject: "s", text: "t"}), /403/);
+});
+
+test("health says whether emails can be sent, without exposing settings", async () => {
+  const off = await start();
+  const offHealth = await (await fetch(off.base + "/api/health")).json();
+  assert.deepEqual(offHealth.mail, {notifications: false, provider: "none"});
+  await off.close();
+  const on = await start({RESEND_API_KEY: "rk_secret_value"});
+  const text = await (await fetch(on.base + "/api/health")).text();
+  assert.equal(JSON.parse(text).mail.provider, "resend");
+  assert.ok(!text.includes("rk_secret_value"));
+  await on.close();
+});
