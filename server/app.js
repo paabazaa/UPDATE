@@ -281,6 +281,39 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     throw new HttpError(500, "The request could not be saved. Please try again.");
   }
 
+  // Tells the business about a new quote request or enquiry. The request is already saved, so a mail problem is logged
+  // and never turns a saved request into an error for the customer.
+  function notifyStaff(kind, ref, value, user) {
+    const to = config.mail && config.mail.notifyTo;
+    if (!to) return;
+    const c = value.contact;
+    const lines = [
+      `A new ${kind === "quote" ? "quote request" : "enquiry"} was received on the SURGICISS website.`,
+      "",
+      `Reference: ${ref}`,
+      `Received: ${new Date().toISOString().replace("T", " ").slice(0, 16)} UTC`,
+      `Account: ${user ? user.email : "not signed in"}`,
+      "",
+      "Contact",
+      `Name: ${c.name}`,
+      `Email: ${c.email}`,
+      `Telephone: ${c.phone || "not given"}`,
+      `Organisation: ${c.organisation}`,
+      `Country: ${c.country}${c.city ? ", " + c.city : ""}`,
+      `Preferred contact: ${c.preferredContact}`
+    ];
+    if (kind === "quote") {
+      lines.push(`Delivery location: ${c.deliveryLocation}`, "", "Items");
+      for (const line of value.lines) lines.push(`- ${line.name} x ${line.quantity}${line.note ? " (" + line.note + ")" : ""}`);
+      lines.push("", "Requirements", value.requirements || "none given");
+    } else {
+      lines.push("", `Relates to: ${value.interest}`, `Subject: ${value.subject || "none"}`, "", "Message", value.message);
+    }
+    lines.push("", "Reply to this email to answer the customer directly.");
+    Promise.resolve()
+      .then(() => mailer.send({to, subject: `New ${kind === "quote" ? "quote request" : "enquiry"} ${ref}`, text: lines.join("\n"), replyTo: c.email}))
+      .catch(error => console.error(`[mail] Could not send the notification for ${ref}:`, error.message));
+  }
   const siteBase = () => config.siteUrl || config.allowedOrigins[0] || "";
   const siteRedirect = path => `${siteBase()}/#${path}`;
 
@@ -459,7 +492,12 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         status: database ? 200 : 503,
         body: {
           ok: database,
-          database
+          database,
+          // Says whether quote and enquiry emails can be sent. Never shows keys or addresses.
+          mail: {
+            notifications: Boolean(mailer && mailer.configured),
+            provider: config.mail.resendKey ? "resend" : config.mail.host ? "smtp" : "none"
+          }
         }
       };
     },
@@ -851,11 +889,13 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
           throw new HttpError(400, input.error);
         }
 
+        const ref = await saveRecord("quotes", "Q", user, input.value);
+        notifyStaff("quote", ref, input.value, user);
         return {
           status: 201,
           body: {
             ok: true,
-            id: await saveRecord("quotes", "Q", user, input.value)
+            id: ref
           }
         };
       }
@@ -867,11 +907,13 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
           throw new HttpError(400, input.error);
         }
 
+        const ref = await saveRecord("enquiries", "E", user, input.value);
+        notifyStaff("enquiry", ref, input.value, user);
         return {
           status: 201,
           body: {
             ok: true,
-            id: await saveRecord("enquiries", "E", user, input.value)
+            id: ref
           }
         };
       }
