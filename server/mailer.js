@@ -13,7 +13,10 @@ export function createMailer(config, fetchImpl = fetch) {
           headers: {Authorization: `Bearer ${config.mail.resendKey}`, "Content-Type": "application/json"},
           body: JSON.stringify({from: config.mail.from, to: [to], subject, text, ...(replyTo ? {reply_to: replyTo} : {})})
         });
-        if (!response.ok) throw new Error(`Email service answered ${response.status}`);
+        if (!response.ok) {
+          const detail = (await response.text().catch(() => "")).slice(0, 300);
+          throw new Error(`Email service answered ${response.status} ${detail}`.trim());
+        }
         return true;
       }
       if (!config.mail.host) {
