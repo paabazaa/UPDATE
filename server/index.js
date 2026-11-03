@@ -10,8 +10,8 @@ const config = loadConfig();
 const db = createDatabase(config.database);
 const mailer = createMailer(config);
 console.log(mailer.configured
-  ? `[mail] Staff notifications: ON via ${config.mail.resendKey ? "Resend" : "SMTP"}, sent to ${config.mail.notifyTo}`
-  : "[mail] Staff notifications: OFF. Set RESEND_API_KEY (or SMTP_HOST) in the environment to receive quote and enquiry emails.");
+  ? `[mail] Staff notifications: ON via ${config.mail.brevoKey ? "Brevo" : config.mail.resendKey ? "Resend" : "SMTP"}, sent to ${config.mail.notifyTo}`
+  : "[mail] Staff notifications: OFF. Set BREVO_API_KEY or RESEND_API_KEY (or SMTP_HOST) in the environment to receive quote and enquiry emails.");
 
 async function initDb() {
   const tables = [

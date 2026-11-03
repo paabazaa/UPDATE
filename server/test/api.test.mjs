@@ -487,3 +487,20 @@ test("health says whether emails can be sent, without exposing settings", async 
   assert.ok(!text.includes("rk_secret_value"));
   await on.close();
 });
+
+test("Brevo sends a reset email to any user with a single verified sender", async () => {
+  const calls = [];
+  const fakeFetch = async (url, init) => { calls.push({url, init}); return {ok: true, text: async () => ""}; };
+  const {createMailer} = await import("../mailer.js");
+  const config = loadConfig({BREVO_API_KEY: "brevo_secret", MAIL_FROM: "SURGICISS LTD <surgiciss@gmail.com>"});
+  const mailer = createMailer(config, fakeFetch);
+  assert.equal(mailer.configured, true);
+  await mailer.send({to: "someone@example.com", subject: "Reset", text: "link", replyTo: "a@b.com"});
+  const body = JSON.parse(calls[0].init.body);
+  assert.equal(calls[0].url, "https://api.brevo.com/v3/smtp/email");
+  assert.equal(calls[0].init.headers["api-key"], "brevo_secret");
+  assert.deepEqual(body.sender, {name: "SURGICISS LTD", email: "surgiciss@gmail.com"});
+  assert.deepEqual(body.to, [{email: "someone@example.com"}]);
+  const failing = createMailer(config, async () => ({ok: false, status: 401, text: async () => "bad key"}));
+  await assert.rejects(() => failing.send({to: "x@y.com", subject: "s", text: "t"}), /401 bad key/);
+});
