@@ -419,7 +419,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
           database,
           mail: {
             notifications: Boolean(mailer && mailer.configured),
-            provider: config.mail.resendKey ? "resend" : config.mail.host ? "smtp" : "none"
+            provider: config.mail.brevoKey ? "brevo" : config.mail.resendKey ? "resend" : config.mail.host ? "smtp" : "none"
           }
         }
       };
@@ -536,7 +536,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
           const base = config.siteUrl || config.allowedOrigins[0] || "";
           try {
             await mailer.send({ to: email, subject: "Reset your SURGICISS password", text: `Use this link within one hour to choose a new password:\n\n${base}/#/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.` });
-          } catch (error) { console.error("[mail] Could not send password-reset email."); }
+          } catch (error) { console.error("[mail] Could not send password-reset email:", String((error && error.message) || error).slice(0, 300)); }
         }
       }
       return { body: { ok: true } };

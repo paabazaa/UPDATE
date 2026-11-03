@@ -4,8 +4,24 @@
 export function createMailer(config, fetchImpl = fetch) {
   let transport = null;
   return {
-    configured: Boolean(config.mail.resendKey || config.mail.host),
+    configured: Boolean(config.mail.resendKey || config.mail.brevoKey || config.mail.host),
     async send({to, subject, text, replyTo}) {
+      if (config.mail.brevoKey) {
+        // MAIL_FROM looks like: SURGICISS LTD <surgiciss@gmail.com>
+        const match = String(config.mail.from).match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+        const sender = match ? {name: match[1].replace(/^"|"$/g, "") || "SURGICISS LTD", email: match[2]} : {name: "SURGICISS LTD", email: String(config.mail.from).trim()};
+        const response = await fetchImpl("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          signal: AbortSignal.timeout(10000),
+          headers: {"api-key": config.mail.brevoKey, "Content-Type": "application/json", Accept: "application/json"},
+          body: JSON.stringify({sender, to: [{email: to}], subject, textContent: text, ...(replyTo ? {replyTo: {email: replyTo}} : {})})
+        });
+        if (!response.ok) {
+          const detail = (await response.text().catch(() => "")).slice(0, 300);
+          throw new Error(`Email service answered ${response.status} ${detail}`.trim());
+        }
+        return true;
+      }
       if (config.mail.resendKey) {
         const response = await fetchImpl("https://api.resend.com/emails", {
           method: "POST",
