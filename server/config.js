@@ -43,7 +43,9 @@ export function loadConfig(env = process.env) {
       // Where new quote requests and enquiries are announced. Set NOTIFY_EMAIL to change it.
       notifyTo: env.NOTIFY_EMAIL || "surgiciss@gmail.com",
       // Optional: send mail through Resend's web API instead of SMTP (hosts such as Render's free plan block SMTP ports).
-      resendKey: env.RESEND_API_KEY || ""
+      resendKey: env.RESEND_API_KEY || "",
+      // Optional: Brevo web API. It lets a single verified sender address (no domain needed) mail any recipient.
+      brevoKey: env.BREVO_API_KEY || ""
     }
   };
 }
