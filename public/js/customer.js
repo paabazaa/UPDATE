@@ -392,7 +392,8 @@ function loginPage() {
           ${formError}
           <div class="fld"><label for="email">Email address</label>
             <input id="email" name="email" type="email" autocomplete="username" maxlength="255" placeholder="you@example.com">${fieldError("email")}</div>
-          ${passwordField("password", "Password", "current-password", `<a href="${withNext("/forgot-password")}">Forgot password?</a>`)}
+          ${passwordField("password", "Password", "current-password")}
+          <p class="forgot-row"><a href="${withNext("/forgot-password")}">Forgot password?</a></p>
           <button class="btn lg login-submit" type="submit">Sign in</button>
         </form>
         ${socialButtons("", "after")}
