@@ -44,16 +44,7 @@ const company = {
 };
 
 const detail = (v, fb = "Available on request") => (v && v.trim() ? v : fb);
-const {productCategories, products, software} = DATA;
-// Services and programmes are switched off for now. Change a value to true to bring that section back.
-const OFFER = {services: false, programmes: false};
-const services = OFFER.services ? DATA.services : [];
-const programmes = OFFER.programmes ? DATA.programmes : [];
-// Our two main products. They come first everywhere and are shown on the home page.
-const MAIN_PRODUCTS = ["surgical-instrument-master-wrap", "universal-surgical-count-sheet-holder"];
-const mainRank = p => { const i = MAIN_PRODUCTS.indexOf(p.slug); return i < 0 ? MAIN_PRODUCTS.length : i; };
-products.sort((a, b) => mainRank(a) - mainRank(b));
-const isMain = p => MAIN_PRODUCTS.includes(p.slug);
+const {productCategories, products, software, services, programmes} = DATA;
 const imageUrl = k => IMAGES[k];
 const catName = s => (productCategories.find(c => c.slug === s) || {}).name || s;
 
@@ -88,14 +79,14 @@ const icons = {
 const state = {menu: null, mobile: false, slide: 0, quoteItem: "", submitted: false, errors: {}, subscribed: false, q: ""};
 const slides = [
   {image: "heroSterileProcessing", title: "SURGICISS LTD:", body: "With advanced technologies and patient-centred expertise, SURGICISS instrument systems support the consistent delivery of clean, sterile, functional and relevant surgical instruments, equipment and supplies — on time and on budget.", cta: ["Generate quote", "/generate-quote"]},
-  OFFER.services && {image: services[0].image, title: "For patient safety and system viability:", body: "Healthcare providers must improve quality, increase efficiency, eliminate waste and lower cost. We partner with them to make that possible.", cta: ["Our services", "/services"]},
+  {image: services[0].image, title: "For patient safety and system viability:", body: "Healthcare providers must improve quality, increase efficiency, eliminate waste and lower cost. We partner with them to make that possible.", cta: ["Our services", "/services"]},
   {image: "heroMasterWrap", title: "Surgical Instrument Master Wrap", body: "Master Wrap applies impact displacement to help prevent a tear or puncture of a wrapped instrument tray.", cta: ["View product", "/products/surgical-instrument-master-wrap"]},
-  OFFER.services && {image: "softwareDashboard", title: "We supercharge instrument technicians:", body: "We support sterile processing technicians with practical skills, structured training and analytical technologies that show what is happening in the department.", cta: ["Training programme", "/services/sterile-processing-technician-training-programme"]},
-  OFFER.services && OFFER.programmes && {image: services[2].image, title: "Enrol in our hospital viability programme:", body: "A structured review of instrument sets, workflow and spend, carried out with your own team inside your own department.", cta: ["See programmes", "/programmes"]}
+  {image: "softwareDashboard", title: "We supercharge instrument technicians:", body: "We support sterile processing technicians with practical skills, structured training and analytical technologies that show what is happening in the department.", cta: ["Training programme", "/services/sterile-processing-technician-training-programme"]},
+  {image: services[2].image, title: "Enrol in our hospital viability programme:", body: "A structured review of instrument sets, workflow and spend, carried out with your own team inside your own department.", cta: ["See programmes", "/programmes"]}
 ].concat(
-  products.filter(p => p.slug !== "surgical-instrument-master-wrap").map(p => ({image: p.image, title: p.name, body: p.summary, cta: ["View product", "/products/" + p.slug]})),
+  products.map(p => ({image: p.image, title: p.name, body: p.summary, cta: ["View product", "/products/" + p.slug]})),
   software.map(s => ({image: s.image, title: s.name, body: s.summary, cta: ["Explore system", "/software/" + s.slug]}))
-).filter(Boolean);
+);
 
 /* ---------- shared pieces ---------- */
 const href = p => "#" + p;
@@ -193,13 +184,13 @@ function footer() {
       </div>
     <div><h2>Newsletter</h2>
       <div class="rule"></div>
-      <p class="small">Notes on sterile services practice, products and software. Enter your email address to be added to the list.</p>
+      <p class="small">Notes on sterile services practice, products and training. Enter your email address to be added to the list.</p>
       <form id="newsletter"><label for="newsletter-email" class="sr">Email address</label>
       <input id="newsletter-email" type="email" required placeholder="Your email address"><button type="submit">Subscribe</button></form>
       ${state.subscribeError ? `<p class="small" style="font-size:12px" role="alert">${escapeHtml(state.subscribeError)}</p>` : ""}${state.subscribed ? `<p class="small" style="font-size:12px" role="status">Thank you. Your email address has been added to the list.</p>` : ""}</div>
   </div>
   <div class="fbase"><div class="wrap"><p>&copy; 2026 ${company.name}. All rights reserved.</p>
-    <nav aria-label="Legal"><a href="#/about">About</a>${OFFER.services ? `<a href="#/services">Services</a>` : ""}${OFFER.programmes ? `<a href="#/programmes">Programmes</a>` : ""}<a href="#/resources">Resources</a><a href="#/faq">FAQ</a><a href="#/search">Search</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a></nav>
+    <nav aria-label="Legal"><a href="#/about">About</a><a href="#/services">Services</a><a href="#/programmes">Programmes</a><a href="#/resources">Resources</a><a href="#/faq">FAQ</a><a href="#/search">Search</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a></nav>
     </div>
     </div>
     </footer>`;
@@ -209,7 +200,7 @@ function footer() {
 const interestGroups = () => [
   {g: "Products", items: products.map(p => p.name)}, {g: "Software", items: software.map(s => s.name)},
   {g: "Services", items: services.map(s => s.name)}, {g: "Programmes", items: programmes.map(s => s.name)}, {g: "Other", items: ["General enquiry"]}
-].filter(g => g.items.length);
+];
 function field(label, name, o = {}) {
   return `<div class="fld"><label for="${name}">${label}${o.req ? ' <span class="req">*</span>' : ""}</label><input id="${name}" name="${name}" type="${o.type || "text"}" maxlength="255" ${o.ph ? `placeholder="${o.ph}"` : ""}>${state.errors[name] ? `<p class="err">${state.errors[name]}</p>` : ""}</div>`;
 }
@@ -243,7 +234,7 @@ function validate(v) {
 }
 
 /* ---------- pages ---------- */
-const featuredSlugs = MAIN_PRODUCTS;
+const featuredSlugs = ["quality-assurance-card", "surgical-instrument-master-wrap", "universal-surgical-count-sheet-holder"];
 const pages = {
   home() {
     const s = slides[state.slide];
@@ -256,11 +247,11 @@ const pages = {
     <section class="wrap sec intro"><h2>${company.name}</h2><h3>${company.tagline}</h3>
       <p>The problem with healthcare today is not the lack of advanced technologies and skilled hands, but the absence of simple innovations that help each pair of hands get the basics done right the first time. These seemingly trivial steps have led to failure, time and again, in even the most sophisticated operating rooms. For patient safety, SURGICISS LTD provides simple innovations that prevent error, minimise delay, reduce unnecessary cost and support real-time compliance in sterile processing departments and operating rooms.</p>
       </section>
-    ${OFFER.services ? `<section class="wrap" style="padding-bottom:48px"><div class="grid g3" style="gap:32px">${services.map(x => `<article class="feat"><a href="${href("/services/" + x.slug)}" style="display:block;overflow:hidden;background:var(--tint)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/services/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${href("/services/" + x.slug)}">Read more${icons.arrow}</a></article>`).join("")}</div>
-      </section>` : ""}
-    <section class="sec tint"><div class="wrap intro"><h2>Our main products</h2>
+    <section class="wrap" style="padding-bottom:48px"><div class="grid g3" style="gap:32px">${services.map(x => `<article class="feat"><a href="${href("/services/" + x.slug)}" style="display:block;overflow:hidden;background:var(--tint)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/services/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${href("/services/" + x.slug)}">Read more${icons.arrow}</a></article>`).join("")}</div>
+      </section>
+    <section class="sec tint"><div class="wrap intro"><h2>Products</h2>
       <p>Through research, development and the steady use of instrument processing products, software and methods in real departments, we work to support patient safety and the viability of the services that deliver it.</p>
-      <div class="grid g2" style="gap:32px;margin-top:32px;text-align:left">${featured.map(x => `<article class="feat"><a href="${href("/products/" + x.slug)}" style="display:block;overflow:hidden;background:var(--card)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/products/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${quoteHref(x.name)}">Request a quote${icons.arrow}</a></article>`).join("")}</div>
+      <div class="grid g3" style="gap:32px;margin-top:32px;text-align:left">${featured.map(x => `<article class="feat"><a href="${href("/products/" + x.slug)}" style="display:block;overflow:hidden;background:var(--card)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/products/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${quoteHref(x.name)}">Request a quote${icons.arrow}</a></article>`).join("")}</div>
       <div class="center" style="margin-top:40px"><a class="btn lg" href="#/products">All Products${icons.arrow}</a></div>
         </div>
         </section>`;
@@ -279,7 +270,7 @@ const pages = {
   },
   products() {
     return banner("Products", [{label: "Products"}], "Practical devices for the parts of the process that most often go wrong: protecting wrapped trays, keeping brushes and count sheets where they belong, and proving that checks were carried out.")
-      + `<section class="wrap sec"><div class="filterbar"><a class="chip on" href="#/products" aria-current="page">All products <b>${products.length}</b></a>${productCategories.map(c => `<a class="chip" href="${href("/product-category/" + c.slug)}">${escapeHtml(c.name)} <b>${products.filter(p => p.category === c.slug).length}</b></a>`).join("")}</div><h2 class="section-title" style="margin-top:32px">Our main products</h2><div class="grid g2" style="margin-top:24px">${products.filter(isMain).map(productCard).join("")}</div><h2 class="section-title" style="margin-top:56px">Other products</h2><div class="grid g3" style="margin-top:24px">${products.filter(p => !isMain(p)).map(productCard).join("")}</div></section>`
+      + `<section class="wrap sec"><div class="filterbar"><a class="chip on" href="#/products" aria-current="page">All products <b>${products.length}</b></a>${productCategories.map(c => `<a class="chip" href="${href("/product-category/" + c.slug)}">${escapeHtml(c.name)} <b>${products.filter(p => p.category === c.slug).length}</b></a>`).join("")}</div><h2 class="sr">All products</h2><div class="grid g3" style="margin-top:32px">${products.map(productCard).join("")}</div></section>`
       + callToAction("Need a quotation for several lines?", "Send one enquiry with the products and quantities and we will price it together.");
   },
   category(slug) {
@@ -362,10 +353,6 @@ const pages = {
         <ul class="links">${programmes.filter(o => o.slug !== slug).map(o => `<li><a href="${href("/programmes/" + o.slug)}">${escapeHtml(o.name)}</a></li>`).join("")}</ul></div></aside></div></section>`
       + callToAction("Interested in this programme?", "We will send the outline, timescales and what we need from you.");
   },
-  unavailable() {
-    return banner("Not available at the moment", [{label: "Not available"}], "This section is not available right now.")
-      + `<section class="wrap narrow sec"><div class="rich"><p>We are not offering this at the moment. Our main products are the Surgical Instrument Master Wrap and the Universal Surgical Count Sheet Holder.</p></div><p style="margin-top:24px"><a class="btn" href="#/products">See our products${icons.arrow}</a></p></section>`;
-  },
   countSheets() {
     const holders = products.filter(p => p.category === "count-sheet-holders");
     return banner("Instrument count sheet holders", [{label: "Instrument count sheet holders"}], "A count sheet only helps if the technician can read it, reach it and trust that it belongs to the tray in front of them.")
@@ -421,7 +408,7 @@ const pages = {
       ["Is your software hosted by you or by us?", "Both arrangements are possible and the choice usually depends on your IT policy. The specific hosting, interface and data-retention options we support are confirmed during scoping."],
       ["Do you deliver training on site?", "Yes. Technician training and morale sessions are normally delivered in the department, because the point is to work with the equipment and pressures your team actually faces."],
       ["What regulatory information can you supply?", "We provide the documentation relevant to each product on request. Classifications and certifications differ by item and market."]
-    ].filter(f => OFFER.services || f[0] !== "Do you deliver training on site?");
+    ];
     return banner("Frequently asked questions", [{label: "FAQ"}], "The questions departments ask us most often. If yours is not here, send it to us.")
       + `<section class="wrap narrow sec"><dl class="faq">${faqs.map(f => `<div><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("")}</dl></section>` + callToAction("Still have a question?", "Ask us directly and we will answer plainly.");
   },
@@ -431,7 +418,7 @@ const pages = {
       ["Making a count sheet usable", "Practical points on layout, protection and placement so a count sheet survives assembly and theatre use intact.", "/count-sheet-holders", "See count sheet holders"],
       ["Receiving loaner instrument sets", "A receipt-to-return sequence for loaners, including what to record when a set arrives late or incomplete.", "/programmes/loaner-instrument-processing", "See loaner instrument processing"],
       ["Endoscope traceability basics", "The minimum record set that lets a department reconstruct which scope was used, on whom, and after which reprocessing cycle.", "/software/endoscope-matrix", "See Endoscope Matrix"]
-    ].filter(x => (OFFER.programmes || !x[2].startsWith("/programmes")) && (OFFER.services || !x[2].startsWith("/services")));
+    ];
     return banner("Resources", [{label: "Resources"}], "Short pieces written for the people doing the work. Downloadable versions are being prepared.")
       + `<section class="wrap sec"><div class="grid g2">${r.map(x => `<article class="box rcard" style="background:var(--card)"><h2 style="font-size:16px;color:var(--heading)"><a class="stretch" href="${href(x[2])}">${x[0]}</a></h2><p>${x[1]}</p><p style="margin-top:14px"><a class="tlink" href="${href(x[2])}">${x[3]}</a></p></article>`).join("")}</div>
         <p class="muted" style="margin-top:40px;font-size:14px">Looking for something specific? <a style="color:var(--link)" href="#/contact-us">Ask us</a> and we will point you to it or write it.</p>
@@ -440,9 +427,9 @@ const pages = {
   },
   search() {
     const idx = [].concat(products.map(p => ({k: "Product", n: p.name, s: p.summary, to: "/products/" + p.slug})), software.map(p => ({k: "Software", n: p.name, s: p.summary, to: "/software/" + p.slug})), services.map(p => ({k: "Service", n: p.name, s: p.summary, to: "/services/" + p.slug})), programmes.map(p => ({k: "Programme", n: p.name, s: p.summary, to: "/programmes/" + p.slug})));
-    return banner("Search", [{label: "Search"}], "Search our products and software.")
+    return banner("Search", [{label: "Search"}], "Search our products, software, services and programmes.")
       + `<section class="wrap narrow sec"><label for="site-search" style="font-size:14px;font-weight:500">What are you looking for?</label>
-        <input class="search-in" style="padding:12px 16px" id="site-search" type="search" value="${escapeHtml(state.q)}" placeholder="e.g. master wrap, count sheet holder, endoscope" maxlength="80"><div id="results" style="margin-top:32px">${searchResults(idx)}</div></section>`;
+        <input class="search-in" style="padding:12px 16px" id="site-search" type="search" value="${escapeHtml(state.q)}" placeholder="e.g. master wrap, endoscope, training" maxlength="80"><div id="results" style="margin-top:32px">${searchResults(idx)}</div></section>`;
   },
   privacy() {
     return banner("Privacy notice", [{label: "Privacy notice"}]) + `<section class="wrap narrow sec"><div class="rich">
@@ -504,8 +491,7 @@ const titles = {"/": "SURGICISS LTD — Sterile Instrument Systems", "/about": "
 function route() {
   const p = currentPath(), seg = p.split("/").filter(Boolean);
   let html = null;
-  if ((seg[0] === "services" && !OFFER.services) || (seg[0] === "programmes" && !OFFER.programmes)) html = pages.unavailable();
-  else if (p === "/") html = pages.home();
+  if (p === "/") html = pages.home();
   else if (seg.length === 1) {
     const m = {about: "about", products: "products", software: "softwareIndex", services: "servicesIndex", programmes: "programmesIndex", "count-sheet-holders": "countSheets", "contact-us": "contact", "request-quote": "quote", "generate-quote": "quote", faq: "faq", resources: "resources", search: "search", privacy: "privacy", terms: "terms"}[seg[0]];
     if (seg[0] === "request-quote" || seg[0] === "generate-quote") state.quoteItem = currentQuery().get("item") || "";

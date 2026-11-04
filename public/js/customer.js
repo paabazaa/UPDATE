@@ -15,17 +15,16 @@ function onBeforeRoute() {
   state.resetDone = false;
 }
 
-function catalogueGroups(all = false) {
-  const sv = all ? DATA.services : services, pg = all ? DATA.programmes : programmes;
+function catalogueGroups() {
   return [
     {label: "Products", items: products.map(item => ({value: "product:" + item.slug, label: item.name}))},
     {label: "Software", items: software.map(item => ({value: "software:" + item.slug, label: item.name}))},
-    {label: "Services", items: sv.map(item => ({value: "service:" + item.slug, label: item.name}))},
-    {label: "Programmes", items: pg.map(item => ({value: "programme:" + item.slug, label: item.name}))}
-  ].filter(group => group.items.length);
+    {label: "Services", items: services.map(item => ({value: "service:" + item.slug, label: item.name}))},
+    {label: "Programmes", items: programmes.map(item => ({value: "programme:" + item.slug, label: item.name}))}
+  ];
 }
 function refLabel(ref) {
-  for (const group of catalogueGroups(true)) {
+  for (const group of catalogueGroups()) {
     const hit = group.items.find(item => item.value === ref);
     if (hit) return hit.label;
   }
@@ -33,7 +32,7 @@ function refLabel(ref) {
 }
 function refForName(name) {
   if (!name) return "";
-  for (const group of catalogueGroups(true)) {
+  for (const group of catalogueGroups()) {
     const hit = group.items.find(item => item.label === name);
     if (hit) return hit.value;
   }
@@ -314,7 +313,7 @@ function customerHeader() {
     </nav>
         </div>
     <div class="mobile-cta"><a class="mc-primary" href="#/generate-quote">${icons.plus}Generate quote</a><a class="mc-second" href="#/contact-us">Ask a question</a></div>
-    ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="#/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", softwareLinks, "/software", "All Software")}${mgroup("Products", productLinks, "/products", "All Products")}<a href="#/count-sheet-holders">Instrument Count Sheet Holders</a>${OFFER.services ? `<a href="#/services">Services</a>` : ""}${OFFER.programmes ? `<a href="#/programmes">Programmes</a>` : ""}<a href="#/about">About</a><a href="#/contact-us">Contact Us</a>${accountMobile}<a class="quote" href="#/generate-quote">Generate quote</a><a class="ask" href="#/contact-us">Ask a question</a></nav>
+    ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="#/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", softwareLinks, "/software", "All Software")}${mgroup("Products", productLinks, "/products", "All Products")}<a href="#/count-sheet-holders">Instrument Count Sheet Holders</a><a href="#/services">Services</a><a href="#/programmes">Programmes</a><a href="#/about">About</a><a href="#/contact-us">Contact Us</a>${accountMobile}<a class="quote" href="#/generate-quote">Generate quote</a><a class="ask" href="#/contact-us">Ask a question</a></nav>
       </div>` : ""}
   </header>`;
 }
