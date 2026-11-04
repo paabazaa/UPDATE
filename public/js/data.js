@@ -152,6 +152,30 @@ const DATA = {
         "Sterilisation and sterile storage",
         "Case carts and operating rooms"
       ],
+      "ifu": {
+        "pdf": "documents/Master-Wrap-Instructions-for-Use-SURGICISS-LTD.pdf",
+        "intro": "Master Wrap applies impact displacement to help protect the primary surgical wrap from external forces that could cause punctures, tears and holes. In rare cases, Master Wrap itself may sustain tears or holes while continuing to redirect potentially damaging impact forces to preserve the integrity of wrapped instrument trays. Always inspect tray wraps in accordance with established operating room best practices.",
+        "audience": "For sterile processing and operating room personnel",
+        "applyNote": "Apply Master Wrap to the wrapped tray as shown. Complete the closure in the final step.",
+        "steps": [
+          {"title": "Prepare", "text": "Place Master Wrap flat on a wrapping table or bench.", "image": "masterWrapPrepare"},
+          {"title": "Position", "text": "Center the wrapped instrument tray on Master Wrap and position it evenly, as shown.", "image": "masterWrapPosition"},
+          {"title": "Secure", "text": "Expose the adhesives. Overlap, align and adhere the strap ends together. Tuck in and reinforce the corners for extra protection.", "image": "masterWrapSecure"}
+        ],
+        "viewsTitle": "Outer-wrap protection using impact displacement",
+        "views": [
+          {"label": "Close-up view", "image": "masterWrapCloseup"},
+          {"label": "Full-tray view", "image": "masterWrapFulltray"}
+        ],
+        "materials": "Our laboratory testing and feedback from hospitals indicate effective hole prevention. We designed Master Wrap to displace external impact forces and help protect the main surgical wrap. We use nonwoven polypropylene approved for surgical tray wrapping and medical-grade adhesive of the type used in standard instrument peel packs. We specify both materials as compatible with all sterilization methods.",
+        "closureTitle": "Closure and processing",
+        "closure": [
+          "Complete the closure: press down and smooth the adhesive ends repeatedly to bond the straps securely.",
+          "Reinforce adhesive areas with sterilization tape as needed.",
+          "Tuck in and reinforce the corners for extra protection.",
+          "Sterilize using the applicable validated process for the surgical wrap and tray."
+        ]
+      },
       "specifications": [
         {
           "label": "Product code",

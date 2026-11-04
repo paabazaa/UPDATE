@@ -976,3 +976,18 @@ html.modal-open{overflow:hidden}
 .forgot-row{margin:-4px 0 16px;text-align:right}
 .forgot-row a{font-size:13px;font-weight:500;color:var(--link)}
 .forgot-row a:hover{text-decoration:underline}
+
+.ifu-dl{margin:20px 0 8px}
+.ifu-h{font-size:18px;margin:32px 0 6px;color:var(--heading)}
+.ifu-steps{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.ifu-steps li{background:var(--card);border:1px solid var(--border,var(--line,#e5e0f0));border-radius:12px;overflow:hidden}
+.ifu-steps img{display:block;width:100%;height:auto;background:#fff}
+.ifu-steps li>div{padding:14px 16px 18px}
+.ifu-steps b{font-size:17px;color:var(--heading);margin-left:8px}
+.ifu-steps p{margin:8px 0 0;font-size:14px}
+.ifu-n{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--primary);color:var(--primary-fg,#fff);font-weight:700;font-size:13px}
+.ifu-views{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin:16px 0 20px}
+.ifu-views figure{margin:0;background:#fff;border:1px solid var(--border,var(--line,#e5e0f0));border-radius:12px;overflow:hidden}
+.ifu-views img{display:block;width:100%;height:auto}
+.ifu-views figcaption{padding:10px 14px;font-size:13px;color:var(--muted-fg,#666)}
+@media(max-width:760px){.ifu-steps,.ifu-views{grid-template-columns:1fr}}
