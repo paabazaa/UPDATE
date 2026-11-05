@@ -1,4 +1,4 @@
-# Runs the API tests on every push and pull request. It never deploys and never touches Render.
+# Runs the tests on every push and pull request. It never deploys and never touches Render.
 name: Tests
 
 on:
@@ -10,13 +10,26 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  api-and-content:
+    name: API and content tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npm test
+
+  pages:
+    name: Pages in a real browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --no-audit --no-fund playwright
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:pages

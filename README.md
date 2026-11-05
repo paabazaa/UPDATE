@@ -1,24 +1,37 @@
 # SURGICISS LTD website
 
-Static HTML, CSS and JavaScript site for SURGICISS LTD. The public catalogue opens immediately. Accounts, quotes and enquiries are optional and are not required to read the site.
+Website, customer accounts and quote API for SURGICISS LTD (sterile instrument systems: the Surgical Instrument Master Wrap, count sheet holders, software and more). The public catalogue opens immediately. Reading the site never needs an account.
+
+The pages are plain HTML, CSS and browser JavaScript. One small Node server (`server/index.js`) serves the built site and the API from the same address, and stores accounts, quotes and enquiries in MySQL.
 
 ## Getting started
 
-Requires Node.js 20 or later.
+Requires Node.js 20.6 or later (22.5 or later to run the tests).
 
 ```bash
-npm install        # installs Vite and creates package-lock.json
+npm install        # installs Vite, MySQL and email packages
 npm run dev        # development server on http://localhost:8080
 npm run build      # production build into dist/
 npm run preview    # preview the production build
 npm run serve      # serve dist/ with the bundled Node static server (no Vite needed)
+npm test           # API and content tests (no browser needed)
+npm run test:pages # opens every page in a real browser (needs Playwright, see Tests)
 ```
 
-The site itself is plain HTML, CSS and browser JavaScript. Vite provides the dev server and the production build; the stylesheet, scripts and images live in `public/` and are copied to `dist/` unchanged. Commit `package-lock.json` after your first `npm install`.
+The stylesheet, scripts, images and documents live in `public/` and are copied to `dist/` unchanged.
 
-### GitHub Pages
+## Deploying on Render
 
-Keep **Settings → Pages → Source** set to **GitHub Actions**. The workflow in `.github/workflows/main.yml` installs dependencies, runs `npm run build` and publishes `dist/`. After a change, wait for the action to finish and refresh with a cache bypass.
+The live site runs as one Render web service connected to this GitHub repository. Every change merged into `main` redeploys it.
+
+| Render setting | Value |
+| --- | --- |
+| Build command | `npm install --include=dev && npm run build` |
+| Start command | `node server/index.js` |
+| Environment | the settings in `.env.example`, entered in Render's Environment tab |
+| Secret file | the database provider's CA certificate at `/etc/secrets/aiven-ca.pem` (or set `DB_SSL_CA_FILE`) |
+
+After a deploy, open `/api/health` on the site. It shows whether the database is reachable and whether email is switched on (`"mail":{"notifications":true,"provider":"brevo"}`), and never shows any key or address. The Render log prints a `[mail]` line at start that says the same.
 
 ## What visitors can do without an account
 
@@ -39,15 +52,15 @@ The site runs in one of two modes, chosen by `apiBase` in `public/js/config.js`:
 
 ## Quotes
 
-**Generate quote** is available from the header, the mobile bar and the page footers. Visitors can browse products first and add them to a request.
+**Generate quote** is available from the header, the mobile bar and the page footers. Anyone can browse the products first, but **a quote can only be requested by someone who has an account and is logged in**; anyone else is asked to log in or create an account and is brought back to the form afterwards. Selections are kept while they do that.
 
-The form asks for items, quantities, contact details, organisation, delivery location and any extra requirements. Selections are kept if the visitor logs in or creates an account halfway through.
+The form asks for items, quantities, contact details, organisation, delivery location and any extra requirements. When a quote is sent, the customer sees a thank-you message and the business is emailed at `NOTIFY_EMAIL`.
 
-No prices, taxes, discounts or delivery charges are shown. A quote request is not an order. The site does not invent orders: **My orders** stays empty until an order system is connected.
+No prices, taxes, discounts or delivery charges are shown. A quote request is not an order, and **My orders** stays empty until an order system is connected.
 
 ## Enquiries
 
-**Ask a question** and **Contact us** open the public enquiry form. Name, email, subject and message are required, along with the organisation and country fields already used by the site. An account is not required.
+**Ask a question** and **Contact us** open the public enquiry form. Name, email, subject and message are required, along with the organisation and country fields already used by the site. **No account is needed to ask a question.** Each enquiry is also emailed to `NOTIFY_EMAIL`, and replying to that email answers the customer directly.
 
 ## Database and API (MySQL)
 
@@ -81,10 +94,13 @@ Settings are in `.env.example`. The important ones:
 | Setting | Meaning |
 | --- | --- |
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | MySQL connection. |
-| `ALLOWED_ORIGINS` | Website addresses allowed to call the API, with no path and no trailing slash. For GitHub Pages use `https://paabazaa.github.io`. |
-| `SITE_URL` | Public website address including any folder, for example `https://paabazaa.github.io/html`. Used in reset emails. |
+| `ALLOWED_ORIGINS` | Website addresses allowed to call the API, with no path and no trailing slash. When the site and API share one address (as on Render), use that address. |
+| `SITE_URL` | Public website address, for example `https://update-xyvr.onrender.com`. Used to build the link in password-reset emails. |
 | `COOKIE_SECURE`, `COOKIE_SAMESITE` | Use `true` and `None` when the website and API are on different domains (HTTPS required). Use `Lax` when they share a domain. |
-| `SMTP_*`, `MAIL_FROM` | Outgoing email for password resets. Without them no email is sent. |
+| `BREVO_API_KEY` and `MAIL_FROM` | Outgoing email through Brevo's web API (recommended on Render's free plan, which blocks SMTP). `MAIL_FROM` must be an address verified in Brevo, for example `SURGICISS LTD <surgiciss@gmail.com>`. |
+| `RESEND_API_KEY` | Alternative to Brevo. Resend only delivers to your own address until a domain is verified. |
+| `SMTP_*` | Alternative on hosts that allow SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SECURE`. |
+| `NOTIFY_EMAIL` | Where new quotes and enquiries are announced. Defaults to `surgiciss@gmail.com`. |
 | `TRUST_PROXY` | `true` when a proxy or host sits in front of the API, so rate limits see the real visitor address. |
 
 ### 3. Point the website at the API
@@ -116,36 +132,57 @@ How it behaves: a returning person is signed straight in. If the provider's conf
 - Stores newsletter sign-ups in `newsletter_subscribers`.
 - Rate limits sign-up, login, reset, submissions and newsletter calls, and limits request size.
 - Rejects state-changing requests from websites that are not in `ALLOWED_ORIGINS`.
+- Emails the business about every new quote and enquiry, and emails password-reset links. A mail failure never loses a saved request: it is written to the log as `[mail] ...` with the reason.
+- `GET /api/health` reports database and email status.
 
 ### Things to know
 
 - Email addresses are not verified at sign-up. For that reason, requests sent before an account existed are **not** attached to it automatically, so nobody can claim another person's requests by registering their address.
 - Quotes and enquiries are stored as JSON in the `payload` column, with the customer's email and account in their own columns for searching. Nothing in the site reads them for staff yet: use your own SQL tool or build an admin view.
 - Rate-limit counters live in memory and reset when the API restarts. Run a single API process, or add a shared limiter before scaling out.
-- The test suite (`npm test`) runs the API against an in-memory SQLite database to check logic, and needs Node.js 22.5 or later. It does not run MySQL. Run `npm run db:migrate` against a real MySQL once and sign up once to confirm your setup.
+- Quotes and enquiries are stored in your own database, so keep backups. If email is not working, they are still saved; look them up with your SQL tool.
+
+## Tests
+
+| Command | What it checks |
+| --- | --- |
+| `npm test` | The API against an in-memory SQLite database (needs Node.js 22.5 or later; it does not touch MySQL), and the site content: every product, software item, service and programme is complete, every picture, the logo and the Master Wrap PDF exist, and the files named in `index.html` exist. |
+| `npm run test:pages` | Opens every page in a real browser: each page has a heading and no script errors, every header and footer link works, pictures load, the Master Wrap PDF downloads, the login page order is right, quotes need a login, and nothing scrolls sideways on a phone. Install Playwright first: `npm install --no-save playwright && npx playwright install chromium`. |
+
+GitHub runs both automatically on every push (`.github/workflows/ci.yml`). A red mark on a commit means a test failed; it does not stop Render from deploying. Run `npm run db:migrate` against a real MySQL once and sign up once to confirm a new setup.
 
 ## Folder layout
 
 | Path | Purpose |
 | --- | --- |
 | `index.html` | Vite entry and page shell. The pages themselves are drawn by the scripts. |
-| `vite.config.js` | Vite settings (relative base, output in `dist/`). |
-| `scripts/serve-static.mjs` | Small Node static server used by `npm run serve`. |
-| `scripts/migrate-db.mjs` | Creates the MySQL tables. |
-| `server/` | The API: `app.js`, `schema.sql`, `index.js`, tests in `server/test/`. |
-| `.env.example` | Settings for the API (copy to `.env`). |
+| `vite.config.js` | Vite settings (output in `dist/`). |
+| `server/index.js` | Starts the server: creates missing tables, serves `dist/` and the API. |
+| `server/app.js` | The API routes: accounts, quotes, enquiries, newsletter, health. |
+| `server/config.js` | Reads every setting from environment variables. |
+| `server/db.js` | MySQL connection (needs the CA certificate file on Render). |
+| `server/mailer.js` | Sends email through Brevo, Resend or SMTP. |
+| `server/oauth.js` | Google and Facebook sign-in steps. |
+| `server/passwords.js`, `ratelimit.js`, `validation.js` | Password hashing, request limits, input checks. |
+| `server/schema.sql` | Table definitions. |
+| `server/test/` | API tests. |
+| `test/` | Content tests (`content.test.mjs`) and browser page tests (`pages.test.mjs`). |
+| `scripts/` | `serve-static.mjs` (static server), `migrate-db.mjs` (creates tables) and `list-users.mjs` (lists accounts for debugging). |
+| `.env.example` | Settings for the server (copy to `.env`, or enter them in Render). |
+| `.github/` | Test workflow, Dependabot, issue and pull request templates, code owners. |
 | `public/css/styles.css` | Layout and the purple and navy styling. |
 | `public/js/data.js` | Products, software, services and programmes. |
 | `public/js/places.js` | Country and city pickers used by the forms. |
-| `public/js/config.js` | API address (`apiBase`). Empty means browser-only mode. |
+| `public/js/config.js` | API address (`apiBase`) and company contact details. |
 | `public/js/api.js` | Small client for the API. |
 | `public/js/accounts.js` | Accounts: browser-only store or the API, depending on `apiBase`. |
 | `public/js/records.js` | Quotes, enquiries and the quote draft. |
 | `public/js/customer.js` | Account pages, quote builder and form delivery. |
-| `public/js/app.js` | Public pages, navigation and search. |
-| `public/images/` | Photographs and logo. |
-| `.github/workflows/main.yml` | GitHub Pages build and publish. |
+| `public/js/app.js` | Public pages, navigation and search. (Not the same file as `server/app.js`.) |
+| `public/images/` | Photographs, product pictures and the logo. |
+| `public/documents/` | Downloadable documents, such as the Master Wrap instructions for use. |
+| `public/robots.txt`, `sitemap.xml` | For search engines. Update the address in both if the site moves to its own domain. |
 
 ## Content
 
-Product names, descriptions, services and programmes are unchanged from the original site. No prices, certifications, testimonials or contact details were added. Where a telephone number, address or company number was not in the project, the page still says it is available on request.
+Product names, descriptions, services and programmes are in `public/js/data.js`. No prices, certifications or testimonials have been invented. Where a product code, price or document is not yet available, the page says it is available on request. The Surgical Instrument Master Wrap page includes the full Instructions for Use (PDF download plus the steps, pictures and materials information).

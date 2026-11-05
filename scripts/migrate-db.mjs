@@ -8,8 +8,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const envPath = path.join(__dirname, "..", ".env");
 
-const envText = fs.readFileSync(envPath, "utf8");
-const env = {};
+// Settings come from the host's environment, and from a .env file when one exists.
+let envText = "";
+try { envText = fs.readFileSync(envPath, "utf8"); } catch {}
+const env = { ...process.env };
 for (const line of envText.split(/\r?\n/)) {
   const t = line.trim();
   if (!t || t.startsWith("#")) continue;
