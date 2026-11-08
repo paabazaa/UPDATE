@@ -177,8 +177,8 @@ GitHub runs both automatically on every push (`.github/workflows/ci.yml`). A red
 | `public/js/api.js` | Small client for the API. |
 | `public/js/accounts.js` | Accounts: browser-only store or the API, depending on `apiBase`. |
 | `public/js/records.js` | Quotes, enquiries and the quote draft. |
-| `public/js/customer.js` | Account pages, quote builder and form delivery. |
-| `public/js/app.js` | Public pages, navigation and search. (Not the same file as `server/app.js`.) |
+| `public/js/customer/` | Account pages, quote builder and form delivery, split into small files (core, quote, auth, dashboard, modals, records, forms, events, actions). |
+| `public/js/site/` | Public pages, navigation and search, split into small files (core, components, layout, enquiry, pages, pages-*, router, events). |
 | `public/images/` | Photographs, product pictures and the logo. |
 | `public/documents/` | Downloadable documents, such as the Master Wrap instructions for use. |
 | `public/robots.txt`, `sitemap.xml` | For search engines. Update the address in both if the site moves to its own domain. |

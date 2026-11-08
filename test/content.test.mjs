@@ -13,7 +13,7 @@ const read = p => fs.readFileSync(path.join(root, p), "utf8");
 
 // data.js declares `const DATA`, so read it inside a sandbox.
 const DATA = new vm.Script(read("public/js/data.js") + "\nDATA;").runInNewContext({});
-const IMAGES = new vm.Script("(" + read("public/js/app.js").match(/const IMAGES = (\{[\s\S]*?\n\});/)[1] + ")").runInNewContext({});
+const IMAGES = new vm.Script("(" + read("public/js/site/core.js").match(/const IMAGES = (\{[\s\S]*?\n\});/)[1] + ")").runInNewContext({});
 const slugs = list => list.map(x => x.slug);
 
 test("every list has unique slugs and the required fields", () => {
