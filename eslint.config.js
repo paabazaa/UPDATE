@@ -12,5 +12,10 @@ export default [
       "no-unused-vars": ["warn", { args: "none", caughtErrors: "none" }],
       "no-empty": ["warn", { allowEmptyCatch: true }]
     }
+  },
+  {
+    // The browser tests run small pieces of code inside the page, so they use browser names such as document and window.
+    files: ["test/pages.test.mjs"],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } }
   }
 ];
