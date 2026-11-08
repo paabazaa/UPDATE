@@ -19,7 +19,8 @@ before(async () => {
     const url = new URL(req.url, "http://x").pathname;
     // Browser-only mode: no API address, so nothing is sent anywhere.
     if (url === "/js/config.js") { res.setHeader("Content-Type", "text/javascript"); return res.end('const SURGICISS_CONFIG={apiBase:"",company:{}};window.SURGICISS_CONFIG=SURGICISS_CONFIG;'); }
-    const file = url === "/" ? path.join(root, "index.html") : path.join(root, "public", url);
+    // Like the real server: a page address without a file ending is answered with index.html.
+    const file = url === "/" || !path.extname(url) ? path.join(root, "index.html") : path.join(root, "public", url);
     if (!file.startsWith(root) || !fs.existsSync(file) || !fs.statSync(file).isFile()) { res.statusCode = 404; return res.end("missing"); }
     res.setHeader("Content-Type", types[path.extname(file)] || "application/octet-stream");
     fs.createReadStream(file).pipe(res);
@@ -37,7 +38,7 @@ async function open(hash, size = {width: 1280, height: 900}) {
   // A missing file on the site itself is a problem. The account calls to /api are expected to fail here: there is no server.
   page.on("response", r => { if (r.status() >= 400 && r.url().startsWith(base) && !r.url().includes("/api/")) problems.push(`${r.status()} ${r.url().replace(base, "")}`); });
   await page.route(url => !url.href.startsWith(base), r => r.abort());
-  await page.goto(`${base}/#${hash}`);
+  await page.goto(`${base}${hash}`);
   await page.waitForSelector("main h1, main h2", {timeout: 5000});
   return {page, problems};
 }
@@ -69,10 +70,10 @@ test("an unknown address shows the not-found page", async () => {
 
 test("every link in the header and footer leads to a real page", async () => {
   const {page} = await open("/");
-  const links = await page.evaluate(() => [...new Set([...document.querySelectorAll("header a[href^='#/'], footer a[href^='#/']")].map(a => a.getAttribute("href").slice(1).split("?")[0]))]);
+  const links = await page.evaluate(() => [...new Set([...document.querySelectorAll("header a[href^='/'], footer a[href^='/']")].map(a => a.getAttribute("href").split("?")[0]).filter(h => !/\.[a-z0-9]+$/i.test(h)))]);
   assert.ok(links.length > 10, "found too few links: " + links.length);
   for (const link of links) {
-    await page.goto(`${base}/#${link}`);
+    await page.goto(`${base}${link}`);
     await page.waitForSelector("main h1, main h2");
     assert.ok(!/can.t find that page/i.test(await headline(page)), `${link} leads to "page not found"`);
   }
@@ -93,7 +94,7 @@ test("pictures load on the home page, the products page and every product page",
 test("the Master Wrap page offers the instructions for use PDF", async () => {
   const {page} = await open("/products/surgical-instrument-master-wrap");
   const href = await page.getAttribute(".ifu-dl a", "href");
-  const res = await page.request.get(`${base}/${href}`);
+  const res = await page.request.get(`${base}${href}`);
   assert.equal(res.status(), 200);
   assert.match(res.headers()["content-type"], /pdf/);
   assert.equal(await page.locator(".ifu-steps li").count(), 3);
@@ -128,4 +129,27 @@ test("the phone layout has no sideways scrolling and the logo is the right size"
     assert.ok(m.logo >= 30 && m.logo <= 80, `${route} logo is ${m.logo}px tall on a phone`);
     await page.close();
   }
+});
+
+test("pages have real addresses and links open without reloading", async () => {
+  const {page} = await open("/");
+  await page.evaluate(() => { window.__same = true; });
+  await page.click("header a[href='/products']");
+  await page.waitForURL(`${base}/products`);
+  assert.ok(await page.evaluate(() => window.__same === true), "the page was reloaded");
+  assert.match(await headline(page), /product/i);
+  await page.goBack();
+  await page.waitForURL(`${base}/`);
+  assert.ok(await page.evaluate(() => window.__same === true), "back reloaded the page");
+  await page.close();
+});
+
+test("old links with a # address open the real page", async () => {
+  const page = await browser.newPage();
+  await page.route(url => !url.href.startsWith(base), r => r.abort());
+  await page.goto(`${base}/#/products/surgical-instrument-master-wrap`);
+  await page.waitForSelector("main h1");
+  assert.equal(new URL(page.url()).pathname, "/products/surgical-instrument-master-wrap");
+  assert.equal(new URL(page.url()).hash, "");
+  await page.close();
 });

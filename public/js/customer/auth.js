@@ -11,30 +11,30 @@ function customerHeader() {
   const mgroup = (label, links, allTo, allLabel) => `<div class="mg"><div class="mrow"><a href="${href(allTo)}">${label}</a><button type="button" class="mt" aria-label="Show ${label} menu" aria-expanded="false" data-mtoggle>${icons.down}</button></div><div class="msub" hidden>${links.map(link => `<a href="${href(link.to)}">${escapeHtml(link.label)}</a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}</a></div></div>`;
   const user = Accounts.current();
   const accountDesktop = user
-    ? `<a class="hbtn solid-soft desk-only" href="#/account">${avatarHtml(user, "sm")}My account</a><button type="button" class="hbtn plain desk-only" data-logout>Log out</button>`
-    : `<a class="hbtn plain desk-only${act("/login")}" href="#/login">Login</a><a class="hbtn outline desk-only${act("/sign-up")}" href="#/sign-up">Create account</a>`;
+    ? `<a class="hbtn solid-soft desk-only" href="/account">${avatarHtml(user, "sm")}My account</a><button type="button" class="hbtn plain desk-only" data-logout>Log out</button>`
+    : `<a class="hbtn plain desk-only${act("/login")}" href="/login">Login</a><a class="hbtn outline desk-only${act("/sign-up")}" href="/sign-up">Create account</a>`;
   const accountMobile = user
-    ? `<a href="#/account">My account</a><a href="#/account/quotes">My quotes</a><a href="#/account/enquiries">My enquiries</a><a href="#/account/orders">My orders</a><button type="button" class="linkish" data-logout>Log out</button>`
-    : `<a href="#/login">Login</a><a href="#/sign-up">Create account</a>`;
+    ? `<a href="/account">My account</a><a href="/account/quotes">My quotes</a><a href="/account/enquiries">My enquiries</a><a href="/account/orders">My orders</a><button type="button" class="linkish" data-logout>Log out</button>`
+    : `<a href="/login">Login</a><a href="/sign-up">Create account</a>`;
   return `<header class="site" id="hdr"><div class="wrap hbar">
-    <a class="logo" href="#/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
+    <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
     <div class="htools">
       ${accountDesktop}
-      <a class="hbtn primary desk-only" href="#/generate-quote">${icons.plus}Generate quote</a>
+      <a class="hbtn primary desk-only" href="/generate-quote">${icons.plus}Generate quote</a>
       <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav">${state.mobile ? icons.close : icons.menu}Menu</button>
       ${themeButton()}
     </div>
   </div>
   <div class="navrow"><nav class="main" aria-label="Main navigation">
-      <a class="tl home${act("/")}" href="#/" aria-label="Home" title="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></a>
+      <a class="tl home${act("/")}" href="/" aria-label="Home" title="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></a>
       ${dd("software", "Software", softwareLinks, "/software", "All Software")}
       ${dd("products", "Products", productLinks, "/products", "All Products")}
-      <a class="tl${act("/count-sheet-holders")}" href="#/count-sheet-holders">Instrument Count Sheet Holders</a>
-      <a class="tl${act("/contact-us")}" href="#/contact-us">Contact Us</a>
+      <a class="tl${act("/count-sheet-holders")}" href="/count-sheet-holders">Instrument Count Sheet Holders</a>
+      <a class="tl${act("/contact-us")}" href="/contact-us">Contact Us</a>
     </nav>
         </div>
-    <div class="mobile-cta"><a class="mc-primary" href="#/generate-quote">${icons.plus}Generate quote</a><a class="mc-second" href="#/contact-us">Ask a question</a></div>
-    ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="#/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", softwareLinks, "/software", "All Software")}${mgroup("Products", productLinks, "/products", "All Products")}<a href="#/count-sheet-holders">Instrument Count Sheet Holders</a><a href="#/services">Services</a><a href="#/programmes">Programmes</a><a href="#/about">About</a><a href="#/contact-us">Contact Us</a>${accountMobile}<a class="quote" href="#/generate-quote">Generate quote</a><a class="ask" href="#/contact-us">Ask a question</a></nav>
+    <div class="mobile-cta"><a class="mc-primary" href="/generate-quote">${icons.plus}Generate quote</a><a class="mc-second" href="/contact-us">Ask a question</a></div>
+    ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", softwareLinks, "/software", "All Software")}${mgroup("Products", productLinks, "/products", "All Products")}<a href="/count-sheet-holders">Instrument Count Sheet Holders</a><a href="/services">Services</a><a href="/programmes">Programmes</a><a href="/about">About</a><a href="/contact-us">Contact Us</a>${accountMobile}<a class="quote" href="/generate-quote">Generate quote</a><a class="ask" href="/contact-us">Ask a question</a></nav>
       </div>` : ""}
   </header>`;
 }
@@ -81,7 +81,7 @@ function authSplit({title, heading, lead, perks, body, fine}) {
   return `<section class="login-page"><div class="wrap">
     <div class="login-card">
       <aside class="login-brand">
-        <a class="login-logo" href="#/" aria-label="SURGICISS LTD home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
+        <a class="login-logo" href="/" aria-label="SURGICISS LTD home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
         <h1>${title}</h1>
         <p class="login-lead">${lead}</p>
         <ul class="login-perks">${perks.map(text => `<li>${text}</li>`).join("")}</ul>
@@ -161,7 +161,7 @@ function forgotPage() {
       <p style="margin-top:12px"><a href="${withNext("/login")}">Back to login</a></p></div>`);
   }
   const user = Accounts.current();
-  const signedIn = user ? `<p class="muted" style="font-size:14px">You are already signed in. You can change the password from <a href="#/account/settings">Account settings</a>.</p>` : "";
+  const signedIn = user ? `<p class="muted" style="font-size:14px">You are already signed in. You can change the password from <a href="/account/settings">Account settings</a>.</p>` : "";
   const formError = state.authError ? `<p class="err" role="alert">${escapeHtml(state.authError)}</p>` : "";
   return authCard("Forgot password", "Tell us the email address on the account and we will email you a link to choose a new password.", `<form class="enq" id="forgot-form" novalidate>
     ${formError}
@@ -177,11 +177,11 @@ function resetPage() {
   if (state.resetDone) {
     return authCard("Choose a new password", "Your password has been changed.", `<div class="done" role="status"><h2>Your password has been changed.</h2>
       <p>You can now log in with the new password. You have been signed out everywhere else.</p>
-      <p style="margin-top:12px"><a class="btn" href="#/login">Login</a></p></div>`);
+      <p style="margin-top:12px"><a class="btn" href="/login">Login</a></p></div>`);
   }
   const formError = state.authError ? `<p class="err" role="alert">${escapeHtml(state.authError)}</p>` : "";
   if (!currentQuery().get("token")) {
-    return authCard("Choose a new password", "This link is incomplete.", `<div class="done"><p>Open the link from the reset email again, or <a href="#/forgot-password">request a new one</a>.</p></div>`);
+    return authCard("Choose a new password", "This link is incomplete.", `<div class="done"><p>Open the link from the reset email again, or <a href="/forgot-password">request a new one</a>.</p></div>`);
   }
   return authCard("Choose a new password", "Enter a new password for your account.", `<form class="enq" id="reset-form" novalidate>
     ${formError}

@@ -52,10 +52,10 @@ function safeNext(value) {
 }
 function withNext(path) {
   const next = currentQuery().get("next");
-  return next ? "#" + path + "?next=" + encodeURIComponent(safeNext(next)) : "#" + path;
+  return next ? path + "?next=" + encodeURIComponent(safeNext(next)) : path;
 }
 function goNext(fallback) {
-  location.hash = "#" + safeNext(currentQuery().get("next") || fallback || "/account");
+  navigate(safeNext(currentQuery().get("next") || fallback || "/account"));
 }
 function localNotice() {
   return "";

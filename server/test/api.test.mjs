@@ -181,7 +181,7 @@ test("password reset by email link", async () => {
   assert.equal((await api("POST", "/api/auth/forgot", {email: "ama@example.com"})).status, 200);
   assert.equal(s.outbox.length, 1);
   const token = s.outbox[0].text.match(/token=([\w-]+)/)[1];
-  assert.ok(s.outbox[0].text.includes(ORIGIN + "/html/#/reset-password?token="));
+  assert.ok(s.outbox[0].text.includes(ORIGIN + "/html/reset-password?token="));
   assert.equal((await api("POST", "/api/auth/reset", {token: "wrong", password: "brand new pass", confirm: "brand new pass"})).status, 400);
   assert.equal((await api("POST", "/api/auth/reset", {token, password: "brand new pass", confirm: "brand new pass"})).status, 200);
   assert.equal((await api("POST", "/api/auth/reset", {token, password: "another pass 22", confirm: "another pass 22"})).status, 400, "a link works once");
@@ -273,7 +273,7 @@ const asUser = (s, session) => async path => (await fetch(s.base + path, {header
 test("only configured providers are offered", async () => {
   const none = await start(); assert.deepEqual((await none.client()("GET", "/api/auth/oauth/providers")).data.providers, []);
   const redirected = await fetch(none.base + "/api/auth/oauth/google/start", {redirect: "manual"});
-  assert.match(redirected.headers.get("location"), /#\/login\?error=oauth_unavailable$/);
+  assert.match(redirected.headers.get("location"), /\/login\?error=oauth_unavailable$/);
   await none.close();
   const some = await start({...OAUTH_ENV, FACEBOOK_APP_ID: "", FACEBOOK_APP_SECRET: ""});
   assert.deepEqual((await some.client()("GET", "/api/auth/oauth/providers")).data.providers, ["google"]);
@@ -301,7 +301,7 @@ test("a new Google user is created and signed in", async () => {
   const s = await start(OAUTH_ENV, fake.fetch);
   const r = await oauthRun(s, "google", {next: "/account/quotes"});
   assert.equal(r.callback.status, 302);
-  assert.equal(r.location, ORIGIN + "/html/#/account/quotes");
+  assert.equal(r.location, ORIGIN + "/html/account/quotes");
   assert.match(r.session, /^surgiciss_session=/);
   const me = await asUser(s, r.session)("/api/auth/me");
   assert.equal(me.user.email, "ama@example.com"); assert.equal(me.user.name, "Ama Mensah"); assert.equal(me.user.hasPassword, false);
@@ -321,7 +321,7 @@ test("a Facebook user can sign in", async () => {
   const s = await start(OAUTH_ENV, fake.fetch);
   const r = await oauthRun(s, "facebook");
   assert.equal(r.authorize.hostname, "www.facebook.com"); assert.equal(r.authorize.searchParams.get("scope"), "email,public_profile");
-  assert.equal(r.location, ORIGIN + "/html/#/account");
+  assert.equal(r.location, ORIGIN + "/html/account");
   assert.equal((await asUser(s, r.session)("/api/auth/me")).user.email, "kofi@example.com");
   await s.close();
 });
@@ -362,7 +362,7 @@ test("the page to return to must be a path on the site", async () => {
   const fake = fakeProviders(); fake.profile = googleProfile(); const s = await start(OAUTH_ENV, fake.fetch);
   for (const next of ["//evil.example", "https://evil.example", "/\\evil.example", "/login", "javascript:alert(1)"]) {
     const r = await oauthRun(s, "google", {next});
-    assert.equal(r.location, ORIGIN + "/html/#/account", next);
+    assert.equal(r.location, ORIGIN + "/html/account", next);
   }
   await s.close();
 });

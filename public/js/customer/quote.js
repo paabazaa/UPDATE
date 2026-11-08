@@ -149,8 +149,8 @@ function quoteGate() {
     + `<section class="wrap narrow sec"><div class="box tint quote-gate" role="region" aria-labelledby="gate-title">
       <h2 class="h-sec" id="gate-title">Please log in to generate a quote</h2>
       <p style="margin-top:12px">You need an account, and to be logged in, before you can generate a quote. It takes a minute to create one.${item ? ` Your choice, <strong>${escapeHtml(item)}</strong>, will be waiting for you.` : ""}</p>
-      <div class="row" style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn lg" href="#/login?next=${next}">Log in</a><a class="btn lg line" href="#/sign-up?next=${next}">Create account</a></div>
-      <p class="muted" style="margin-top:20px;font-size:14px">Only have a question? You can <a href="#/contact-us">ask us without an account</a>.</p>
+      <div class="row" style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn lg" href="/login?next=${next}">Log in</a><a class="btn lg line" href="/sign-up?next=${next}">Create account</a></div>
+      <p class="muted" style="margin-top:20px;font-size:14px">Only have a question? You can <a href="/contact-us">ask us without an account</a>.</p>
     </div></section>`;
 }
 function quotePage() {
@@ -189,7 +189,7 @@ function quotePage() {
           </div>
       <div class="box"><h2 class="h-sec">Just a question?</h2>
           <p>You do not need a quote to ask something. The contact page is open to everyone.</p>
-          <a class="btn line" href="#/contact-us">Ask a question</a></div>
+          <a class="btn line" href="/contact-us">Ask a question</a></div>
     </aside>
           </div>
           </section>`;
@@ -197,8 +197,8 @@ function quotePage() {
 function quoteDone(record) {
   const user = Accounts.current();
   const filing = user
-    ? `<p><a href="#/account/quotes/${encodeURIComponent(record.id)}">View it in My quotes</a></p>`
-    : `<p><a href="#/sign-up?next=${encodeURIComponent("/account/quotes")}">Create an account</a> with ${escapeHtml(record.contact.email)} ${"to keep your future requests together under My quotes."}</p>`;
+    ? `<p><a href="/account/quotes/${encodeURIComponent(record.id)}">View it in My quotes</a></p>`
+    : `<p><a href="/sign-up?next=${encodeURIComponent("/account/quotes")}">Create an account</a> with ${escapeHtml(record.contact.email)} ${"to keep your future requests together under My quotes."}</p>`;
   return banner("Quote request", [{label: "Generate a quote"}], "Keep the reference. A request is not an order.")
     + `<section class="wrap narrow sec"><div class="done" role="status"><h2>Your quote request was sent.</h2><p>${escapeHtml(deliveryCopy(record))}</p><p>Reference <strong>${escapeHtml(record.id)}</strong>.</p>${filing}<div class="row" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="btn" data-download="${escapeHtml(record.id)}">Download a copy</button><button type="button" class="btn line" id="again">Prepare another</button></div>
       </div>

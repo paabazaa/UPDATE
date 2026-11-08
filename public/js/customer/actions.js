@@ -124,7 +124,7 @@ async function submitDelete(form) {
   if (!result.ok) return refuse(result.error || "The account could not be deleted. Please try again.");
   try {sessionStorage.setItem("surgiciss-flash", "Your account has been removed. You are back on the public site.");}
   catch (err) { /* ignore */}
-  location.hash = "#/";
+  navigate("/");
 }
 
 // Profile picture: the chosen file is cropped to a square and shrunk in the page before it is sent to the server.

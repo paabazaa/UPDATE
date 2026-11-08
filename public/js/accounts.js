@@ -219,7 +219,7 @@ const serverAccounts = (() => {
     hasProvider(name) { return providers.includes(name); },
     oauthUrl(provider) {
       const base = window.location.origin;
-      return `/auth/oauth/${provider}?return=${encodeURIComponent(base + '/#/account')}`;
+      return `/auth/oauth/${provider}?return=${encodeURIComponent(base + '/account')}`;
     },
     loginWithProvider(provider) {
       if (!this.hasProvider(provider)) return { ok: false, error: `${provider} not enabled` };

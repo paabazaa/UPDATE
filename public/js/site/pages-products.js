@@ -4,14 +4,14 @@
 Object.assign(pages, {
   products() {
     return banner("Products", [{label: "Products"}], "Practical devices for the parts of the process that most often go wrong: protecting wrapped trays, keeping brushes and count sheets where they belong, and proving that checks were carried out.")
-      + `<section class="wrap sec"><div class="filterbar"><a class="chip on" href="#/products" aria-current="page">All products <b>${products.length}</b></a>${productCategories.map(c => `<a class="chip" href="${href("/product-category/" + c.slug)}">${escapeHtml(c.name)} <b>${products.filter(p => p.category === c.slug).length}</b></a>`).join("")}</div><h2 class="sr">All products</h2><div class="grid g3" style="margin-top:32px">${products.map(productCard).join("")}</div></section>`
+      + `<section class="wrap sec"><div class="filterbar"><a class="chip on" href="/products" aria-current="page">All products <b>${products.length}</b></a>${productCategories.map(c => `<a class="chip" href="${href("/product-category/" + c.slug)}">${escapeHtml(c.name)} <b>${products.filter(p => p.category === c.slug).length}</b></a>`).join("")}</div><h2 class="sr">All products</h2><div class="grid g3" style="margin-top:32px">${products.map(productCard).join("")}</div></section>`
       + callToAction("Need a quotation for several lines?", "Send one enquiry with the products and quantities and we will price it together.");
   },
   category(slug) {
     const c = productCategories.find(x => x.slug === slug); if (!c) return null;
     const list = products.filter(p => p.category === slug);
     return banner(c.name, [{label: "Products", to: "/products"}, {label: c.name}], c.description)
-      + `<section class="wrap sec"><div class="filterbar"><a class="chip" href="#/products">All products <b>${products.length}</b></a>${productCategories.map(x => `<a class="chip${x.slug === slug ? " on" : ""}" href="${href("/product-category/" + x.slug)}"${x.slug === slug ? ' aria-current="page"' : ""}>${escapeHtml(x.name)} <b>${products.filter(p => p.category === x.slug).length}</b></a>`).join("")}</div>${list.length ? `<h2 class="sr">Products in this category</h2><div class="grid g3" style="margin-top:32px">${list.map(productCard).join("")}</div>` : `<p class="muted" style="font-size:14px;margin-top:24px">No products are listed in this category yet. <a style="color:var(--link)" href="#/contact-us">Contact us</a> for the current range.</p>`}</section>`
+      + `<section class="wrap sec"><div class="filterbar"><a class="chip" href="/products">All products <b>${products.length}</b></a>${productCategories.map(x => `<a class="chip${x.slug === slug ? " on" : ""}" href="${href("/product-category/" + x.slug)}"${x.slug === slug ? ' aria-current="page"' : ""}>${escapeHtml(x.name)} <b>${products.filter(p => p.category === x.slug).length}</b></a>`).join("")}</div>${list.length ? `<h2 class="sr">Products in this category</h2><div class="grid g3" style="margin-top:32px">${list.map(productCard).join("")}</div>` : `<p class="muted" style="font-size:14px;margin-top:24px">No products are listed in this category yet. <a style="color:var(--link)" href="/contact-us">Contact us</a> for the current range.</p>`}</section>`
       + callToAction("Not sure which option suits your sets?", "Describe the trays and we will recommend a fit.");
   },
   product(slug) {
@@ -21,7 +21,7 @@ Object.assign(pages, {
     return imageBanner(p.name, [{label: "Products", to: "/products"}, {label: p.name}], "", p.image, catName(p.category))
       + `<section class="wrap sec"><div class="pd">
       <aside class="pd-media"><div class="pd-photo"><img class="pimg" src="${imageUrl(p.image)}" alt="${escapeHtml(p.name)}" width="1024" height="1024"><span class="badge"><a href="${href("/product-category/" + p.category)}">${escapeHtml(catName(p.category))}</a></span></div>
-        <div class="pd-buy"><a class="btn lg" href="${quoteHref(p.name)}">Request a quote${icons.arrow}</a><a class="btn line lg" href="#/contact-us">Ask a question</a>${p.ifu ? `<a class="btn line lg" href="${p.ifu.pdf}" target="_blank" rel="noopener">Instructions for use (PDF)</a>` : ""}<p>Prices are given by quotation, not shown on the page.</p></div></aside>
+        <div class="pd-buy"><a class="btn lg" href="${quoteHref(p.name)}">Request a quote${icons.arrow}</a><a class="btn line lg" href="/contact-us">Ask a question</a>${p.ifu ? `<a class="btn line lg" href="${p.ifu.pdf}" target="_blank" rel="noopener">Instructions for use (PDF)</a>` : ""}<p>Prices are given by quotation, not shown on the page.</p></div></aside>
       <div class="pd-main">
         <p class="pd-lead">${escapeHtml(p.summary)}</p>
         ${facts.length ? `<dl class="facts">${facts.map(f => `<div><dt>${escapeHtml(f.label)}</dt><dd>${escapeHtml(f.value)}</dd></div>`).join("")}</dl>` : ""}
@@ -44,7 +44,7 @@ Object.assign(pages, {
         <p>A holder fixes the sheet in one predictable place, keeps it legible during assembly and inspection, and travels with the tray so the record and the instruments never separate.</p>
         </div>
       <h2 class="sr">Count sheet holders</h2><div class="grid g3" style="margin-top:40px">${holders.map(productCard).join("")}</div>
-        <div style="margin-top:40px"><a class="btn outline lg" href="#/products">All products</a></div>
+        <div style="margin-top:40px"><a class="btn outline lg" href="/products">All products</a></div>
         </section>`
       + callToAction("Sizing a holder to your sheets?", "Send us the sheet dimensions and tray type and we will confirm the fit.");
   }

@@ -21,7 +21,7 @@ Object.assign(pages, {
     <section class="sec tint"><div class="wrap intro"><h2>Products</h2>
       <p>Through research, development and the steady use of instrument processing products, software and methods in real departments, we work to support patient safety and the viability of the services that deliver it.</p>
       <div class="grid g3" style="gap:32px;margin-top:32px;text-align:left">${featured.map(x => `<article class="feat"><a href="${href("/products/" + x.slug)}" style="display:block;overflow:hidden;background:var(--card)"><img src="${imageUrl(x.image)}" alt="${escapeHtml(x.name)}" loading="lazy" width="800" height="520"></a><h3 class="h-card"><a class="stretch" href="${href("/products/" + x.slug)}">${escapeHtml(x.name)}</a></h3><p>${escapeHtml(x.summary)}</p><a class="tlink" href="${quoteHref(x.name)}">Request a quote${icons.arrow}</a></article>`).join("")}</div>
-      <div class="center" style="margin-top:40px"><a class="btn lg" href="#/products">All Products${icons.arrow}</a></div>
+      <div class="center" style="margin-top:40px"><a class="btn lg" href="/products">All Products${icons.arrow}</a></div>
         </div>
         </section>`;
   },

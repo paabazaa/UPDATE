@@ -30,13 +30,13 @@ function accountShell(title, body) {
   const path = currentPath();
   const home = path === "/account";
   const first = String(user.name || "").trim().split(/\s+/)[0] || "there";
-  const item = (hrefPath, label, icon) => `<a href="#${hrefPath}" class="${navOn(hrefPath, path) ? "active" : ""}"${navOn(hrefPath, path) ? ' aria-current="page"' : ""}>${dashIcon(icon)}<span>${label}</span></a>`;
-  const eyebrow = home ? "Your account" : `<a href="#/account">Your account</a><span aria-hidden="true"> / </span>${escapeHtml(title)}`;
+  const item = (hrefPath, label, icon) => `<a href="${hrefPath}" class="${navOn(hrefPath, path) ? "active" : ""}"${navOn(hrefPath, path) ? ' aria-current="page"' : ""}>${dashIcon(icon)}<span>${label}</span></a>`;
+  const eyebrow = home ? "Your account" : `<a href="/account">Your account</a><span aria-hidden="true"> / </span>${escapeHtml(title)}`;
   const sub = [user.email, user.organisation].filter(Boolean).map(escapeHtml).join(" · ");
   return `<section class="dash-hero"><div class="wrap dash-hero-in">
       <span class="avatar-wrap"><button type="button" class="avatar-open" data-avatar-open aria-label="View profile picture">${avatarHtml(user, "lg")}</button><label class="avatar-cam" for="avatar-file" title="Upload a profile picture" aria-label="Upload a profile picture">${dashIcon("camera")}</label><input type="file" id="avatar-file" accept="image/png,image/jpeg,image/webp" hidden></span>
       <div class="dash-who"><p class="eyebrow">${eyebrow}</p><h1>${home ? `Welcome back, ${escapeHtml(first)}` : escapeHtml(title)}</h1><p class="sub">${sub}</p></div>
-      <div class="dash-actions"><a class="btn light" href="#/generate-quote">${dashIcon("plus")}Generate quote</a><a class="btn ghost" href="#/contact-us">Ask a question</a></div>
+      <div class="dash-actions"><a class="btn light" href="/generate-quote">${dashIcon("plus")}Generate quote</a><a class="btn ghost" href="/contact-us">Ask a question</a></div>
     </div></section>
     <section class="wrap dash"><nav class="dash-nav" aria-label="Account">
       ${item("/account", "Overview", "overview")}
@@ -48,7 +48,7 @@ function accountShell(title, body) {
       ${item("/account/profile/edit", "Edit profile", "edit")}
       ${item("/account/settings", "Account settings", "settings")}
       <button type="button" class="navitem" data-logout>${dashIcon("logout")}<span>Log out</span></button>
-      <a class="navitem-danger" href="#/account/settings?delete=1">${dashIcon("trash")}<span>Delete account</span></a>
+      <a class="navitem-danger" href="/account/settings?delete=1">${dashIcon("trash")}<span>Delete account</span></a>
     </nav><div class="dash-main">${state.pictureError ? `<div class="note warn" role="alert" style="margin-bottom:16px"><p>${escapeHtml(state.pictureError)}</p></div>` : ""}${body}</div></section>`;
 }
 function navOn(hrefPath, path) {
@@ -60,8 +60,8 @@ function navOn(hrefPath, path) {
 function allActivity() {
   const user = Accounts.current();
   return [
-    ...Records.quotesFor(user.id).map(q => ({kind: "quote", id: q.id, when: q.createdAt, href: `#/account/quotes/${encodeURIComponent(q.id)}`, icon: "quotes", title: `Quote request ${q.id}`, meta: `${q.lines.length} item${q.lines.length === 1 ? "" : "s"}`})),
-    ...Records.enquiriesFor(user.id).map(n => ({kind: "enquiry", id: n.id, when: n.createdAt, href: `#/account/enquiries/${encodeURIComponent(n.id)}`, icon: "enquiries", title: n.subject || "Enquiry", meta: n.id}))
+    ...Records.quotesFor(user.id).map(q => ({kind: "quote", id: q.id, when: q.createdAt, href: `/account/quotes/${encodeURIComponent(q.id)}`, icon: "quotes", title: `Quote request ${q.id}`, meta: `${q.lines.length} item${q.lines.length === 1 ? "" : "s"}`})),
+    ...Records.enquiriesFor(user.id).map(n => ({kind: "enquiry", id: n.id, when: n.createdAt, href: `/account/enquiries/${encodeURIComponent(n.id)}`, icon: "enquiries", title: n.subject || "Enquiry", meta: n.id}))
   ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
 }
 // Message shown above the lists that have delete buttons: what happened, or why a delete did not go through.
@@ -79,18 +79,18 @@ function accountHome() {
   const activity = allActivity();
   const activityHtml = activity.length
     ? `<div class="act-scroll">${activityList(activity)}</div>`
-    : `<div class="act-empty"><p><b>No activity yet</b></p><p>Quote requests and enquiries you send while signed in will appear here.</p><p><a class="btn" href="#/generate-quote">Generate a quote</a></p></div>`;
+    : `<div class="act-empty"><p><b>No activity yet</b></p><p>Quote requests and enquiries you send while signed in will appear here.</p><p><a class="btn" href="/generate-quote">Generate a quote</a></p></div>`;
   const where = [user.city, user.country].filter(Boolean).map(escapeHtml).join(", ");
   const row = (icon, label, value) => `<li>${dashIcon(icon)}<span><small>${label}</small>${value ? escapeHtml(value) : '<em>Not provided</em>'}</span></li>`;
   return accountShell("Your account", `${notice}
     <div class="statgrid dash-stats">
-      <a class="stat" href="#/account/quotes"><span class="stat-ico">${dashIcon("quotes")}</span><b>${quotes.length}</b><span class="stat-label">Quote requests</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
-      <a class="stat" href="#/account/enquiries"><span class="stat-ico">${dashIcon("enquiries")}</span><b>${enquiries.length}</b><span class="stat-label">Enquiries</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
-      <a class="stat" href="#/account/orders"><span class="stat-ico">${dashIcon("orders")}</span><b>${activity.length}</b><span class="stat-label">Orders</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="/account/quotes"><span class="stat-ico">${dashIcon("quotes")}</span><b>${quotes.length}</b><span class="stat-label">Quote requests</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="/account/enquiries"><span class="stat-ico">${dashIcon("enquiries")}</span><b>${enquiries.length}</b><span class="stat-label">Enquiries</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="/account/orders"><span class="stat-ico">${dashIcon("orders")}</span><b>${activity.length}</b><span class="stat-label">Orders</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
     </div>
     <div class="dash-cols">
       <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Recent activity</h2><span class="count-badge">${activity.length}</span></div>${activityHtml}</div>
-      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Your details</h2><a class="tlink" href="#/account/profile/edit">Edit</a></div>
+      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Your details</h2><a class="tlink" href="/account/profile/edit">Edit</a></div>
         <ul class="detail-list">
           ${row("profile", "Name", user.name)}${row("quotes", "Organisation", user.organisation)}${row("pin", "Location", where)}${row("phone", "Telephone", user.phone)}
         </ul>
@@ -107,7 +107,7 @@ function passwordCard() {
   const user = Accounts.current();
   if (user && user.hasPassword === false) {
     return `<div class="box" id="password-card"><h2 class="h-sec">Password</h2>
-      <p class="muted" style="font-size:14px;margin-top:8px">You sign in with Google or Facebook, so this account has no password. If you would also like to sign in with an email and password, <a href="#/forgot-password">request a link to set one</a>.</p></div>`;
+      <p class="muted" style="font-size:14px;margin-top:8px">You sign in with Google or Facebook, so this account has no password. If you would also like to sign in with an email and password, <a href="/forgot-password">request a link to set one</a>.</p></div>`;
   }
   const msg = state.passwordMsg;
   const note = msg ? (msg.ok
@@ -125,7 +125,7 @@ function passwordCard() {
 function accountProfile() {
   const user = Accounts.current();
   return accountShell("My profile", `<div class="box"><h2 class="h-sec">Profile</h2>
-    <p class="muted" style="margin-top:8px;font-size:14px">The email address is the sign-in name and cannot be changed here.</p>${profileList(user)}<a class="btn" href="#/account/profile/edit" style="margin-top:16px">Edit profile</a></div>
+    <p class="muted" style="margin-top:8px;font-size:14px">The email address is the sign-in name and cannot be changed here.</p>${profileList(user)}<a class="btn" href="/account/profile/edit" style="margin-top:16px">Edit profile</a></div>
     <div style="margin-top:24px">${passwordCard()}</div>`);
 }
 function accountEdit() {
@@ -157,7 +157,7 @@ function accountOrders() {
   if (!list.length) {
     return accountShell("My orders", `${notice}<div class="empty"><h2>No orders yet</h2>
       <p>Quote requests and enquiries you send while signed in are listed here.</p>
-      <p style="margin-top:16px"><a class="btn" href="#/generate-quote">Generate quote</a></p>
+      <p style="margin-top:16px"><a class="btn" href="/generate-quote">Generate quote</a></p>
       </div>`);
   }
   return accountShell("My orders", `${notice}<div class="box dash-card"><div class="card-head"><h2 class="h-sec">All orders</h2><span class="count-badge">${list.length}</span></div>${activityList(list)}</div>`);
