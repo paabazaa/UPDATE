@@ -2,10 +2,10 @@
 // Part of the site scripts. Loaded in order by index.html; they share one global scope.
 
 /* ---------- shared pieces ---------- */
-const href = p => "#" + p;
-const quoteHref = item => "#/generate-quote" + (item ? "?item=" + encodeURIComponent(item) : "");
+const href = p => p;
+const quoteHref = item => "/generate-quote" + (item ? "?item=" + encodeURIComponent(item) : "");
 const crumbs = list => {
-  const items = [`<li style="display:flex;align-items:center;gap:4px"><a href="#/">Home</a>${icons.chev}</li>`].concat(list.map((c, i) => {
+  const items = [`<li style="display:flex;align-items:center;gap:4px"><a href="/">Home</a>${icons.chev}</li>`].concat(list.map((c, i) => {
     const last = i === list.length - 1;
     return `<li style="display:flex;align-items:center;gap:4px">${c.to && !last ? `<a href="${href(c.to)}">${escapeHtml(c.label)}</a>` : `<span class="cur">${escapeHtml(c.label)}</span>`}${last ? "" : icons.chev}</li>`;
   }));
@@ -19,7 +19,7 @@ const imageBanner = (title, cr, lead, img, kind) => `<div class="banner imgbanne
 // Closing banner with the two main actions.
 const callToAction = (h, b) => `<section class="cta"><div class="wrap"><div><h2>${escapeHtml(h)}</h2><p>${escapeHtml(b)}</p>
   </div>
-  <div class="row"><a class="btn" href="#/generate-quote">Generate quote</a><a class="btn ghost" href="#/contact-us">Ask a question</a></div>
+  <div class="row"><a class="btn" href="/generate-quote">Generate quote</a><a class="btn ghost" href="/contact-us">Ask a question</a></div>
   </div>
   </section>`;
 const productCard = p => `<article class="card pcard"><a class="img" href="${href("/products/" + p.slug)}" tabindex="-1" aria-hidden="true"><img src="${imageUrl(p.image)}" alt="" loading="lazy" width="900" height="700"><span class="badge">${escapeHtml(catName(p.category))}</span></a><div class="body"><h3 class="h-card"><a class="stretch" href="${href("/products/" + p.slug)}">${escapeHtml(p.name)}</a></h3><p>${escapeHtml(p.summary)}</p>${tickList(p.features.slice(0, 2))}<div class="acts"><a class="btn" href="${quoteHref(p.name)}">Request a quote</a><a class="btn line" href="${href("/products/" + p.slug)}">Details${icons.arrow}</a></div></div></article>`;

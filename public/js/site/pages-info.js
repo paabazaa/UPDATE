@@ -58,7 +58,7 @@ Object.assign(pages, {
     ];
     return banner("Resources", [{label: "Resources"}], "Short pieces written for the people doing the work. Downloadable versions are being prepared.")
       + `<section class="wrap sec"><div class="grid g2">${r.map(x => `<article class="box rcard" style="background:var(--card)"><h2 style="font-size:16px;color:var(--heading)"><a class="stretch" href="${href(x[2])}">${x[0]}</a></h2><p>${x[1]}</p><p style="margin-top:14px"><a class="tlink" href="${href(x[2])}">${x[3]}</a></p></article>`).join("")}</div>
-        <p class="muted" style="margin-top:40px;font-size:14px">Looking for something specific? <a style="color:var(--link)" href="#/contact-us">Ask us</a> and we will point you to it or write it.</p>
+        <p class="muted" style="margin-top:40px;font-size:14px">Looking for something specific? <a style="color:var(--link)" href="/contact-us">Ask us</a> and we will point you to it or write it.</p>
         </section>`
       + callToAction("Want these as handouts for your team?", "Tell us how many you need and in what format.");
   },
@@ -108,7 +108,7 @@ Object.assign(pages, {
     return `<section class="wrap nf"><h1>404</h1>
       <h2>We can't find that page</h2>
       <p class="muted" style="margin-top:8px;font-size:14px">The page you are looking for does not exist or may have moved.</p>
-      <div class="row"><a class="btn lg" href="#/">Go home</a><a class="btn line lg" href="#/contact-us">Contact us</a></div>
+      <div class="row"><a class="btn lg" href="/">Go home</a><a class="btn line lg" href="/contact-us">Contact us</a></div>
       </section>`;
   }
 });

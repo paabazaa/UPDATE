@@ -277,7 +277,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
   }
 
   const siteBase = () => config.siteUrl || config.allowedOrigins[0] || "";
-  const siteRedirect = path => `${siteBase()}/#${path}`;
+  const siteRedirect = path => `${siteBase()}${path}`;
 
   const OAUTH_COOKIE = "surgiciss_oauth";
 
@@ -535,7 +535,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
           await db.execute("INSERT INTO password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [sha256(token), row.id, sqlDate(now), sqlDate(new Date(now.getTime() + HOUR))]);
           const base = config.siteUrl || config.allowedOrigins[0] || "";
           try {
-            await mailer.send({ to: email, subject: "Reset your SURGICISS password", text: `Use this link within one hour to choose a new password:\n\n${base}/#/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.` });
+            await mailer.send({ to: email, subject: "Reset your SURGICISS password", text: `Use this link within one hour to choose a new password:\n\n${base}/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.` });
           } catch (error) { console.error("[mail] Could not send password-reset email:", String((error && error.message) || error).slice(0, 300)); }
         }
       }

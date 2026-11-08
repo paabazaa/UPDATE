@@ -68,3 +68,11 @@ test("the sitemap and robots.txt point at the same address", () => {
   const site = read("public/sitemap.xml").match(/<loc>(https?:\/\/[^<]+?)\/?<\/loc>/)[1];
   assert.ok(read("public/robots.txt").includes(site + "/sitemap.xml"), "robots.txt does not name the sitemap");
 });
+
+test("the sitemap lists every product and software page with real addresses", () => {
+  const sitemap = read("public/sitemap.xml");
+  assert.ok(!sitemap.includes("#"), "the sitemap must not use # addresses");
+  for (const item of [...DATA.products.map(p => "/products/" + p.slug), ...DATA.software.map(s => "/software/" + s.slug)]) {
+    assert.ok(sitemap.includes(item + "</loc>"), "missing from the sitemap: " + item);
+  }
+});

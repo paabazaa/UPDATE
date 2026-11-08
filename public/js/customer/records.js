@@ -12,11 +12,11 @@ function accountHistory() {
   const filter = show === "quote" || show === "enquiry" ? show : "all";
   const list = filter === "all" ? all : all.filter(a => a.kind === filter);
   const counts = {all: all.length, quote: all.filter(a => a.kind === "quote").length, enquiry: all.filter(a => a.kind === "enquiry").length};
-  const tab = (key, label) => `<a class="hist-tab" href="#/account/history${key === "all" ? "" : "?show=" + key}" ${filter === key ? 'aria-current="page"' : ""}>${label}<span>${counts[key]}</span></a>`;
+  const tab = (key, label) => `<a class="hist-tab" href="/account/history${key === "all" ? "" : "?show=" + key}" ${filter === key ? 'aria-current="page"' : ""}>${label}<span>${counts[key]}</span></a>`;
   if (!all.length) {
     return accountShell("Order history", `<div class="empty"><h2>No history yet</h2>
       <p>Every quote request and enquiry you send while signed in is kept here, newest first.</p>
-      <p style="margin-top:16px"><a class="btn" href="#/generate-quote">Generate quote</a></p></div>`);
+      <p style="margin-top:16px"><a class="btn" href="/generate-quote">Generate quote</a></p></div>`);
   }
   const monthOf = when => {
     const d = new Date(when);
@@ -39,10 +39,10 @@ function accountQuotes() {
   if (!list.length) {
     return accountShell("My quotes", `<div class="empty"><h2>${"No quotes yet"}</h2>
       <p>When you generate a quote while signed in — or later sign in with the same email address — the request appears here. Nothing is shown unless you actually submitted it.</p>
-      <p style="margin-top:16px"><a class="btn" href="#/generate-quote">Generate quote</a></p>
+      <p style="margin-top:16px"><a class="btn" href="/generate-quote">Generate quote</a></p>
       </div>`);
   }
-  const rows = list.map(item => `<li><div class="listhead"><a href="#/account/quotes/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a>${statusPill(item)}${deleteControl("quote", item.id)}</div><p>${escapeHtml(formatWhen(item.createdAt))} · ${item.lines.length} item${item.lines.length === 1 ? "" : "s"} · ${escapeHtml(item.lines.map(line => line.name).join(", "))}</p></li>`).join("");
+  const rows = list.map(item => `<li><div class="listhead"><a href="/account/quotes/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a>${statusPill(item)}${deleteControl("quote", item.id)}</div><p>${escapeHtml(formatWhen(item.createdAt))} · ${item.lines.length} item${item.lines.length === 1 ? "" : "s"} · ${escapeHtml(item.lines.map(line => line.name).join(", "))}</p></li>`).join("");
   return accountShell("My quotes", `${listMessage()}<ul class="rec-list">${rows}</ul>`);
 }
 function accountQuoteDetail(id) {
@@ -59,10 +59,10 @@ function accountEnquiries() {
   if (!list.length) {
     return accountShell("My enquiries", `<div class="empty"><h2>${"No enquiries yet"}</h2>
       <p>Questions you send while signed in, or with the same email address, are listed here after you submit the contact form. The list does not mean SURGICISS has replied.</p>
-      <p style="margin-top:16px"><a class="btn" href="#/contact-us">Ask a question</a></p>
+      <p style="margin-top:16px"><a class="btn" href="/contact-us">Ask a question</a></p>
       </div>`);
   }
-  const rows = list.map(item => `<li><div class="listhead"><a href="#/account/enquiries/${encodeURIComponent(item.id)}">${escapeHtml(item.subject || "Enquiry")}</a>${statusPill(item)}${deleteControl("enquiry", item.id)}</div><p>${escapeHtml(item.id)} · ${escapeHtml(formatWhen(item.createdAt))}</p></li>`).join("");
+  const rows = list.map(item => `<li><div class="listhead"><a href="/account/enquiries/${encodeURIComponent(item.id)}">${escapeHtml(item.subject || "Enquiry")}</a>${statusPill(item)}${deleteControl("enquiry", item.id)}</div><p>${escapeHtml(item.id)} · ${escapeHtml(formatWhen(item.createdAt))}</p></li>`).join("");
   return accountShell("My enquiries", `${listMessage()}<ul class="rec-list">${rows}</ul>`);
 }
 function accountEnquiryDetail(id) {
@@ -107,12 +107,12 @@ function accountSettings() {
 function gatedPath() {
   let path = currentPath();
   if (path.startsWith("/account") && !Accounts.current()) {
-    history.replaceState(null, "", "#/login?next=" + encodeURIComponent(path));
+    history.replaceState(null, "", "/login?next=" + encodeURIComponent(path));
     path = "/login";
   }
   if ((path === "/login" || path === "/sign-up") && Accounts.current()) {
     const next = safeNext(currentQuery().get("next") || "/account");
-    history.replaceState(null, "", "#" + next);
+    history.replaceState(null, "", next);
     path = next.split("?")[0];
   }
   return path;

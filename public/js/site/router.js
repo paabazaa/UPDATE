@@ -5,13 +5,24 @@ function searchResults(idx) {
   const term = state.q.trim().toLowerCase();
   if (term.length < 2) return `<p class="muted" style="font-size:14px">Type at least two characters to search.</p>`;
   const res = idx.filter(e => (e.n + " " + e.s).toLowerCase().includes(term));
-  if (!res.length) return `<p class="muted" style="font-size:14px">Nothing matched “${escapeHtml(state.q)}”. <a style="color:var(--link)" href="#/contact-us">Ask us</a> and we will tell you whether we can supply it.</p>`;
+  if (!res.length) return `<p class="muted" style="font-size:14px">Nothing matched “${escapeHtml(state.q)}”. <a style="color:var(--link)" href="/contact-us">Ask us</a> and we will tell you whether we can supply it.</p>`;
   return `<ul class="results">${res.map(e => `<li><p class="k">${e.k}</p><a href="${href(e.to)}">${escapeHtml(e.n)}</a><p>${escapeHtml(e.s)}</p></li>`).join("")}</ul>`;
 }
 
 /* ---------- router ---------- */
-function currentPath() {return (location.hash.slice(1).split("?")[0] || "/").replace(/\/+$/, "") || "/";}
-function currentQuery() {const q = location.hash.split("?")[1] || ""; return new URLSearchParams(q);}
+function currentPath() {return (location.pathname.replace(/\/+$/, "")) || "/";}
+function currentQuery() {return new URLSearchParams(location.search);}
+// Move to another page of the site without reloading it.
+function navigate(to, replace) {
+  history[replace ? "replaceState" : "pushState"](null, "", to);
+  pageChanged();
+}
+function pageChanged() {
+  state.submitted = false; state.errors = {}; state.submitResult = null;
+  if (window.onBeforeRoute) onBeforeRoute();
+  route();
+  scrollTo(0, 0);
+}
 const titles = {"/": "SURGICISS LTD — Sterile Instrument Systems", "/about": "About SURGICISS LTD", "/products": "Products — SURGICISS LTD", "/software": "Software — SURGICISS LTD", "/services": "Services — SURGICISS LTD", "/programmes": "Programmes — SURGICISS LTD", "/count-sheet-holders": "Instrument count sheet holders — SURGICISS LTD", "/contact-us": "Contact SURGICISS LTD", "/request-quote": "Generate a quote — SURGICISS LTD", "/generate-quote": "Generate a quote — SURGICISS LTD", "/faq": "Frequently asked questions — SURGICISS LTD", "/resources": "Resources — SURGICISS LTD", "/search": "Search — SURGICISS LTD", "/privacy": "Privacy notice — SURGICISS LTD", "/terms": "Terms of use — SURGICISS LTD"};
 function route() {
   const p = currentPath(), seg = p.split("/").filter(Boolean);

@@ -2,15 +2,25 @@
 // Part of the site scripts. Loaded in order by index.html; they share one global scope.
 
 /* ---------- events ---------- */
+// A link to another page of this site (not a file, not a new tab, not a modified click) is opened without reloading.
+function isPageLink(link, e) {
+  const to = link.getAttribute("href");
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false;
+  if (link.target && link.target !== "_self") return false;
+  if (link.hasAttribute("download") || to.startsWith("//")) return false;
+  return !/\.[a-z0-9]+($|\?)/i.test(to.split("?")[0]);
+}
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-toggle],[data-mtoggle],[data-slide],[data-goto],#menubtn,#themebtn,#again,#totop");
   const inDD = e.target.closest(".dd");
   if (!inDD) document.querySelectorAll(".dd.open").forEach(x => x.classList.remove("open"));
-  const link = e.target.closest("a[href^='#']");
-  if (link) {
+  const link = e.target.closest("a[href^='/']");
+  if (link && isPageLink(link, e)) {
+    e.preventDefault();
     document.querySelectorAll(".dd.open").forEach(x => x.classList.remove("open"));
-    if (link.getAttribute("href") === (location.hash || "#/")) scrollTo({top: 0, behavior: "smooth"});
-    if (link.closest("#mobnav")) setTimeout(() => {if (state.mobile) {state.mobile = false; rerenderKeepScroll();} }, 0);
+    state.mobile = false;
+    if (link.getAttribute("href") === location.pathname + location.search) {rerenderKeepScroll(); scrollTo({top: 0, behavior: "smooth"});}
+    else navigate(link.getAttribute("href"));
   }
   if (!t) return;
   if (t.dataset.toggle) {const box = t.closest(".dd"); const was = box.classList.contains("open"); document.querySelectorAll(".dd.open").forEach(x => x.classList.remove("open")); box.classList.toggle("open", !was); t.setAttribute("aria-expanded", String(!was));}
@@ -70,7 +80,8 @@ addEventListener("scroll", () => {
   document.getElementById("totop").hidden = scrollY < 400;
 }, {passive: true});
 
-addEventListener("hashchange", () => {state.submitted = false; state.errors = {}; state.submitResult = null; if (window.onBeforeRoute) onBeforeRoute(); route(); scrollTo(0, 0);});
+// Back and forward buttons.
+addEventListener("popstate", pageChanged);
 
 // The hero slides advance on their own, except for visitors who ask for reduced motion, and they pause while the
 // pointer or keyboard focus is on the slider.

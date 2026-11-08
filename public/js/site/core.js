@@ -2,32 +2,34 @@
 // Part of the site scripts. Loaded in order by index.html; they share one global scope.
 
 // Public pages, navigation, search and the enquiry form.
-// Routes use the URL hash (for example #/products), so the site can be hosted anywhere.
+// Pages have real addresses (for example /products). The server answers every page address with index.html.
+// Old links that used the hash form (/#/products) are turned into the real address as soon as the page opens.
+if (/^#\//.test(location.hash)) history.replaceState(null, "", location.hash.slice(1));
 // Depends on data.js, places.js, config.js, accounts.js, records.js and customer.js, loaded first.
 
 // Image paths by key, relative to the site root.
 const IMAGES = {
-  "productBrushRack": "images/product-ibr-brush-rack.jpg",
-  "productHealthMonitor": "images/product-covidot-health-monitor.jpg",
-  "productTrayIntegrityTest": "images/product-tray-integrity-test.jpg",
-  "productCountSheetHolder": "images/product-count-sheet-holder.jpg",
-  "productMasterWrap": "images/product-master-wrap.jpg",
-  "productQualityAssuranceCard": "images/product-quality-assurance-card.jpg",
-  "softwareDashboard": "images/software-sterile-matrix.jpg",
-  "softwareCaseCart": "images/software-case-cart-matrix.jpg",
-  "softwareCrashCart": "images/software-crash-cart-matrix.jpg",
-  "softwareEndoscope": "images/software-endoscope-matrix.jpg",
-  "heroMasterWrap": "images/hero-master-wrap.jpg",
-  "masterWrapPrepare": "images/master-wrap-ifu-prepare.jpg",
-  "masterWrapPosition": "images/master-wrap-ifu-position.jpg",
-  "masterWrapSecure": "images/master-wrap-ifu-secure.jpg",
-  "masterWrapCloseup": "images/master-wrap-ifu-closeup.jpg",
-  "masterWrapFulltray": "images/master-wrap-ifu-fulltray.jpg",
-  "serviceLeadership": "images/service-operating-room.jpg",
-  "serviceMorale": "images/service-sterile-storage.jpg",
-  "serviceTraining": "images/hero-sterile-services.jpg",
-  "heroSterileProcessing": "images/hero-sterile-services.jpg",
-  "logo": "images/logo.png"
+  "productBrushRack": "/images/product-ibr-brush-rack.jpg",
+  "productHealthMonitor": "/images/product-covidot-health-monitor.jpg",
+  "productTrayIntegrityTest": "/images/product-tray-integrity-test.jpg",
+  "productCountSheetHolder": "/images/product-count-sheet-holder.jpg",
+  "productMasterWrap": "/images/product-master-wrap.jpg",
+  "productQualityAssuranceCard": "/images/product-quality-assurance-card.jpg",
+  "softwareDashboard": "/images/software-sterile-matrix.jpg",
+  "softwareCaseCart": "/images/software-case-cart-matrix.jpg",
+  "softwareCrashCart": "/images/software-crash-cart-matrix.jpg",
+  "softwareEndoscope": "/images/software-endoscope-matrix.jpg",
+  "heroMasterWrap": "/images/hero-master-wrap.jpg",
+  "masterWrapPrepare": "/images/master-wrap-ifu-prepare.jpg",
+  "masterWrapPosition": "/images/master-wrap-ifu-position.jpg",
+  "masterWrapSecure": "/images/master-wrap-ifu-secure.jpg",
+  "masterWrapCloseup": "/images/master-wrap-ifu-closeup.jpg",
+  "masterWrapFulltray": "/images/master-wrap-ifu-fulltray.jpg",
+  "serviceLeadership": "/images/service-operating-room.jpg",
+  "serviceMorale": "/images/service-sterile-storage.jpg",
+  "serviceTraining": "/images/hero-sterile-services.jpg",
+  "heroSterileProcessing": "/images/hero-sterile-services.jpg",
+  "logo": "/images/logo.png"
 };
 
 // Official SURGICISS LTD contact information.

@@ -18,7 +18,7 @@ Object.assign(pages, {
       <section class="pd-sec">${secHead("What departments get from it")}${tickList(s.benefits)}</section></div>
       <aside class="sw-aside"><div class="box tint"><h2 class="h-sec">Enquire about ${escapeHtml(s.name)}</h2>
         <p>Tell us how many sets, trolleys or scopes you handle and we will scope the work against that.</p>
-        <a class="btn" href="${quoteHref(s.name)}">Request a quote${icons.arrow}</a><a class="btn line" href="#/contact-us" style="margin-left:8px">Ask a question</a></div>
+        <a class="btn" href="${quoteHref(s.name)}">Request a quote${icons.arrow}</a><a class="btn line" href="/contact-us" style="margin-left:8px">Ask a question</a></div>
       <div class="box"><h2 class="h-sec">Other software</h2><ul class="links">${others.map(o => `<li><a href="${href("/software/" + o.slug)}">${escapeHtml(o.name)}</a></li>`).join("")}</ul></div></aside></div></section>`
       + callToAction("Considering " + s.name + "?", "We will talk you through what it does and what it does not do.");
   }

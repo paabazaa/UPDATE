@@ -46,7 +46,7 @@ Login and Create account sit in the header (and in the menu on a phone). They op
 The site runs in one of two modes, chosen by `apiBase` in `public/js/config.js`:
 
 - **Server mode (`apiBase` set):** accounts, quote requests and enquiries are stored in MySQL through the API in `server/`. Passwords are hashed with scrypt, and the browser holds only an HttpOnly session cookie. Forgot password emails a one-hour, single-use link.
-- **Browser-only mode (`apiBase` empty):** with no server, accounts and requests stay in the visitor's `localStorage` on that device. This is not secure sign-in and nothing reaches SURGICISS. It exists so the site still works on plain static hosting.
+- **Browser-only mode (`apiBase` empty):** with no server, accounts and requests stay in the visitor's `localStorage` on that device. This is not secure sign-in and nothing reaches SURGICISS. It exists so the site still works on plain static hosting. Pages have real addresses such as `/products`, so a static host must answer every page address with `index.html` (the Node server in `server/` already does). Old links in the `/#/products` form still open the right page.
 
 **My orders** stays empty in both modes until an order system is connected. No orders are invented.
 

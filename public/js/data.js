@@ -153,7 +153,7 @@ const DATA = {
         "Case carts and operating rooms"
       ],
       "ifu": {
-        "pdf": "documents/Master-Wrap-Instructions-for-Use-SURGICISS-LTD.pdf",
+        "pdf": "/documents/Master-Wrap-Instructions-for-Use-SURGICISS-LTD.pdf",
         "intro": "Master Wrap applies impact displacement to help protect the primary surgical wrap from external forces that could cause punctures, tears and holes. In rare cases, Master Wrap itself may sustain tears or holes while continuing to redirect potentially damaging impact forces to preserve the integrity of wrapped instrument trays. Always inspect tray wraps in accordance with established operating room best practices.",
         "audience": "For sterile processing and operating room personnel",
         "applyNote": "Apply Master Wrap to the wrapped tray as shown. Complete the closure in the final step.",

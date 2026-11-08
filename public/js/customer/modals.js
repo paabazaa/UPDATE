@@ -29,10 +29,7 @@ function openLogoutModal() {
 function confirmLogout() {
   closeLogoutModal();
   Accounts.logout();
-  const home = location.hash === "" || location.hash === "#" || location.hash === "#/";
-  location.hash = "#/";
-  if (home) route();
-  window.scrollTo(0, 0);
+  navigate("/");
 }
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") closeLogoutModal();

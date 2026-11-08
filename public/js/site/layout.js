@@ -16,19 +16,19 @@ function header() {
   const prL = products.map(p => ({label: p.name, to: "/products/" + p.slug}));
   const mgroup = (label, links, allTo, allLabel) => `<div class="mg"><div class="mrow"><a href="${href(allTo)}">${label}</a><button type="button" class="mt" aria-label="Show ${label} menu" aria-expanded="false" data-mtoggle>${icons.down}</button></div><div class="msub" hidden>${links.map(l => `<a href="${href(l.to)}">${escapeHtml(l.label)}</a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}</a></div></div>`;
   return `<header class="site" id="hdr"><div class="wrap hbar">
-    <a class="logo" href="#/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
+    <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
     <div style="display:flex;align-items:center">
     <nav class="main" aria-label="Main navigation">
-      <a class="tl home${act("/")}" href="#/" aria-label="Home" title="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></a>
+      <a class="tl home${act("/")}" href="/" aria-label="Home" title="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></a>
       ${dd("software", "Software", swL, "/software", "All Software")}
       ${dd("products", "Products", prL, "/products", "All Products")}
-      <a class="tl${act("/count-sheet-holders")}" href="#/count-sheet-holders">Instrument Count Sheet Holders</a>
-      <a class="tl${act("/contact-us")}" href="#/contact-us">Contact Us</a>
+      <a class="tl${act("/count-sheet-holders")}" href="/count-sheet-holders">Instrument Count Sheet Holders</a>
+      <a class="tl${act("/contact-us")}" href="/contact-us">Contact Us</a>
     </nav>
     <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav">${state.mobile ? icons.close : icons.menu}Menu</button>
     ${themeButton()}
     </div></div>
-    ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="#/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", swL, "/software", "All Software")}${mgroup("Products", prL, "/products", "All Products")}<a href="#/count-sheet-holders">Instrument Count Sheet Holders</a><a href="#/about">About</a><a href="#/contact-us">Contact Us</a><a class="quote" href="#/request-quote">Request a quote</a></nav>
+    ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", swL, "/software", "All Software")}${mgroup("Products", prL, "/products", "All Products")}<a href="/count-sheet-holders">Instrument Count Sheet Holders</a><a href="/about">About</a><a href="/contact-us">Contact Us</a><a class="quote" href="/request-quote">Request a quote</a></nav>
       </div>` : ""}
   </header>`;
 }
@@ -42,10 +42,10 @@ function footer() {
       <li>${icons.mail}${emailLink()}</li>
       <li>${icons.whatsapp}${whatsappLink()}</li>
     </ul>
-      <a class="go" href="#/contact-us">Send an enquiry</a></div>
+      <a class="go" href="/contact-us">Send an enquiry</a></div>
     <div><h2>Software</h2>
         <div class="rule"></div>
-        <ul>${software.map(s => `<li><a href="${href("/software/" + s.slug)}">${escapeHtml(s.name)}</a></li>`).join("")}<li><a href="#/software">All Software</a></li>
+        <ul>${software.map(s => `<li><a href="${href("/software/" + s.slug)}">${escapeHtml(s.name)}</a></li>`).join("")}<li><a href="/software">All Software</a></li>
       </ul>
       </div>
     <div><h2>Products</h2>
@@ -60,7 +60,7 @@ function footer() {
       ${state.subscribeError ? `<p class="small" style="font-size:12px" role="alert">${escapeHtml(state.subscribeError)}</p>` : ""}${state.subscribed ? `<p class="small" style="font-size:12px" role="status">Thank you. Your email address has been added to the list.</p>` : ""}</div>
   </div>
   <div class="fbase"><div class="wrap"><p>&copy; 2026 ${company.name}. All rights reserved.</p>
-    <nav aria-label="Legal"><a href="#/about">About</a><a href="#/services">Services</a><a href="#/programmes">Programmes</a><a href="#/resources">Resources</a><a href="#/faq">FAQ</a><a href="#/search">Search</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a></nav>
+    <nav aria-label="Legal"><a href="/about">About</a><a href="/services">Services</a><a href="/programmes">Programmes</a><a href="/resources">Resources</a><a href="/faq">FAQ</a><a href="/search">Search</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
     </div>
     </div>
     </footer>`;
