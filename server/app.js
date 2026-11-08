@@ -411,7 +411,10 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       let database = true;
       try {
         await db.query("SELECT 1 AS ok");
-      } catch { database = false; }
+      } catch (error) {
+        database = false;
+        console.error("[api] Health check could not reach the database:", String((error && error.message) || error).slice(0, 200));
+      }
       return {
         status: database ? 200 : 503,
         body: {

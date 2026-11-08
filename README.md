@@ -149,6 +149,8 @@ How it behaves: a returning person is signed straight in. If the provider's conf
 | `npm test` | The API against an in-memory SQLite database (needs Node.js 22.5 or later; it does not touch MySQL), and the site content: every product, software item, service and programme is complete, every picture, the logo and the Master Wrap PDF exist, and the files named in `index.html` exist. |
 | `npm run test:pages` | Opens every page in a real browser: each page has a heading and no script errors, every header and footer link works, pictures load, the Master Wrap PDF downloads, the login page order is right, quotes need a login, and nothing scrolls sideways on a phone. Install Playwright first: `npm install --no-save playwright && npx playwright install chromium`. |
 
+`npm run lint` checks the Node code and `npm run format` tidies the layout of the files (settings in `eslint.config.js` and `.prettierrc.json`). GitHub shows the lint result as an advisory check that never blocks a deploy.
+
 GitHub runs both automatically on every push (`.github/workflows/ci.yml`). A red mark on a commit means a test failed; it does not stop Render from deploying. Run `npm run db:migrate` against a real MySQL once and sign up once to confirm a new setup.
 
 ## Folder layout
