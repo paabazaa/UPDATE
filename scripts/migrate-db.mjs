@@ -1,8 +1,9 @@
-// Creates the database tables: npm run db:migrate
+// Creates the database and applies the database changes in server/migrations: npm run db:migrate
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import mysql from "mysql2/promise";
+import { runMigrations } from "../server/migrations.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,32 +42,22 @@ await rootConn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET
 await rootConn.end();
 console.log(`Database ${DB_NAME} exists`);
 
-let schemaPath = path.join(__dirname, "..", "server", "schema.sql");
-if (!fs.existsSync(schemaPath)) schemaPath = path.join(__dirname, "schema.sql");
-const schema = fs.readFileSync(schemaPath, "utf8");
-const statements = schema.split(/;\s*(?:\r?\n|$)/).map(s => s.trim()).filter(Boolean);
-
-// 2) Now connect WITH database and run schema
+// 2) Now connect WITH database and apply the migrations that have not run yet
 const conn = await mysql.createConnection({
   host: DB_HOST,
   port: DB_PORT,
   user: DB_USER,
   password: DB_PASS,
-  database: DB_NAME,
-  multipleStatements: true,
+  database: DB_NAME
 });
 
 try {
-  for (const sql of statements) {
-    if (sql) await conn.query(sql);
-  }
-  // Databases created before profile pictures existed need the extra column.
-  const [hasAvatar] = await conn.query("SHOW COLUMNS FROM users LIKE 'avatar'");
-  if (!hasAvatar.length) {
-    await conn.query("ALTER TABLE users ADD COLUMN avatar MEDIUMTEXT NULL AFTER delivery_location");
-    console.log("Added users.avatar for profile pictures.");
-  }
-  console.log(`Database ready: ${statements.length} statements OK`);
+  const db = {
+    query: async (sql, params) => (await conn.query(sql, params))[0],
+    execute: async (sql, params) => (await conn.query(sql, params))[0]
+  };
+  const result = await runMigrations(db);
+  if (result.failed) process.exitCode = 1;
 } finally {
   await conn.end();
 }

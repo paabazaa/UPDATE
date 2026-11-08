@@ -83,7 +83,7 @@ Restrict the `'%'` host to your API server's address where your host allows it.
 ```bash
 cp .env.example .env     # then fill in the database, ALLOWED_ORIGINS, SITE_URL and mail settings
 npm install
-npm run db:migrate:dev   # creates the tables from server/schema.sql (safe to repeat)
+npm run db:migrate:dev   # creates the database and applies any new changes from server/migrations (safe to repeat)
 npm run api:dev          # starts the API (default port 3000)
 ```
 
@@ -164,7 +164,7 @@ GitHub runs both automatically on every push (`.github/workflows/ci.yml`). A red
 | `server/mailer.js` | Sends email through Brevo, Resend or SMTP. |
 | `server/oauth.js` | Google and Facebook sign-in steps. |
 | `server/passwords.js`, `ratelimit.js`, `validation.js` | Password hashing, request limits, input checks. |
-| `server/schema.sql` | Table definitions. |
+| `server/migrations.js`, `server/migrations/` | Database changes, applied in order and recorded in the `schema_migrations` table. To change the database, add a new numbered `.sql` file and list it in `migrations.js`; the server applies it on the next start. |
 | `server/test/` | API tests. |
 | `test/` | Content tests (`content.test.mjs`) and browser page tests (`pages.test.mjs`). |
 | `scripts/` | `serve-static.mjs` (static server), `migrate-db.mjs` (creates tables) and `list-users.mjs` (lists accounts for debugging). |
