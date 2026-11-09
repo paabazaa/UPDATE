@@ -43,9 +43,25 @@ function route() {
   render(html);
 }
 
+// Search bar shown under the header on every page except the search page itself. It looks through products and software.
+function searchBar() {
+  if (currentPath() === "/search") return "";
+  return `<div class="sbar"><div class="wrap"><form class="sbar-form" id="bar-search-form" role="search" autocomplete="off">
+    <label class="sr" for="bar-search">Search products and software</label>
+    <svg class="ico sbar-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="bar-search" type="search" placeholder="Search products and software" maxlength="80" aria-controls="bar-results" aria-expanded="false">
+    <div class="sbar-results" id="bar-results" hidden></div></form></div></div>`;
+}
+function barMatches(term) {
+  const t = term.trim().toLowerCase();
+  if (t.length < 2) return [];
+  const all = [].concat(products.map(p => ({k: "Product", n: p.name, s: p.summary, to: "/products/" + p.slug})), software.map(p => ({k: "Software", n: p.name, s: p.summary, to: "/software/" + p.slug})));
+  return all.filter(e => (e.n + " " + e.s).toLowerCase().includes(t));
+}
+
 let lastMain = "";
 function render(main) {
   if (main !== undefined) lastMain = main;
-  document.getElementById("app").innerHTML = header() + `<main id="main" tabindex="-1">${lastMain}</main>` + footer();
+  document.getElementById("app").innerHTML = header() + searchBar() + `<main id="main" tabindex="-1">${lastMain}</main>` + footer();
 }
 function rerenderKeepScroll(main) {const y = scrollY; render(main); scrollTo(0, y);}
