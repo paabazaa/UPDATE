@@ -67,6 +67,32 @@ document.addEventListener("submit", e => {
   }
 });
 
+// Search bar under the header: suggestions while typing, the full search page on Enter.
+function closeBarResults() {
+  const box = document.getElementById("bar-results"), input = document.getElementById("bar-search");
+  if (box) box.hidden = true;
+  if (input) input.setAttribute("aria-expanded", "false");
+}
+document.addEventListener("input", e => {
+  if (e.target.id !== "bar-search") return;
+  const box = document.getElementById("bar-results");
+  const term = e.target.value, found = barMatches(term);
+  if (term.trim().length < 2) {closeBarResults(); return;}
+  box.innerHTML = found.length
+    ? found.slice(0, 8).map(f => `<a href="${f.to}"><span class="k">${f.k}</span><strong>${escapeHtml(f.n)}</strong></a>`).join("") + (found.length > 8 ? `<a class="more" href="/search">See all ${found.length} results</a>` : "")
+    : `<p class="none">Nothing matched “${escapeHtml(term.trim())}”.</p>`;
+  box.hidden = false;
+  e.target.setAttribute("aria-expanded", "true");
+});
+document.addEventListener("submit", e => {
+  if (e.target.id !== "bar-search-form") return;
+  e.preventDefault();
+  state.q = document.getElementById("bar-search").value.trim();
+  navigate("/search");
+});
+document.addEventListener("keydown", e => {if (e.key === "Escape") closeBarResults();});
+document.addEventListener("click", e => {if (!e.target.closest("#bar-search-form")) closeBarResults();});
+
 document.addEventListener("input", e => {
   if (e.target.id === "site-search") {
     state.q = e.target.value;
