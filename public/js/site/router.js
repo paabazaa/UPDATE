@@ -43,14 +43,19 @@ function route() {
   render(html);
 }
 
-// Search bar shown under the header on every page except the search page itself. It looks through products and software.
-function searchBar() {
+// Search box for products and software. It sits beside the Login / Create account / Generate quote buttons on wide screens
+// and in a strip under the header on phones and tablets. It is left out of the search page itself.
+function searchBox(where) {
   if (currentPath() === "/search") return "";
-  return `<div class="sbar"><div class="wrap"><form class="sbar-form" id="bar-search-form" role="search" autocomplete="off">
-    <label class="sr" for="bar-search">Search products and software</label>
-    <svg class="ico sbar-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="bar-search" type="search" placeholder="Search products and software" maxlength="80" aria-controls="bar-results" aria-expanded="false">
-    <div class="sbar-results" id="bar-results" hidden></div></form></div></div>`;
+  return `<form class="bar-form ${where}" role="search" autocomplete="off">
+    <label class="sr">Search products and software</label>
+    <svg class="ico bar-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input class="bar-search" type="search" placeholder="Search products and software" aria-label="Search products and software" maxlength="80" aria-expanded="false">
+    <div class="bar-results" hidden></div></form>`;
+}
+function searchBar() {
+  const box = searchBox("bar-mob");
+  return box ? `<div class="sbar"><div class="wrap">${box}</div></div>` : "";
 }
 function barMatches(term) {
   const t = term.trim().toLowerCase();

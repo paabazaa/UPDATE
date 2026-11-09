@@ -67,15 +67,14 @@ document.addEventListener("submit", e => {
   }
 });
 
-// Search bar under the header: suggestions while typing, the full search page on Enter.
+// Search box in the header: suggestions while typing, the full search page on Enter.
 function closeBarResults() {
-  const box = document.getElementById("bar-results"), input = document.getElementById("bar-search");
-  if (box) box.hidden = true;
-  if (input) input.setAttribute("aria-expanded", "false");
+  document.querySelectorAll(".bar-results").forEach(box => {box.hidden = true;});
+  document.querySelectorAll(".bar-search").forEach(input => input.setAttribute("aria-expanded", "false"));
 }
 document.addEventListener("input", e => {
-  if (e.target.id !== "bar-search") return;
-  const box = document.getElementById("bar-results");
+  if (!e.target.classList.contains("bar-search")) return;
+  const box = e.target.closest(".bar-form").querySelector(".bar-results");
   const term = e.target.value, found = barMatches(term);
   if (term.trim().length < 2) {closeBarResults(); return;}
   box.innerHTML = found.length
@@ -85,13 +84,13 @@ document.addEventListener("input", e => {
   e.target.setAttribute("aria-expanded", "true");
 });
 document.addEventListener("submit", e => {
-  if (e.target.id !== "bar-search-form") return;
+  if (!e.target.classList.contains("bar-form")) return;
   e.preventDefault();
-  state.q = document.getElementById("bar-search").value.trim();
+  state.q = e.target.querySelector(".bar-search").value.trim();
   navigate("/search");
 });
 document.addEventListener("keydown", e => {if (e.key === "Escape") closeBarResults();});
-document.addEventListener("click", e => {if (!e.target.closest("#bar-search-form")) closeBarResults();});
+document.addEventListener("click", e => {if (!e.target.closest(".bar-form")) closeBarResults();});
 
 document.addEventListener("input", e => {
   if (e.target.id === "site-search") {
