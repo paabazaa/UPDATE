@@ -19,6 +19,7 @@ function customerHeader() {
   return `<header class="site" id="hdr"><div class="wrap hbar">
     <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
     <div class="htools">
+      ${searchBox("desk-only")}
       ${accountDesktop}
       <a class="hbtn primary desk-only" href="/generate-quote">${icons.plus}Generate quote</a>
       <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav">${state.mobile ? icons.close : icons.menu}Menu</button>
