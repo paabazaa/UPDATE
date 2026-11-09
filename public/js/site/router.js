@@ -43,19 +43,16 @@ function route() {
   render(html);
 }
 
-// Search box for products and software. It sits beside the Login / Create account / Generate quote buttons on wide screens
-// and in a strip under the header on phones and tablets. It is left out of the search page itself.
-function searchBox(where) {
+// Search for products and software. Only a search symbol shows in the header (next to the theme button); pressing it opens the box.
+// It is left out of the search page itself.
+function searchBox() {
   if (currentPath() === "/search") return "";
-  return `<form class="bar-form ${where}" role="search" autocomplete="off">
-    <label class="sr">Search products and software</label>
-    <svg class="ico bar-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input class="bar-search" type="search" placeholder="Search products and software" aria-label="Search products and software" maxlength="80" aria-expanded="false">
-    <div class="bar-results" hidden></div></form>`;
-}
-function searchBar() {
-  const box = searchBox("bar-mob");
-  return box ? `<div class="sbar"><div class="wrap">${box}</div></div>` : "";
+  return `<form class="bar-form" role="search" autocomplete="off">
+    <button type="button" class="bar-toggle" aria-label="Search products and software" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <div class="bar-panel" hidden>
+      <input class="bar-search" type="search" placeholder="Search products and software" aria-label="Search products and software" maxlength="80">
+      <div class="bar-results" hidden></div>
+    </div></form>`;
 }
 function barMatches(term) {
   const t = term.trim().toLowerCase();
@@ -67,6 +64,6 @@ function barMatches(term) {
 let lastMain = "";
 function render(main) {
   if (main !== undefined) lastMain = main;
-  document.getElementById("app").innerHTML = header() + searchBar() + `<main id="main" tabindex="-1">${lastMain}</main>` + footer();
+  document.getElementById("app").innerHTML = header() + `<main id="main" tabindex="-1">${lastMain}</main>` + footer();
 }
 function rerenderKeepScroll(main) {const y = scrollY; render(main); scrollTo(0, y);}

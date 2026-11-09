@@ -154,22 +154,25 @@ test("old links with a # address open the real page", async () => {
   await page.close();
 });
 
-test("every page has a search bar for products and software", async () => {
+test("every page has a search symbol that opens a search for products and software", async () => {
   for (const route of ["/", "/products", "/about", "/login", "/contact-us"]) {
     const {page} = await open(route);
-    assert.equal(await page.locator(".bar-search:visible").count(), 1, `${route} has no search bar`);
+    assert.equal(await page.locator(".bar-toggle").count(), 1, `${route} has no search symbol`);
+    assert.ok(await page.locator(".bar-search").isHidden(), `${route} shows the box before it is pressed`);
     await page.close();
   }
   const {page} = await open("/about");
-  await page.fill(".bar-search:visible", "master wrap");
+  await page.click(".bar-toggle");
+  await page.fill(".bar-search", "master wrap");
   await page.waitForSelector(".bar-results a");
-  assert.match(await page.textContent(".htools .bar-results"), /Master Wrap/i);
-  await page.click(".htools .bar-results a");
+  assert.match(await page.textContent(".bar-results"), /Master Wrap/i);
+  await page.click(".bar-results a");
   await page.waitForURL(/\/products\/surgical-instrument-master-wrap/);
-  await page.fill(".bar-search:visible", "matrix");
-  await page.press(".bar-search:visible", "Enter");
+  await page.click(".bar-toggle");
+  await page.fill(".bar-search", "matrix");
+  await page.press(".bar-search", "Enter");
   await page.waitForURL(`${base}/search`);
-  assert.equal(await page.locator(".bar-search").count(), 0, "the search page should not show a second bar");
+  assert.equal(await page.locator(".bar-toggle").count(), 0, "the search page should not show the symbol");
   assert.match(await page.inputValue("#site-search"), /matrix/);
   await page.close();
 });
