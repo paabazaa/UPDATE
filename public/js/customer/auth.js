@@ -81,7 +81,6 @@ function authSplit({title, heading, lead, perks, body, fine}) {
   return `<section class="login-page"><div class="wrap">
     <div class="login-card">
       <aside class="login-brand">
-        <a class="login-logo" href="/" aria-label="SURGICISS LTD home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
         <h1>${title}</h1>
         <p class="login-lead">${lead}</p>
         <ul class="login-perks">${perks.map(text => `<li>${text}</li>`).join("")}</ul>
@@ -104,7 +103,7 @@ function loginPage() {
   const message = state.authError || socialError();
   const formError = message ? `<p class="err login-error" role="alert">${escapeHtml(message)}</p>` : "";
   return authSplit({
-    title: "Welcome back",
+    title: "LOGIN",
     lead: "Sign in to open your dashboard, quotes and enquiries.",
     perks: ["Review your saved quotes", "Follow up your enquiries", "Keep your delivery details ready"],
     heading: "Sign in to your account",
@@ -127,7 +126,7 @@ function signupPage() {
   const perks = ["Keep every quote and enquiry in one place", "Reuse your details on each new request"];
   if (Accounts.providers && Accounts.providers().length) perks.push("Or skip the form with Google or Facebook");
   return authSplit({
-    title: "Create your account",
+    title: "SIGN UP",
     lead: "Use an account only if you want a dashboard for your quotes and enquiries.",
     perks,
     heading: "Your details",

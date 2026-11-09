@@ -376,7 +376,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .login-brand{position:relative;color:#fff;padding:28px 24px;background:radial-gradient(120% 90% at 100% 0%,oklch(0.62 0.24 305),transparent 60%),linear-gradient(160deg,oklch(0.5 0.24 295),oklch(0.34 0.18 300))}
 .login-logo{display:inline-block;align-self:flex-start;background:#fff;border-radius:10px;padding:8px 14px;box-shadow:0 8px 20px -10px rgb(0 0 0 / 45%)}
 .login-logo img{display:block;height:50px;width:auto}
-.login-brand h1{margin-top:22px;font-size:30px;color:#fff}
+.login-brand h1{margin-top:0;font-size:30px;color:#fff;text-align:center;letter-spacing:.08em}
 .login-lead{margin-top:10px;font-size:15px;line-height:1.6;opacity:.92;max-width:34ch}
 .login-perks{display:none;margin-top:28px;gap:14px}
 .login-perks li{position:relative;padding-left:30px;font-size:15px}
