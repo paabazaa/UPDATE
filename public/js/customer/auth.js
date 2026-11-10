@@ -143,7 +143,7 @@ function signupPage() {
             ${passwordField("confirm", "Confirm password", "new-password", "", true)}
             <div class="fld"><label for="organisation">Organisation</label>
               <input id="organisation" name="organisation" autocomplete="organization" maxlength="255"></div>
-            <div class="fld"><label for="phone">Telephone</label>
+            <div class="fld"><label for="phone">Phone number</label>
               <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="255"></div>
             ${Places.countryField("")}
             ${Places.cityField("", "")}

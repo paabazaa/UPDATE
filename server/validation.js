@@ -1,6 +1,6 @@
 // Input checks for the API. Only known fields are kept, trimmed and length-limited.
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const CONTACT_METHODS = ["Email", "Telephone", "Either"];
+const CONTACT_METHODS = ["Email", "Phone", "Telephone", "Either"];
 
 export const text = (value, max) => String(value ?? "").trim().slice(0, max);
 export const normaliseEmail = value => text(value, 254).toLowerCase();

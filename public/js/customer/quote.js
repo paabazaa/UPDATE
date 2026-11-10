@@ -103,7 +103,7 @@ function contactFieldsHtml(fields) {
     <input id="name" name="name" autocomplete="name" maxlength="255" value="${escapeHtml(fields.name || "")}">${err("name")}</div>
       <div class="fld"><label for="email">Email address <span class="req">*</span></label>
         <input id="email" name="email" type="email" autocomplete="email" maxlength="255" value="${escapeHtml(fields.email || "")}">${err("email")}</div>
-      <div class="fld"><label for="phone">Telephone</label>
+      <div class="fld"><label for="phone">Phone number</label>
         <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="255" value="${escapeHtml(fields.phone || "")}"></div>
       <div class="fld"><label for="organisation">Organisation <span class="req">*</span></label>
         <input id="organisation" name="organisation" autocomplete="organization" maxlength="255" value="${escapeHtml(fields.organisation || "")}">${err("organisation")}</div>
@@ -111,7 +111,7 @@ function contactFieldsHtml(fields) {
       ${Places.cityField(fields.country, fields.city)}
     </div>
     <div class="fld"><label for="delivery">Delivery location <span class="req">*</span></label><textarea id="delivery" name="delivery" rows="3" maxlength="500" placeholder="Department, hospital and address, or where the work should take place.">${escapeHtml(fields.delivery || "")}</textarea>${err("delivery")}</div>
-    <fieldset class="fld"><legend>Preferred contact method</legend><div class="radios">${radio("Email")}${radio("Telephone")}${radio("Either")}</div></fieldset>
+    <fieldset class="fld"><legend>Preferred contact method</legend><div class="radios">${radio("Email")}${radio("Phone")}${radio("Either")}</div></fieldset>
     <div class="fld"><label for="requirements">Additional requirements</label><textarea id="requirements" name="requirements" rows="5" maxlength="2000" placeholder="Sets, timescales, or anything the quotation should take into account.">${escapeHtml(fields.requirements || "")}</textarea></div>`;
 }
 function quoteText(record) {
@@ -131,7 +131,7 @@ function quoteText(record) {
     "Organisation: " + record.contact.organisation,
     "Contact: " + record.contact.name,
     "Email: " + record.contact.email,
-    "Telephone: " + (record.contact.phone || "Not given"),
+    "Phone number: " + (record.contact.phone || "Not given"),
     "Delivery location: " + record.contact.deliveryLocation,
     "Country: " + record.contact.country,
     "City: " + (record.contact.city || "Not given"),
@@ -211,7 +211,7 @@ function quoteSummary(record) {
     <p style="margin-top:12px">${escapeHtml(deliveryCopy(record))}</p>
     <div class="table-scroll"><table class="lines"><thead><tr><th>Item</th><th>Quantity</th><th>Note</th></tr>
       </thead><tbody>${rows}</tbody></table></div>
-    <dl class="kv" style="margin-top:16px"><div><dt>Organisation</dt><dd>${escapeHtml(record.contact.organisation)}</dd></div><div><dt>Contact</dt><dd>${escapeHtml(record.contact.name)} · ${escapeHtml(record.contact.email)}</dd></div><div><dt>Telephone</dt><dd>${escapeHtml(record.contact.phone || "Not given")}</dd></div><div><dt>Delivery location</dt><dd>${escapeHtml(record.contact.deliveryLocation)}</dd></div><div><dt>Country and city</dt><dd>${escapeHtml(record.contact.country)}${record.contact.city ? " · " + escapeHtml(record.contact.city) : ""}</dd></div><div><dt>Requirements</dt><dd>${escapeHtml(record.requirements || "None given")}</dd></div>
+    <dl class="kv" style="margin-top:16px"><div><dt>Organisation</dt><dd>${escapeHtml(record.contact.organisation)}</dd></div><div><dt>Contact</dt><dd>${escapeHtml(record.contact.name)} · ${escapeHtml(record.contact.email)}</dd></div><div><dt>Phone number</dt><dd>${escapeHtml(record.contact.phone || "Not given")}</dd></div><div><dt>Delivery location</dt><dd>${escapeHtml(record.contact.deliveryLocation)}</dd></div><div><dt>Country and city</dt><dd>${escapeHtml(record.contact.country)}${record.contact.city ? " · " + escapeHtml(record.contact.city) : ""}</dd></div><div><dt>Requirements</dt><dd>${escapeHtml(record.requirements || "None given")}</dd></div>
       </dl>
     <p class="muted" style="margin-top:16px;font-size:13px">No prices are shown. This is not an order.</p>
       </div>`;
