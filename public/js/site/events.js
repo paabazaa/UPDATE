@@ -67,11 +67,24 @@ document.addEventListener("submit", e => {
   }
 });
 
-// Search box in the header: suggestions while typing, the full search page on Enter.
+// Search symbol in the header: opens the box; suggestions while typing, the full search page on Enter.
 function closeBarResults() {
   document.querySelectorAll(".bar-results").forEach(box => {box.hidden = true;});
-  document.querySelectorAll(".bar-search").forEach(input => input.setAttribute("aria-expanded", "false"));
 }
+function closeBar() {
+  closeBarResults();
+  document.querySelectorAll(".bar-panel").forEach(panel => {panel.hidden = true;});
+  document.querySelectorAll(".bar-toggle").forEach(button => button.setAttribute("aria-expanded", "false"));
+}
+document.addEventListener("click", e => {
+  const toggle = e.target.closest(".bar-toggle");
+  if (toggle) {
+    const panel = toggle.parentElement.querySelector(".bar-panel");
+    const opening = panel.hidden;
+    closeBar();
+    if (opening) {panel.hidden = false; toggle.setAttribute("aria-expanded", "true"); panel.querySelector(".bar-search").focus();}
+  } else if (!e.target.closest(".bar-form")) closeBar();
+});
 document.addEventListener("input", e => {
   if (!e.target.classList.contains("bar-search")) return;
   const box = e.target.closest(".bar-form").querySelector(".bar-results");
@@ -81,7 +94,6 @@ document.addEventListener("input", e => {
     ? found.slice(0, 8).map(f => `<a href="${f.to}"><span class="k">${f.k}</span><strong>${escapeHtml(f.n)}</strong></a>`).join("") + (found.length > 8 ? `<a class="more" href="/search">See all ${found.length} results</a>` : "")
     : `<p class="none">Nothing matched “${escapeHtml(term.trim())}”.</p>`;
   box.hidden = false;
-  e.target.setAttribute("aria-expanded", "true");
 });
 document.addEventListener("submit", e => {
   if (!e.target.classList.contains("bar-form")) return;
@@ -89,8 +101,7 @@ document.addEventListener("submit", e => {
   state.q = e.target.querySelector(".bar-search").value.trim();
   navigate("/search");
 });
-document.addEventListener("keydown", e => {if (e.key === "Escape") closeBarResults();});
-document.addEventListener("click", e => {if (!e.target.closest(".bar-form")) closeBarResults();});
+document.addEventListener("keydown", e => {if (e.key === "Escape") closeBar();});
 
 document.addEventListener("input", e => {
   if (e.target.id === "site-search") {
