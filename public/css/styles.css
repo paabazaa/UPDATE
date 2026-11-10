@@ -1014,3 +1014,4 @@ html.modal-open{overflow:hidden}
 .bar-results .more{justify-content:center;color:var(--primary);font-weight:600}
 .bar-results .none{padding:12px 10px;color:var(--muted-fg);font-size:14px}
 @media(max-width:640px){.bar-panel{position:fixed;left:16px;right:16px;top:76px;width:auto}}
+@media(min-width:1024px){.bar-form{margin-left:0;margin-right:6px}.bar-panel{right:auto;left:0}}
