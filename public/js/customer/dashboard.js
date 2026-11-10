@@ -92,7 +92,7 @@ function accountHome() {
       <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Recent activity</h2><span class="count-badge">${activity.length}</span></div>${activityHtml}</div>
       <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Your details</h2><a class="tlink" href="/account/profile/edit">Edit</a></div>
         <ul class="detail-list">
-          ${row("profile", "Name", user.name)}${row("quotes", "Organisation", user.organisation)}${row("pin", "Location", where)}${row("phone", "Telephone", user.phone)}
+          ${row("profile", "Name", user.name)}${row("quotes", "Organisation", user.organisation)}${row("pin", "Location", where)}${row("phone", "Phone number", user.phone)}
         </ul>
         <p class="dash-email">${escapeHtml(user.email)}</p>
       </div>
@@ -100,7 +100,7 @@ function accountHome() {
 }
 function profileList(user) {
   const row = (label, value) => `<div><dt>${label}</dt><dd>${escapeHtml(value || "Not provided")}</dd></div>`;
-  return `<dl class="kv">${row("Name", user.name)}${row("Email", user.email)}${row("Telephone", user.phone)}${row("Organisation", user.organisation)}${row("Country", user.country)}${row("City", user.city)}${row("Usual delivery location", user.deliveryLocation)}${row("Account created", formatWhen(user.createdAt))}</dl>`;
+  return `<dl class="kv">${row("Name", user.name)}${row("Email", user.email)}${row("Phone number", user.phone)}${row("Organisation", user.organisation)}${row("Country", user.country)}${row("City", user.city)}${row("Usual delivery location", user.deliveryLocation)}${row("Account created", formatWhen(user.createdAt))}</dl>`;
 }
 // Change-password card, shown on My profile and on Account settings. Messages appear inside the card, next to the button.
 function passwordCard() {
@@ -140,7 +140,7 @@ function accountEdit() {
       <div class="fld"><label for="email">Email address</label>
         <input id="email" name="email" value="${escapeHtml(user.email)}" disabled><p class="muted" style="margin-top:6px;font-size:12px">Used to sign in.</p>
         </div>
-      <div class="fld"><label for="phone">Telephone</label>
+      <div class="fld"><label for="phone">Phone number</label>
         <input id="phone" name="phone" maxlength="255" autocomplete="tel" value="${escapeHtml(user.phone)}"></div>
       <div class="fld"><label for="organisation">Organisation</label>
         <input id="organisation" name="organisation" maxlength="255" autocomplete="organization" value="${escapeHtml(user.organisation)}"></div>

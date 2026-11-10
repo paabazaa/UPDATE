@@ -7,7 +7,7 @@ Object.assign(pages, {
       + `<section class="wrap sec"><div class="two contact"><aside style="display:grid;gap:24px;align-content:start"><div class="box tint"><h2 class="h-sec">SURGICISS LTD</h2>
         <dl class="kv">
         <div><dt>Address</dt><dd>${escapeHtml(company.address)}</dd></div>
-        <div><dt>Telephone</dt><dd>${phoneLink()}</dd></div>
+        <div><dt>Phone number</dt><dd>${phoneLink()}</dd></div>
         <div><dt>Email</dt><dd>${emailLink()}</dd></div>
         <div><dt>WhatsApp</dt><dd>${whatsappLink()}</dd></div>
         <div><dt>Office hours</dt><dd>${escapeHtml(detail(company.hours))}</dd></div>
@@ -71,7 +71,7 @@ Object.assign(pages, {
   privacy() {
     return banner("Privacy notice", [{label: "Privacy notice"}]) + `<section class="wrap narrow sec"><div class="rich">
       <h2 class="lt">What we collect</h2>
-      <p>If you create an account, ask a question or prepare a quote request, the details you type (name, organisation, email, telephone, location and message) are sent to SURGICISS and held in its database.</p>
+      <p>If you create an account, ask a question or prepare a quote request, the details you type (name, organisation, email, phone number, location and message) are sent to SURGICISS and held in its database.</p>
       <h2 class="lt">Why we use it</h2>
       <p>Those details are used so the team can answer the enquiry, prepare a quotation and keep a record of the correspondence. They are not for sale, and this site does not add you to a marketing list on its own.</p>
       <h2 class="lt">Accounts</h2>

@@ -258,7 +258,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       "Contact",
       `Name: ${c.name}`,
       `Email: ${c.email}`,
-      `Telephone: ${c.phone || "not given"}`,
+      `Phone number: ${c.phone || "not given"}`,
       `Organisation: ${c.organisation}`,
       `Country: ${c.country}${c.city ? ", " + c.city : ""}`,
       `Preferred contact: ${c.preferredContact}`

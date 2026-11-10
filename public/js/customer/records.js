@@ -74,7 +74,7 @@ function accountEnquiryDetail(id) {
   return accountShell("Enquiry", `<div class="box"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><h2 class="h-sec">${escapeHtml(record.subject || "Enquiry")}</h2>${statusPill(record)}</div>
     <p class="muted" style="margin-top:8px;font-size:14px">${escapeHtml(record.id)} · ${escapeHtml(formatWhen(record.createdAt))}</p>
     <p style="margin-top:12px">${escapeHtml(deliveryCopy(record))}</p>
-    <dl class="kv"><div><dt>Relates to</dt><dd>${escapeHtml(record.interest || "Not given")}</dd></div><div><dt>Message</dt><dd>${escapeHtml(record.message || "")}</dd></div><div><dt>Contact</dt><dd>${escapeHtml(record.contact.name)} · ${escapeHtml(record.contact.email)}</dd></div><div><dt>Organisation</dt><dd>${escapeHtml(record.contact.organisation || "Not given")}</dd></div><div><dt>Telephone</dt><dd>${escapeHtml(record.contact.phone || "Not given")}</dd></div><div><dt>Preferred contact</dt><dd>${escapeHtml(record.contact.preferredContact || "Email")}</dd></div></dl></div>`);
+    <dl class="kv"><div><dt>Relates to</dt><dd>${escapeHtml(record.interest || "Not given")}</dd></div><div><dt>Message</dt><dd>${escapeHtml(record.message || "")}</dd></div><div><dt>Contact</dt><dd>${escapeHtml(record.contact.name)} · ${escapeHtml(record.contact.email)}</dd></div><div><dt>Organisation</dt><dd>${escapeHtml(record.contact.organisation || "Not given")}</dd></div><div><dt>Phone number</dt><dd>${escapeHtml(record.contact.phone || "Not given")}</dd></div><div><dt>Preferred contact</dt><dd>${escapeHtml(record.contact.preferredContact || "Email")}</dd></div></dl></div>`);
 }
 function accountSettings() {
   if (currentQuery().get("delete")) setTimeout(() => {
