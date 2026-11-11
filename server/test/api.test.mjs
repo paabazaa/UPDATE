@@ -39,16 +39,18 @@ async function start(overrides = {}, fetchImpl) {
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
   const client = () => {
-    let cookie = "";
+    let cookie = "", csrf = "";
     return async (method, path, body, headers = {}) => {
       const response = await fetch(base + path, {
         method,
-        headers: {"Content-Type": "application/json", "X-Requested-With": "test", Origin: ORIGIN, ...(cookie ? {Cookie: cookie} : {}), ...headers},
+        headers: {"Content-Type": "application/json", "X-Requested-With": "test", Origin: ORIGIN, ...(cookie ? {Cookie: cookie} : {}), ...(csrf ? {"X-CSRF-Token": csrf} : {}), ...headers},
         body: body === undefined ? undefined : JSON.stringify(body)
       });
       const set = response.headers.get("set-cookie");
       if (set) cookie = set.startsWith("surgiciss_session=;") ? "" : set.split(";")[0];
-      return {status: response.status, headers: response.headers, data: await response.json().catch(() => null), setCookie: set};
+      const data = await response.json().catch(() => null);
+      if (data && typeof data.csrfToken === "string") csrf = data.csrfToken;
+      return {status: response.status, headers: response.headers, data, setCookie: set};
     };
   };
   return {db, outbox, client, base, close: () => new Promise(resolve => server.close(resolve))};
@@ -75,7 +77,7 @@ test("signup, session cookie, me, logout", async () => {
   assert.equal(r.status, 201);
   assert.equal(r.data.user.email, "ama@example.com");
   assert.ok(!JSON.stringify(r.data).includes("password"));
-  assert.match(r.setCookie, /HttpOnly/); assert.match(r.setCookie, /Secure/); assert.match(r.setCookie, /SameSite=None/);
+  assert.match(r.setCookie, /HttpOnly/); assert.match(r.setCookie, /Secure/); assert.match(r.setCookie, /SameSite=Lax/);
   assert.equal((await api("GET", "/api/auth/me")).data.user.name, "Ama Mensah");
   assert.equal((await api("POST", "/api/auth/logout", {})).status, 200);
   assert.equal((await api("GET", "/api/auth/me")).data.user, null);
@@ -399,8 +401,10 @@ test("a Google-only account has no password to change, deletes by typing DELETE,
   const fake = fakeProviders(); fake.profile = googleProfile();
   const s = await start(OAUTH_ENV, fake.fetch);
   const r = await oauthRun(s, "google");
+  // Like the real website, ask who is signed in first; that hands out the CSRF token the later changes need.
+  const me = await (await fetch(s.base + "/api/auth/me", {headers: {Origin: ORIGIN, Cookie: r.session}})).json();
   const call = async (method, path, body) => {
-    const response = await fetch(s.base + path, {method, headers: {"Content-Type": "application/json", "X-Requested-With": "t", Origin: ORIGIN, Cookie: r.session}, body: JSON.stringify(body)});
+    const response = await fetch(s.base + path, {method, headers: {"Content-Type": "application/json", "X-Requested-With": "t", Origin: ORIGIN, Cookie: r.session, "X-CSRF-Token": me.csrfToken}, body: JSON.stringify(body)});
     return {status: response.status, data: await response.json()};
   };
   assert.equal((await call("POST", "/api/auth/password", {currentPassword: "x", nextPassword: "new password 1", confirm: "new password 1"})).status, 400);
@@ -414,7 +418,8 @@ test("a Google-only account has no password to change, deletes by typing DELETE,
 
   const s2 = await start(OAUTH_ENV, fake.fetch);
   const r2 = await oauthRun(s2, "google");
-  const del = async body => { const response = await fetch(s2.base + "/api/auth/delete", {method: "POST", headers: {"Content-Type": "application/json", "X-Requested-With": "t", Origin: ORIGIN, Cookie: r2.session}, body: JSON.stringify(body)}); return response.status; };
+  const me2 = await (await fetch(s2.base + "/api/auth/me", {headers: {Origin: ORIGIN, Cookie: r2.session}})).json();
+  const del = async body => { const response = await fetch(s2.base + "/api/auth/delete", {method: "POST", headers: {"Content-Type": "application/json", "X-Requested-With": "t", Origin: ORIGIN, Cookie: r2.session, "X-CSRF-Token": me2.csrfToken}, body: JSON.stringify(body)}); return response.status; };
   assert.equal(await del({confirmText: "delete"}), 400);
   assert.equal(await del({confirmText: "DELETE"}), 200);
   assert.equal(s2.db.sqlite.prepare("SELECT COUNT(*) AS n FROM users").get().n, 0);
@@ -503,4 +508,129 @@ test("Brevo sends a reset email to any user with a single verified sender", asyn
   assert.deepEqual(body.to, [{email: "someone@example.com"}]);
   const failing = createMailer(config, async () => ({ok: false, status: 401, text: async () => "bad key"}));
   await assert.rejects(() => failing.send({to: "x@y.com", subject: "s", text: "t"}), /401 bad key/);
+});
+
+
+/* ---------- security checks ---------- */
+
+test("changes by a signed-in person need the CSRF token, and a wrong or missing token is refused", async () => {
+  const s = await start(); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  const profile = {name: "Ama Mensah", phone: "1", organisation: "Korle Bu", country: "Ghana", city: "Accra", deliveryLocation: ""};
+  assert.equal((await api("PATCH", "/api/auth/profile", profile, {"X-CSRF-Token": ""})).status, 403, "no token");
+  assert.equal((await api("PATCH", "/api/auth/profile", profile, {"X-CSRF-Token": "guess"})).status, 403, "wrong token");
+  assert.equal((await api("POST", "/api/submissions", {kind: "quote", record: quoteRecord()}, {"X-CSRF-Token": ""})).status, 403, "quotes need it too");
+  assert.equal((await api("PATCH", "/api/auth/profile", profile)).status, 200, "right token");
+  // Another person's token does not work for this session.
+  const other = s.client();
+  await other("POST", "/api/auth/signup", signupBody("kofi@example.com"));
+  const otherToken = (await other("GET", "/api/auth/me")).data.csrfToken;
+  assert.equal((await api("PATCH", "/api/auth/profile", profile, {"X-CSRF-Token": otherToken})).status, 403, "token from another session");
+  // Signing in and out stay possible without one.
+  assert.equal((await s.client()("POST", "/api/auth/login", {email: "ama@example.com", password: "correct horse 9"})).status, 200);
+  await s.close();
+});
+
+test("requests from another website are refused, including by browser fetch metadata", async () => {
+  const s = await start(); const api = s.client();
+  assert.equal((await api("POST", "/api/auth/login", {email: "a@b.co", password: "x"}, {Origin: "https://evil.example"})).status, 403);
+  assert.equal((await api("POST", "/api/auth/login", {email: "a@b.co", password: "x"}, {Origin: "", "Sec-Fetch-Site": "cross-site"})).status, 403);
+  assert.equal((await api("POST", "/api/auth/login", {email: "a@b.co", password: "x"}, {"X-Requested-With": ""})).status, 403);
+  await s.close();
+});
+
+test("an internal error shows the visitor nothing about the inside of the system", async () => {
+  const s = await start(); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  const original = s.db.query;
+  s.db.query = async () => { throw new Error("SECRET sql detail password=hunter2 host=10.0.0.5"); };
+  const quiet = console.error; console.error = () => {};
+  const r = await api("GET", "/api/auth/me");
+  console.error = quiet; s.db.query = original;
+  assert.equal(r.status, 500);
+  const shown = JSON.stringify(r.data);
+  assert.ok(!/SECRET|hunter2|10\.0\.0\.5|Debug|stack/i.test(shown), shown);
+  await s.close();
+});
+
+test("SQL-looking input is treated as plain text", async () => {
+  const s = await start(); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  for (const email of ["' OR '1'='1", "ama@example.com' --", "x'; DROP TABLE users; --"]) {
+    assert.equal((await s.client()("POST", "/api/auth/login", {email, password: "' OR '1'='1"})).status, 401, email);
+  }
+  const record = quoteRecord(); record.requirements = "'); DROP TABLE quotes; --"; record.lines[0].note = "x' OR 1=1 --";
+  assert.equal((await api("POST", "/api/submissions", {kind: "quote", record})).status, 201);
+  assert.equal((await api("GET", "/api/me/records")).data.quotes.length, 1);
+  assert.equal(s.db.sqlite.prepare("SELECT COUNT(*) AS n FROM users").get().n, 1, "the users table is still there");
+  await s.close();
+});
+
+test("script tags in submitted text are stored as plain text and never run as code on the server side", async () => {
+  const s = await start(); const api = s.client();
+  const r = await api("POST", "/api/auth/signup", {...signupBody(), name: "<script>alert(1)</script>"});
+  assert.equal(r.status, 201);
+  assert.equal(r.data.user.name, "<script>alert(1)</script>");
+  assert.match(r.headers.get("content-type"), /^application\/json/);
+  assert.equal(r.headers.get("x-content-type-options"), "nosniff");
+  await s.close();
+});
+
+test("the live host is treated as production with secure, same-site cookies", () => {
+  const live = loadConfig({RENDER: "true", ALLOWED_ORIGINS: ORIGIN});
+  assert.equal(live.production, true);
+  assert.equal(live.session.secure, true);
+  assert.equal(live.session.sameSite, "Lax");
+  assert.equal(loadConfig({COOKIE_SAMESITE: "None", COOKIE_SECURE: "true"}).session.sameSite, "None");
+});
+
+test("password reset links expire after 30 minutes and work once", async () => {
+  const s = await start({}); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  await s.client()("POST", "/api/auth/forgot", {email: "ama@example.com"});
+  const row = s.db.sqlite.prepare("SELECT created_at, expires_at FROM password_resets").get();
+  const minutes = (new Date(row.expires_at.replace(" ", "T") + "Z") - new Date(row.created_at.replace(" ", "T") + "Z")) / 60000;
+  assert.ok(minutes > 29 && minutes <= 30.1, "lifetime is " + minutes + " minutes");
+  assert.match(s.outbox[0].text, /within 30 minutes/);
+  const token = s.outbox[0].text.match(/token=([\w-]+)/)[1];
+  s.db.sqlite.prepare("UPDATE password_resets SET expires_at = '2000-01-01 00:00:00'").run();
+  assert.equal((await s.client()("POST", "/api/auth/reset", {token, password: "brand new pass 1", confirm: "brand new pass 1"})).status, 400, "expired link");
+  await s.close();
+});
+
+test("asking for a reset link is limited per email address so nobody can flood an inbox", async () => {
+  const s = await start({}); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  const codes = [];
+  for (let i = 0; i < 5; i++) codes.push((await s.client()("POST", "/api/auth/forgot", {email: "ama@example.com"}, {"X-Forwarded-For": "10.0.0." + i})).status);
+  assert.ok(s.outbox.length <= 3, "sent " + s.outbox.length);
+  await s.close();
+});
+
+test("passwords are stored hashed, never as text", async () => {
+  const s = await start(); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  const stored = s.db.sqlite.prepare("SELECT password_hash FROM users").get().password_hash;
+  assert.match(stored, /^scrypt\$/);
+  assert.ok(!stored.includes("correct horse"));
+  await s.close();
+});
+
+test("there are no admin pages or routes", async () => {
+  const s = await start(); const api = s.client();
+  for (const path of ["/api/admin", "/api/admin/users", "/api/users", "/api/quotes", "/api/enquiries", "/api/newsletter/list"]) {
+    assert.equal((await api("GET", path)).status, 404, path);
+  }
+  await s.close();
+});
+
+test("pictures: only real JPEG, PNG and WebP files within the size limit are accepted", async () => {
+  const s = await start(); const api = s.client();
+  await api("POST", "/api/auth/signup", signupBody());
+  const bad = ["data:image/svg+xml;base64,PHN2Zz48c2NyaXB0Pg==", "data:text/html;base64,PHNjcmlwdD4=", "data:image/png;base64," + Buffer.from("not really a png at all").toString("base64"), "data:image/jpeg;base64," + "A".repeat(200000)];
+  for (const image of bad) {
+    const r = await api("POST", "/api/auth/avatar", {image});
+    assert.ok([400, 413, 503].includes(r.status), image.slice(0, 30) + " gave " + r.status);
+  }
+  await s.close();
 });

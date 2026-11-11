@@ -6,13 +6,14 @@ import { createDatabase } from "./db.js";
 import { loadConfig } from "./config.js";
 import { createMailer } from "./mailer.js";
 import { runMigrations } from "./migrations.js";
+import { httpsRedirect, securityHeaders } from "./security.js";
 
 const config = loadConfig();
 const db = createDatabase(config.database);
 const mailer = createMailer(config);
 console.log(mailer.configured
-  ? `[mail] Staff notifications: ON via ${config.mail.brevoKey ? "Brevo" : config.mail.resendKey ? "Resend" : "SMTP"}, sent to ${config.mail.notifyTo}`
-  : "[mail] Staff notifications: OFF. Set BREVO_API_KEY or RESEND_API_KEY (or SMTP_HOST) in the environment to receive quote and enquiry emails.");
+  ? `[mail] Staff notifications: ON via ${config.mail.brevoKey ? "Brevo" : "Resend"}, sent to ${config.mail.notifyTo}`
+  : "[mail] Staff notifications: OFF. Set BREVO_API_KEY or RESEND_API_KEY in the environment to receive quote and enquiry emails.");
 
 // Brings the database up to date. A problem is logged but never stops the website from starting.
 async function initDb() {
@@ -71,34 +72,6 @@ const contentTypes = {
   ".pdf": "application/pdf"
 };
 
-// Apply baseline HTTP security headers
-function applySecurityHeaders(req, res) {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "SAMEORIGIN");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-
-  res.setHeader(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=()"
-  );
-
-  // Enable HSTS only in production over HTTPS.
-  // This supports deployments behind HTTPS reverse proxies.
-  const forwardedProto = (
-    req.headers["x-forwarded-proto"] || ""
-  ).split(",")[0].trim().toLowerCase();
-
-  if (
-    config.nodeEnv === "production" &&
-    forwardedProto === "https"
-  ) {
-    res.setHeader(
-      "Strict-Transport-Security",
-      "max-age=31536000"
-    );
-  }
-}
-
 // Determine appropriate caching for static files
 function setStaticCacheHeaders(res, filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -115,7 +88,12 @@ function setStaticCacheHeaders(res, filePath) {
 }
 
 const server = http.createServer((req, res) => {
-  applySecurityHeaders(req, res);
+  const secureAddress = httpsRedirect(config, req);
+  if (secureAddress) {
+    res.writeHead(301, { Location: secureAddress, "Cache-Control": "no-store" });
+    return res.end();
+  }
+  for (const [name, value] of Object.entries(securityHeaders(config, req))) res.setHeader(name, value);
 
   // API and authentication requests must not be cached.
   if (

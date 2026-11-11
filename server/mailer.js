@@ -1,10 +1,9 @@
-// Sends email through the Resend web API when RESEND_API_KEY is set, otherwise through SMTP when SMTP_HOST is set
-// (needs the "nodemailer" package, listed in package.json). Without either, messages are not sent;
-// outside production the text is printed to the console.
+// Sends email through Brevo's web API (BREVO_API_KEY) or Resend's web API (RESEND_API_KEY). Without either, messages are not sent;
+// outside production the text is printed to the console. There is deliberately no SMTP route: it needed the nodemailer package,
+// which has open security advisories, and hosts such as Render's free plan block SMTP anyway.
 export function createMailer(config, fetchImpl = fetch) {
-  let transport = null;
   return {
-    configured: Boolean(config.mail.resendKey || config.mail.brevoKey || config.mail.host),
+    configured: Boolean(config.mail.resendKey || config.mail.brevoKey),
     async send({to, subject, text, replyTo}) {
       if (config.mail.brevoKey) {
         // MAIL_FROM looks like: SURGICISS LTD <surgiciss@gmail.com>
@@ -35,25 +34,9 @@ export function createMailer(config, fetchImpl = fetch) {
         }
         return true;
       }
-      if (!config.mail.host) {
-        if (config.production) console.warn(`[mail] No email service is configured; message "${subject}" was not sent.`);
-        else console.log(`[mail] To: ${to}\n[mail] Subject: ${subject}\n${text}\n`);
-        return false;
-      }
-      if (!transport) {
-        const {default: nodemailer} = await import("nodemailer");
-        transport = nodemailer.createTransport({
-          host: config.mail.host,
-          port: config.mail.port,
-          secure: config.mail.secure,
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
-          auth: config.mail.user ? {user: config.mail.user, pass: config.mail.password} : undefined
-        });
-      }
-      await transport.sendMail({from: config.mail.from, to, subject, text, ...(replyTo ? {replyTo} : {})});
-      return true;
+      if (config.production) console.warn(`[mail] No email service is configured; message "${subject}" was not sent.`);
+      else console.log(`[mail] To: ${to}\n[mail] Subject: ${subject}\n${text}\n`);
+      return false;
     }
   };
 }

@@ -3,7 +3,8 @@ const toBool = (value, fallback) => (value === undefined || value === "" ? fallb
 const toList = value => String(value || "").split(",").map(item => item.trim().replace(/\/+$/, "")).filter(Boolean);
 
 export function loadConfig(env = process.env) {
-  const production = env.NODE_ENV === "production";
+  // Render sets RENDER on every service, so the live site is treated as production even if NODE_ENV was not set.
+  const production = env.NODE_ENV === "production" || Boolean(env.RENDER);
   const secureCookie = toBool(env.COOKIE_SECURE, production);
   return {
     production,
@@ -22,8 +23,8 @@ export function loadConfig(env = process.env) {
       days: Number(env.SESSION_DAYS || 14),
       cookieName: "surgiciss_session",
       secure: secureCookie,
-      // Cross-site cookies (site and API on different domains) need SameSite=None, which requires Secure.
-      sameSite: env.COOKIE_SAMESITE || (secureCookie ? "None" : "Lax")
+      // Lax keeps the cookie off cross-site requests. Use COOKIE_SAMESITE=None only if the website and API are on different domains.
+      sameSite: env.COOKIE_SAMESITE || "Lax"
     },
     database: {
       host: env.DB_HOST || "127.0.0.1",
@@ -35,14 +36,9 @@ export function loadConfig(env = process.env) {
     },
     mail: {
       from: env.MAIL_FROM || "SURGICISS LTD <no-reply@localhost>",
-      host: env.SMTP_HOST || "",
-      port: Number(env.SMTP_PORT || 587),
-      user: env.SMTP_USER || "",
-      password: env.SMTP_PASSWORD || "",
-      secure: toBool(env.SMTP_SECURE, false),
       // Where new quote requests and enquiries are announced. Set NOTIFY_EMAIL to change it.
       notifyTo: env.NOTIFY_EMAIL || "surgiciss@gmail.com",
-      // Optional: send mail through Resend's web API instead of SMTP (hosts such as Render's free plan block SMTP ports).
+      // Optional: send mail through Resend's web API.
       resendKey: env.RESEND_API_KEY || "",
       // Optional: Brevo web API. It lets a single verified sender address (no domain needed) mail any recipient.
       brevoKey: env.BREVO_API_KEY || ""

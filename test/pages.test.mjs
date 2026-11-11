@@ -1,3 +1,4 @@
+/* global safeNext */
 // Opens the real site in a browser and checks every page. Needs Playwright:
 //   npm install --no-save playwright && npx playwright install chromium && npm run test:pages
 import test, { before, after } from "node:test";
@@ -8,6 +9,8 @@ import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { securityHeaders } from "../server/security.js";
+import { loadConfig } from "../server/config.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const types = {".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon", ".pdf": "application/pdf", ".txt": "text/plain", ".xml": "application/xml"};
@@ -22,6 +25,9 @@ before(async () => {
     // Like the real server: a page address without a file ending is answered with index.html.
     const file = url === "/" || !path.extname(url) ? path.join(root, "index.html") : path.join(root, "public", url);
     if (!file.startsWith(root) || !fs.existsSync(file) || !fs.statSync(file).isFile()) { res.statusCode = 404; return res.end("missing"); }
+    // The same security headers the live server sends, including the content security policy, so a page that breaks under them fails here.
+    const live = loadConfig({RENDER: "true", ALLOWED_ORIGINS: base});
+    for (const [name, value] of Object.entries(securityHeaders(live, {headers: {"x-forwarded-proto": "https"}}))) if (name !== "Strict-Transport-Security") res.setHeader(name, value);
     res.setHeader("Content-Type", types[path.extname(file)] || "application/octet-stream");
     fs.createReadStream(file).pipe(res);
   });
@@ -35,6 +41,7 @@ async function open(hash, size = {width: 1280, height: 900}) {
   const page = await browser.newPage({viewport: size});
   const problems = [];
   page.on("pageerror", e => problems.push("script error: " + e.message));
+  page.on("console", m => { if (/Content Security Policy|Refused to (load|execute|apply|connect)/i.test(m.text())) problems.push("blocked by the security policy: " + m.text().slice(0, 160)); });
   // A missing file on the site itself is a problem. The account calls to /api are expected to fail here: there is no server.
   page.on("response", r => { if (r.status() >= 400 && r.url().startsWith(base) && !r.url().includes("/api/")) problems.push(`${r.status()} ${r.url().replace(base, "")}`); });
   await page.route(url => !url.href.startsWith(base), r => r.abort());
@@ -174,5 +181,54 @@ test("every page has a search symbol that opens a search for products and softwa
   await page.waitForURL(`${base}/search`);
   assert.equal(await page.locator(".bar-toggle").count(), 0, "the search page should not show the symbol");
   assert.match(await page.inputValue("#site-search"), /matrix/);
+  await page.close();
+});
+
+// ---- Script injection (XSS) ----
+const PAYLOADS = ['<img src=x onerror="window.__xss=1">', '"><script>window.__xss=1</script>', "'><svg onload=window.__xss=1>", "javascript:window.__xss=1"];
+async function nothingInjected(page, where) {
+  await page.waitForTimeout(150);
+  assert.equal(await page.evaluate(() => window.__xss), undefined, `script ran on ${where}`);
+  assert.equal(await page.locator("main img[src='x'], main svg[onload], main script").count(), 0, `markup was injected on ${where}`);
+}
+
+test("text in the address bar is never run as code", async () => {
+  for (const payload of PAYLOADS) {
+    const q = encodeURIComponent(payload);
+    for (const route of [`/search?q=${q}`, `/login?error=${q}&next=${q}`, `/reset-password?token=${q}`, `/generate-quote?item=${q}&q=${q}`, `/products/${q}`, `/software/${q}`, `/product-category/${q}`, `/contact-us?x=${q}`]) {
+      const {page} = await open(route).catch(async () => ({page: null}));
+      if (!page) continue;
+      await nothingInjected(page, route);
+      await page.close();
+    }
+  }
+});
+
+test("hostile text typed into the account form is shown as plain text everywhere", async () => {
+  const {page} = await open("/sign-up");
+  await page.fill("#name", PAYLOADS[0]);
+  await page.fill("#email", "xss@example.com");
+  await page.fill("#password", "correct horse 9"); await page.fill("#confirm", "correct horse 9");
+  await page.fill("#organisation", PAYLOADS[1]);
+  await page.fill("#phone", PAYLOADS[2]);
+  await page.click("#signup-form button[type=submit]");
+  await page.waitForTimeout(600);
+  for (const route of ["/account", "/account/profile", "/account/profile/edit", "/account/settings", "/generate-quote", "/"]) {
+    await page.goto(`${base}${route}`);
+    await page.waitForSelector("main h1, main h2");
+    await nothingInjected(page, route);
+    // The text is really on the page, so the check above did look at the hostile values.
+    if (route === "/account/profile") assert.ok((await page.textContent("main")).includes("<img src=x"), "the account was not created, so nothing was tested");
+  }
+  await page.close();
+});
+
+test("a sign-in return address cannot send people to another website", async () => {
+  const {page} = await open("/login?next=https://evil.example/steal");
+  assert.equal(await page.evaluate(() => safeNext("https://evil.example/steal")), "/account");
+  assert.equal(await page.evaluate(() => safeNext("//evil.example")), "/account");
+  assert.equal(await page.evaluate(() => safeNext("/\\evil.example")), "/account");
+  assert.equal(await page.evaluate(() => safeNext("javascript:alert(1)")), "/account");
+  assert.equal(await page.evaluate(() => safeNext("/account/quotes")), "/account/quotes");
   await page.close();
 });

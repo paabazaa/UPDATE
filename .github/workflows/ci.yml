@@ -20,6 +20,11 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm test
+      # The same build Render runs, so a broken build is caught before it reaches the live site.
+      - run: npm run build
+      - name: Audit packages (report only)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
 
   pages:
     name: Pages in a real browser
