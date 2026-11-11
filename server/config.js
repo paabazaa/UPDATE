@@ -36,14 +36,9 @@ export function loadConfig(env = process.env) {
     },
     mail: {
       from: env.MAIL_FROM || "SURGICISS LTD <no-reply@localhost>",
-      host: env.SMTP_HOST || "",
-      port: Number(env.SMTP_PORT || 587),
-      user: env.SMTP_USER || "",
-      password: env.SMTP_PASSWORD || "",
-      secure: toBool(env.SMTP_SECURE, false),
       // Where new quote requests and enquiries are announced. Set NOTIFY_EMAIL to change it.
       notifyTo: env.NOTIFY_EMAIL || "surgiciss@gmail.com",
-      // Optional: send mail through Resend's web API instead of SMTP (hosts such as Render's free plan block SMTP ports).
+      // Optional: send mail through Resend's web API.
       resendKey: env.RESEND_API_KEY || "",
       // Optional: Brevo web API. It lets a single verified sender address (no domain needed) mail any recipient.
       brevoKey: env.BREVO_API_KEY || ""

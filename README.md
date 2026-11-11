@@ -99,7 +99,6 @@ Settings are in `.env.example`. The important ones:
 | `COOKIE_SECURE`, `COOKIE_SAMESITE` | Use `true` and `None` when the website and API are on different domains (HTTPS required). Use `Lax` when they share a domain. |
 | `BREVO_API_KEY` and `MAIL_FROM` | Outgoing email through Brevo's web API (recommended on Render's free plan, which blocks SMTP). `MAIL_FROM` must be an address verified in Brevo, for example `SURGICISS LTD <surgiciss@gmail.com>`. |
 | `RESEND_API_KEY` | Alternative to Brevo. Resend only delivers to your own address until a domain is verified. |
-| `SMTP_*` | Alternative on hosts that allow SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SECURE`. |
 | `NOTIFY_EMAIL` | Where new quotes and enquiries are announced. Defaults to `surgiciss@gmail.com`. |
 | `TRUST_PROXY` | `true` when a proxy or host sits in front of the API, so rate limits see the real visitor address. |
 
@@ -163,7 +162,7 @@ GitHub runs both automatically on every push (`.github/workflows/ci.yml`). A red
 | `server/app.js` | The API routes: accounts, quotes, enquiries, newsletter, health. |
 | `server/config.js` | Reads every setting from environment variables. |
 | `server/db.js` | MySQL connection (needs the CA certificate file on Render). |
-| `server/mailer.js` | Sends email through Brevo, Resend or SMTP. |
+| `server/mailer.js` | Sends email through Brevo or Resend. |
 | `server/oauth.js` | Google and Facebook sign-in steps. |
 | `server/passwords.js`, `ratelimit.js`, `validation.js` | Password hashing, request limits, input checks. |
 | `server/migrations.js`, `server/migrations/` | Database changes, applied in order and recorded in the `schema_migrations` table. To change the database, add a new numbered `.sql` file and list it in `migrations.js`; the server applies it on the next start. |

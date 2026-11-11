@@ -440,7 +440,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
           database,
           mail: {
             notifications: Boolean(mailer && mailer.configured),
-            provider: config.mail.brevoKey ? "brevo" : config.mail.resendKey ? "resend" : config.mail.host ? "smtp" : "none"
+            provider: config.mail.brevoKey ? "brevo" : config.mail.resendKey ? "resend" : "none"
           }
         }
       };
