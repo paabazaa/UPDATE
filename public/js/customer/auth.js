@@ -157,7 +157,7 @@ function signupPage() {
 function forgotPage() {
   if (state.forgotSent) {
     return authCard("Forgot password", "Check your email for the next step.", `<div class="done" role="status"><h2>Check your email.</h2>
-      <p>If an account exists for that address, we have sent a link to choose a new password. The link works once and expires after one hour. This page does not reveal whether the address is on file.</p>
+      <p>If an account exists for that address, we have sent a link to choose a new password. The link works once and expires after 30 minutes. This page does not reveal whether the address is on file.</p>
       <p style="margin-top:12px"><a href="${withNext("/login")}">Back to login</a></p></div>`);
   }
   const user = Accounts.current();

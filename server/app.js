@@ -10,6 +10,7 @@ const MAX_BODY = 100 * 1024;
 const MAX_AVATAR = 90 * 1024;
 const HOUR = 60 * 60 * 1000;
 const QUARTER_HOUR = 15 * 60 * 1000;
+const RESET_MINUTES = 30;
 
 const sqlDate = (date = new Date()) => date.toISOString().slice(0, 19).replace("T", " ");
 const parseJson = value => (typeof value === "string" ? JSON.parse(value) : value);
@@ -178,11 +179,28 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     return rows[0] || null;
   }
 
+  // CSRF protection: every request that changes data for a signed-in person must carry a token that only this browser session can know.
+  // The token is worked out from the secret session cookie, so a page on another website cannot guess it.
+  const csrfOf = token => sha256("csrf:" + token);
+  const csrfTokenFor = req => {
+    const token = cookies(req)[config.session.cookieName];
+    return token ? csrfOf(token) : "";
+  };
+  function checkCsrf(req) {
+    if (req.method === "GET" || req.method === "HEAD") return;
+    const expected = Buffer.from(csrfTokenFor(req));
+    const sent = Buffer.from(String(req.headers["x-csrf-token"] || ""));
+    if (!expected.length || sent.length !== expected.length || !crypto.timingSafeEqual(sent, expected)) {
+      throw new HttpError(403, "Your session check failed. Please refresh the page and try again.");
+    }
+  }
+
   const requireUser = async req => {
     const user = await sessionUser(req);
     if (!user) {
       throw new HttpError(401, "Please log in.");
     }
+    checkCsrf(req);
     return user;
   };
 
@@ -200,7 +218,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       "INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
       [sha256(token), userId, sqlDate(now), sqlDate(expires)]
     );
-    return cookieHeader(token, config.session.days * 24 * 60 * 60);
+    return {cookie: cookieHeader(token, config.session.days * 24 * 60 * 60), csrfToken: csrfOf(token)};
   }
 
   const clearCookie = () => cookieHeader("", 0);
@@ -399,7 +417,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     const userId = await userForOauth(name, profile, email);
     return {
       redirect: siteRedirect(row.next_path),
-      cookies: [clear, await startSession(userId)]
+      cookies: [clear, (await startSession(userId)).cookie]
     };
   }
 
@@ -433,7 +451,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         const picture = (await db.query("SELECT avatar FROM users WHERE id = ?", [user.id]))[0];
         user.avatar = picture ? picture.avatar : "";
       }
-      return { body: { user: user ? presentUser(user) : null } };
+      return { body: { user: user ? presentUser(user) : null, csrfToken: user ? csrfTokenFor(req) : "" } };
     },
     "POST /api/auth/signup": async req => {
       limit(req, "signup", 20, HOUR);
@@ -452,9 +470,9 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         console.error("[signup INSERT failed]", error?.message, error?.code);
         throw new HttpError(500, "Your account could not be created right now. Please try again in a little while.");
       }
-      const cookie = await startSession(id);
+      const session = await startSession(id);
       const row = (await db.query("SELECT * FROM users WHERE id = ?", [id]))[0];
-      return { status: 201, cookie, body: { user: presentUser(row) } };
+      return { status: 201, cookie: session.cookie, body: { user: presentUser(row), csrfToken: session.csrfToken } };
     },
     "POST /api/auth/login": async req => {
       const body = await readBody(req);
@@ -464,7 +482,8 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       const row = (await db.query("SELECT * FROM users WHERE email = ?", [email]))[0];
       const ok = await verifyPassword(String(body.password || "").slice(0, 128), row && row.password_hash ? row.password_hash : DUMMY_HASH);
       if (!row || !row.password_hash || !ok) throw new HttpError(401, "That email and password do not match an account.");
-      return { cookie: await startSession(row.id), body: { user: presentUser(row) } };
+      const session = await startSession(row.id);
+      return { cookie: session.cookie, body: { user: presentUser(row), csrfToken: session.csrfToken } };
     },
     "POST /api/auth/logout": async req => {
       const token = cookies(req)[config.session.cookieName];
@@ -529,16 +548,17 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     "POST /api/auth/forgot": async req => {
       limit(req, "forgot", 5, HOUR);
       const email = normaliseEmail((await readBody(req)).email);
+      limit(req, "forgot-email", 3, HOUR, email);
       if (isEmail(email)) {
         const row = (await db.query("SELECT id FROM users WHERE email = ?", [email]))[0];
         if (row) {
           const token = newToken();
           const now = new Date();
           await db.execute("DELETE FROM password_resets WHERE user_id = ?", [row.id]);
-          await db.execute("INSERT INTO password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [sha256(token), row.id, sqlDate(now), sqlDate(new Date(now.getTime() + HOUR))]);
+          await db.execute("INSERT INTO password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [sha256(token), row.id, sqlDate(now), sqlDate(new Date(now.getTime() + RESET_MINUTES * 60 * 1000))]);
           const base = config.siteUrl || config.allowedOrigins[0] || "";
           try {
-            await mailer.send({ to: email, subject: "Reset your SURGICISS password", text: `Use this link within one hour to choose a new password:\n\n${base}/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.` });
+            await mailer.send({ to: email, subject: "Reset your SURGICISS password", text: `Use this link within 30 minutes to choose a new password:\n\n${base}/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.` });
           } catch (error) { console.error("[mail] Could not send password-reset email:", String((error && error.message) || error).slice(0, 300)); }
         }
       }
@@ -561,6 +581,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       limit(req, "submit", 40, HOUR);
       const body = await readBody(req);
       const user = await sessionUser(req);
+      if (user) checkCsrf(req);
       if (body.kind === "quote") {
         if (!user) throw new HttpError(401, "Please sign in or create an account before requesting a quote.");
         const input = cleanQuote(body.record);
@@ -613,7 +634,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       ? {
           "Access-Control-Allow-Origin": origin,
           "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Headers": "Content-Type, X-Requested-With",
+          "Access-Control-Allow-Headers": "Content-Type, X-Requested-With, X-CSRF-Token",
           "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
           "Access-Control-Max-Age": "600",
           "Vary": "Origin"
@@ -637,6 +658,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       if (!route) throw new HttpError(404, "Not found.");
       if (req.method !== "GET") {
         if (origin && !originAllowed) throw new HttpError(403, "This website is not allowed to use the API.");
+        if (req.headers["sec-fetch-site"] === "cross-site" && !originAllowed) throw new HttpError(403, "This website is not allowed to use the API.");
         if (!req.headers["x-requested-with"]) throw new HttpError(403, "Missing request header.");
       }
       const result = await route(req);
@@ -648,18 +670,11 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         return send(res, error.status, {error: error.message}, error.closeConnection ? {...corsHeaders, Connection: "close"} : corsHeaders);
       }
 
-      // ===== NEW VERBOSE LOGGING - THIS WILL SHOW REAL ERROR =====
-      console.error("====== REAL ERROR START ======");
-      console.error("Message:", error?.message);
-      console.error("Stack:", error?.stack);
-      console.error("Code:", error?.code);
-      console.error("Errno:", error?.errno);
-      console.error("Route:", req.method, req.url);
-      console.error("Full error:", error);
-      console.error("====== REAL ERROR END ======");
+      // Details go to the server log only. The visitor gets a plain message with nothing about the inside of the system.
       console.error("[api] An internal API error occurred:", error?.message || String(error), "| route:", req.method, String(req.url || "").split("?")[0], "code:", error?.code);
+      if (error?.stack) console.error(error.stack);
 
-      send(res, 500, { error: "Something went wrong on our side. Please try again in a little while. Debug: " + (error?.message || String(error)).slice(0,300) }, corsHeaders);
+      send(res, 500, { error: "Something went wrong on our side. Please try again in a little while." }, corsHeaders);
     }
   };
 }

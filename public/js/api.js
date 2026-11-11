@@ -2,6 +2,9 @@
 const Api = (() => {
   const base = String((window.SURGICISS_CONFIG && window.SURGICISS_CONFIG.apiBase) || "").trim().replace(/\/+$/, "");
 
+  // Proof for the server that a change really comes from this signed-in browser (CSRF protection). The server hands it out on sign-in.
+  let csrfToken = "";
+
   async function request(method, path, body, timeoutMs = 15000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -10,12 +13,13 @@ const Api = (() => {
         method,
         credentials: "include",
         signal: controller.signal,
-        headers: {"Content-Type": "application/json", "Accept": "application/json", "X-Requested-With": "surgiciss-web"},
+        headers: {"Content-Type": "application/json", "Accept": "application/json", "X-Requested-With": "surgiciss-web", ...(csrfToken ? {"X-CSRF-Token": csrfToken} : {})},
         body: body === undefined ? undefined : JSON.stringify(body)
       });
       let data = {};
       try {data = (await response.json()) || {};}
       catch (e) { /* the body was not JSON */}
+      if (typeof data.csrfToken === "string") csrfToken = data.csrfToken;
       return {
         ok: response.ok,
         status: response.status,
