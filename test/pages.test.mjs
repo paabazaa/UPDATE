@@ -1,3 +1,4 @@
+/* global safeNext */
 // Opens the real site in a browser and checks every page. Needs Playwright:
 //   npm install --no-save playwright && npx playwright install chromium && npm run test:pages
 import test, { before, after } from "node:test";
