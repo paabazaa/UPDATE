@@ -10,25 +10,25 @@ if (/^#\//.test(location.hash)) history.replaceState(null, "", location.hash.sli
 // Image paths by key, relative to the site root.
 const IMAGES = {
   "productBrushRack": "/images/product-ibr-brush-rack.jpg",
-  "productHealthMonitor": "/images/product-covidot-health-monitor.jpg",
+  "productHealthMonitor": "/images/product-covidot-health-monitor.jpg?v=2",
   "productTrayIntegrityTest": "/images/product-tray-integrity-test.jpg",
   "productCountSheetHolder": "/images/product-count-sheet-holder.jpg",
-  "productMasterWrap": "/images/product-master-wrap.jpg",
+  "productMasterWrap": "/images/product-master-wrap.jpg?v=2",
   "productQualityAssuranceCard": "/images/product-quality-assurance-card.jpg",
   "softwareDashboard": "/images/software-sterile-matrix.jpg",
   "softwareCaseCart": "/images/software-case-cart-matrix.jpg",
   "softwareCrashCart": "/images/software-crash-cart-matrix.jpg",
   "softwareEndoscope": "/images/software-endoscope-matrix.jpg",
-  "heroMasterWrap": "/images/hero-master-wrap.jpg",
+  "heroMasterWrap": "/images/hero-master-wrap.jpg?v=2",
   "masterWrapPrepare": "/images/master-wrap-ifu-prepare.jpg",
   "masterWrapPosition": "/images/master-wrap-ifu-position.jpg",
   "masterWrapSecure": "/images/master-wrap-ifu-secure.jpg",
   "masterWrapCloseup": "/images/master-wrap-ifu-closeup.jpg",
   "masterWrapFulltray": "/images/master-wrap-ifu-fulltray.jpg",
-  "serviceLeadership": "/images/service-operating-room.jpg",
-  "serviceMorale": "/images/service-sterile-storage.jpg",
-  "serviceTraining": "/images/hero-sterile-services.jpg",
-  "heroSterileProcessing": "/images/hero-sterile-services.jpg",
+  "serviceLeadership": "/images/service-operating-room.jpg?v=2",
+  "serviceMorale": "/images/service-sterile-storage.jpg?v=2",
+  "serviceTraining": "/images/hero-sterile-services.jpg?v=2",
+  "heroSterileProcessing": "/images/hero-sterile-services.jpg?v=2",
   "logo": "/images/logo.png"
 };
 

@@ -36,7 +36,7 @@ test("every list has unique slugs and the required fields", () => {
 });
 
 test("every picture used by the site exists", () => {
-  for (const [key, file] of Object.entries(IMAGES)) assert.ok(fs.existsSync(pub(file)), `image "${key}" points to a missing file: ${file}`);
+  for (const [key, file] of Object.entries(IMAGES)) assert.ok(fs.existsSync(pub(file.split("?")[0])), `image "${key}" points to a missing file: ${file}`);
   for (const item of [...DATA.products, ...DATA.software, ...DATA.services, ...DATA.programmes]) {
     assert.ok(IMAGES[item.image], `${item.slug} uses an image key that is not defined: ${item.image}`);
   }
