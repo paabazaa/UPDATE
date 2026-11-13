@@ -232,3 +232,33 @@ test("a sign-in return address cannot send people to another website", async () 
   assert.equal(await page.evaluate(() => safeNext("/account/quotes")), "/account/quotes");
   await page.close();
 });
+
+test("a signed-in person sees their profile menu at the top right, ending with Log out", async () => {
+  const {page} = await open("/sign-up");
+  await page.fill("#name", "Ama Mensah");
+  await page.fill("#email", "menu@example.com");
+  await page.fill("#password", "correct horse 9"); await page.fill("#confirm", "correct horse 9");
+  await page.click("#signup-form button[type=submit]");
+  await page.waitForSelector("[data-umenu]");
+  assert.equal(await page.locator("header .hbtn.plain[data-logout]").count(), 0, "the old loose Log out button is gone");
+  const button = page.locator("[data-umenu]");
+  const box = await button.boundingBox();
+  const others = await page.locator("header .htools > *:visible").evaluateAll(els => els.map(e => e.getBoundingClientRect().right));
+  assert.ok(box.x + box.width >= Math.max(...others) - 1, "the profile is the right-most item in the header");
+  assert.match(await button.textContent(), /Ama/);
+  assert.ok(await page.locator(".umenu-panel").isHidden(), "closed to begin with");
+  await button.click();
+  const items = await page.locator(".umenu-panel [role=menuitem]").allTextContents();
+  assert.deepEqual(items.map(t => t.trim()), ["Overview", "My quotes", "My enquiries", "My orders", "Order history", "My profile", "Account settings", "Log out"]);
+  await page.click(".umenu-panel a[href='/account/quotes']");
+  await page.waitForURL(`${base}/account/quotes`);
+  assert.ok(await page.locator(".umenu-panel").isHidden(), "the menu closes after a choice");
+  await page.click("[data-umenu]"); await page.keyboard.press("Escape");
+  assert.ok(await page.locator(".umenu-panel").isHidden(), "Escape closes it");
+  await page.click("[data-umenu]");
+  await page.click(".umenu-panel [data-logout]");
+  await page.click("[data-logout-yes]"); // the site asks "Are you sure?" first
+  await page.waitForSelector("header a[href='/login']");
+  assert.equal(await page.locator("[data-umenu]").count(), 0, "logged out");
+  await page.close();
+});
