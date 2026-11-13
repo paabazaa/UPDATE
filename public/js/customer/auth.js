@@ -10,11 +10,18 @@ function customerHeader() {
   const productLinks = products.map(item => ({label: item.name, to: "/products/" + item.slug, summary: clip(item.summary), icon: "box"}));
   const mgroup = (label, links, allTo, allLabel) => `<div class="mg"><div class="mrow"><a href="${href(allTo)}">${label}</a><button type="button" class="mt" aria-label="Show ${label} menu" aria-expanded="false" data-mtoggle>${icons.down}</button></div><div class="msub" hidden>${links.map(link => `<a href="${href(link.to)}">${escapeHtml(link.label)}</a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}</a></div></div>`;
   const user = Accounts.current();
+  // Signed-in people get their profile in the top right corner with a menu; Log out is always the last choice.
+  const menuLinks = [["/account", "Overview"], ["/account/quotes", "My quotes"], ["/account/enquiries", "My enquiries"], ["/account/orders", "My orders"], ["/account/history", "Order history"], ["/account/profile", "My profile"], ["/account/settings", "Account settings"]];
+  const firstName = user ? (String(user.name || "").trim().split(/\s+/)[0] || "My account") : "";
+  const profileMenu = user
+    ? `<div class="umenu desk-only"><button type="button" class="hbtn solid-soft umenu-btn" data-umenu aria-haspopup="menu" aria-expanded="false" aria-label="Your account menu">${avatarHtml(user, "sm")}<span class="uname">${escapeHtml(firstName)}</span>${icons.down}</button>
+      <div class="umenu-panel" role="menu" hidden><p class="umenu-who"><strong>${escapeHtml(user.name || "Your account")}</strong><span>${escapeHtml(user.email || "")}</span></p>${menuLinks.map(([to, label]) => `<a role="menuitem" href="${to}"${currentPath() === to ? ' aria-current="page"' : ""}>${label}</a>`).join("")}<button type="button" role="menuitem" class="umenu-out" data-logout>Log out</button></div></div>`
+    : "";
   const accountDesktop = user
-    ? `<a class="hbtn solid-soft desk-only" href="/account">${avatarHtml(user, "sm")}My account</a><button type="button" class="hbtn plain desk-only" data-logout>Log out</button>`
+    ? ""
     : `<a class="hbtn plain desk-only${act("/login")}" href="/login">Login</a><a class="hbtn outline desk-only${act("/sign-up")}" href="/sign-up">Create account</a>`;
   const accountMobile = user
-    ? `<a href="/account">My account</a><a href="/account/quotes">My quotes</a><a href="/account/enquiries">My enquiries</a><a href="/account/orders">My orders</a><button type="button" class="linkish" data-logout>Log out</button>`
+    ? `${menuLinks.map(([to, label]) => `<a href="${to}">${label}</a>`).join("")}<button type="button" class="linkish" data-logout>Log out</button>`
     : `<a href="/login">Login</a><a href="/sign-up">Create account</a>`;
   return `<header class="site" id="hdr"><div class="wrap hbar">
     <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
@@ -24,6 +31,7 @@ function customerHeader() {
       <a class="hbtn primary desk-only" href="/generate-quote">${icons.plus}Generate quote</a>
       <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav">${state.mobile ? icons.close : icons.menu}Menu</button>
       ${themeButton()}
+      ${profileMenu}
     </div>
   </div>
   <div class="navrow"><nav class="main" aria-label="Main navigation">

@@ -67,6 +67,22 @@ document.addEventListener("submit", e => {
   }
 });
 
+// Profile menu in the header (signed-in people): opens and closes the list that ends with Log out.
+function closeUserMenu() {
+  document.querySelectorAll(".umenu-panel").forEach(panel => {panel.hidden = true;});
+  document.querySelectorAll("[data-umenu]").forEach(button => button.setAttribute("aria-expanded", "false"));
+}
+document.addEventListener("click", e => {
+  const button = e.target.closest("[data-umenu]");
+  if (button) {
+    const panel = button.parentElement.querySelector(".umenu-panel");
+    const opening = panel.hidden;
+    closeUserMenu();
+    if (opening) {panel.hidden = false; button.setAttribute("aria-expanded", "true");}
+  } else if (!e.target.closest(".umenu-panel") || e.target.closest(".umenu-panel a, [data-logout]")) closeUserMenu();
+});
+document.addEventListener("keydown", e => {if (e.key === "Escape") closeUserMenu();});
+
 // Search symbol in the header: opens the box; suggestions while typing, the full search page on Enter.
 function closeBarResults() {
   document.querySelectorAll(".bar-results").forEach(box => {box.hidden = true;});
