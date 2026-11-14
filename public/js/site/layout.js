@@ -25,7 +25,7 @@ function header() {
       <a class="tl${act("/count-sheet-holders")}" href="/count-sheet-holders">Instrument Count Sheet Holders</a>
       <a class="tl${act("/contact-us")}" href="/contact-us">Contact Us</a>
     </nav>
-    <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav">${state.mobile ? icons.close : icons.menu}Menu</button>
+    <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav" aria-label="${state.mobile ? "Close menu" : "Open menu"}">${state.mobile ? icons.close : icons.menu}</button>
     ${themeButton()}
     </div></div>
     ${state.mobile ? `<div id="mobnav"><nav class="wrap" aria-label="Mobile navigation"><a class="homelink" href="/" aria-label="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></a>${mgroup("Software", swL, "/software", "All Software")}${mgroup("Products", prL, "/products", "All Products")}<a href="/count-sheet-holders">Instrument Count Sheet Holders</a><a href="/about">About</a><a href="/contact-us">Contact Us</a><a class="quote" href="/request-quote">Request a quote</a></nav>

@@ -249,6 +249,16 @@ test("a signed-in person sees their profile menu at the top right, ending with L
   assert.equal(await page.locator("[data-umenu] .uname").count(), 0);
   assert.equal(await page.locator("[data-umenu] .avatar").evaluate(e => getComputedStyle(e).borderRadius), "50%");
   assert.equal(await page.evaluate(() => [initials("AKAERE"), initials("Kofi Mensah"), initials("a"), initials("  ama  boateng ")].join(",")), "AK,KO,A,AM");
+  assert.equal((await page.locator("#menubtn").textContent()).trim(), "", "the menu button is a symbol with no word");
+  await page.setViewportSize({width: 375, height: 700});
+  assert.ok(await button.isVisible(), "the profile also shows on a phone");
+  const small = await button.boundingBox();
+  assert.ok(small.x + small.width <= 375, "the profile fits inside a phone screen");
+  await button.click();
+  const panel = await page.locator(".umenu-panel").boundingBox();
+  assert.ok(panel.x >= 0 && panel.x + panel.width <= 375, "the phone menu stays on screen");
+  await button.click();
+  await page.setViewportSize({width: 1280, height: 720});
   assert.ok(await page.locator(".umenu-panel").isHidden(), "closed to begin with");
   await button.click();
   const items = await page.locator(".umenu-panel [role=menuitem]").allTextContents();
