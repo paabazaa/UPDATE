@@ -23,7 +23,8 @@ const avatarHtml = (user, size) => `<span class="avatar ${size}${user.avatar ? "
 function initials(name) {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "?";
-  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+  // The first two letters of the name, in capitals: AKAERE becomes AK, and a one-letter name gives one letter.
+  return Array.from(parts[0]).slice(0, 2).join("").toUpperCase();
 }
 function accountShell(title, body) {
   const user = Accounts.current() || {};

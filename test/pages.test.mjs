@@ -1,4 +1,4 @@
-/* global safeNext */
+/* global safeNext, initials */
 // Opens the real site in a browser and checks every page. Needs Playwright:
 //   npm install --no-save playwright && npx playwright install chromium && npm run test:pages
 import test, { before, after } from "node:test";
@@ -245,7 +245,10 @@ test("a signed-in person sees their profile menu at the top right, ending with L
   const box = await button.boundingBox();
   const others = await page.locator("header .htools > *:visible").evaluateAll(els => els.map(e => e.getBoundingClientRect().right));
   assert.ok(box.x + box.width >= Math.max(...others) - 1, "the profile is the right-most item in the header");
-  assert.match(await button.textContent(), /Ama/);
+  assert.equal((await button.textContent()).trim(), "AM", "the round picture shows the first two letters and no name");
+  assert.equal(await page.locator("[data-umenu] .uname").count(), 0);
+  assert.equal(await page.locator("[data-umenu] .avatar").evaluate(e => getComputedStyle(e).borderRadius), "50%");
+  assert.equal(await page.evaluate(() => [initials("AKAERE"), initials("Kofi Mensah"), initials("a"), initials("  ama  boateng ")].join(",")), "AK,KO,A,AM");
   assert.ok(await page.locator(".umenu-panel").isHidden(), "closed to begin with");
   await button.click();
   const items = await page.locator(".umenu-panel [role=menuitem]").allTextContents();
