@@ -16,7 +16,7 @@ function header() {
   const prL = products.map(p => ({label: p.name, to: "/products/" + p.slug}));
   const mgroup = (label, links, allTo, allLabel) => `<div class="mg"><div class="mrow"><a href="${href(allTo)}">${label}</a><button type="button" class="mt" aria-label="Show ${label} menu" aria-expanded="false" data-mtoggle>${icons.down}</button></div><div class="msub" hidden>${links.map(l => `<a href="${href(l.to)}">${escapeHtml(l.label)}</a>`).join("")}<a class="all" href="${href(allTo)}">${allLabel}</a></div></div>`;
   return `<header class="site" id="hdr"><div class="wrap hbar">
-    <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
+    <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS LTD" width="760" height="192" decoding="async"></a>
     <div style="display:flex;align-items:center">
     <nav class="main" aria-label="Main navigation">
       <a class="tl home${act("/")}" href="/" aria-label="Home" title="Home"><svg class="ico" style="margin:0;width:20px;height:20px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></a>
@@ -54,7 +54,7 @@ function footer() {
       </div>
     <div><h2>Newsletter</h2>
       <div class="rule"></div>
-      <p class="small">Notes on sterile services practice, products and training. Enter your email address to be added to the list.</p>
+      <p class="small">Occasional updates about our products and sterile processing. Enter your email address to subscribe.</p>
       <form id="newsletter"><label for="newsletter-email" class="sr">Email address</label>
       <input id="newsletter-email" type="email" required placeholder="Your email address"><button type="submit">Subscribe</button></form>
       ${state.subscribeError ? `<p class="small" style="font-size:12px" role="alert">${escapeHtml(state.subscribeError)}</p>` : ""}${state.subscribed ? `<p class="small" style="font-size:12px" role="status">Thank you. Your email address has been added to the list.</p>` : ""}</div>
