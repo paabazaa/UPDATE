@@ -27,12 +27,12 @@ const DATA = {
       "slug": "surgical-tray-integrity-test",
       "name": "Surgical Tray Integrity Test",
       "category": "sterile-barrier",
-      "summary": "A quick, easy test that uses the wicking effect of antiseptic fluids across clean synthetic membranes to reveal tiny holes around the retention pins of rigid containers.",
+      "summary": "A simple test that uses the wicking effect of a fluid across a synthetic membrane to help reveal small holes around the retention pins of rigid instrument containers.",
       "image": "productTrayIntegrityTest",
       "body": [
-        "In operating rooms and sterile processing departments, patient safety has no quitting time. This explains why we are compliantly obligated to enforce and cross-check our best practices to ensure the best surgical outcomes for each patient. In sterile barrier maintenance, however, rigid containers elusively sustain wear and tear around their retention pins. These invisible holes on rigid containers could become potential bacterial ingress, which contaminates surgical instruments.",
-        "What is worse, these microscopic defects, though common in hospitals, remain hidden and impossible to detect without the use of technology. This Surgical Tray Integrity Test applies the wicking effect of some antiseptic fluids across clean synthetic membranes to rapidly magnify potential holes around faulty retention pins of rigid instrument containers, and thus isolate them for proper repair.",
-        "Quick and easy, this sterility maintenance test, when adopted as best practice in operating rooms and sterile processing departments, helps identify and isolate compromised rigid containers for repair. It thus proactively supports the minimisation of surgical site infections, even as it aids operating room nurses and scrub techs to speak up and boldly take action to protect the safety of each patient, in each operating room, each time."
+        "Rigid instrument containers can wear around their retention pins over time. Small holes in these areas may compromise the container's barrier and create a route for contamination. Routine inspection helps staff identify damage before a container is returned to use.",
+        "The Surgical Tray Integrity Test uses the wicking effect of a fluid on a synthetic membrane to make possible defects around the retention pins easier to see. Staff can then set aside containers that need closer inspection or repair.",
+        "The test is intended to support routine checks of rigid containers. When a defect is found, the container can be removed from service and assessed for repair in line with the department's procedures."
       ],
       "features": [
         "Uses the wicking effect of antiseptic fluids across clean synthetic membranes",
@@ -63,9 +63,9 @@ const DATA = {
       "summary": "A lean production device combining bins, racks, shelves and a french gauge to consolidate sterile processing supplies and ease bottlenecks.",
       "image": "productBrushRack",
       "body": [
-        "Coined from instrument brush rack, the term iBR (pronounced I-Bar) is a lean production device that combines the core functionality of bins, racks, shelves and a french gauge to consolidate sterile processing supplies, ease bottlenecks and ensure the consistent delivery of clean, sterile, functional and relevant instruments, patient care equipment and sterilisation supplies on time and on budget.",
-        "Customisable to the needs of each work station, an iBR occupies less space standing on a workbench or if mounted on a wall. It holds items such as brushes, sponges, tags, test kits, locks, integrators, indicators, load stickers, tip protectors, peel packs, count sheet holders, quality assurance cards, labels, tapes, markers, pens and much more in the Decontamination, Set Assembly and Sterilisation areas. iBR does indeed make sterile processing easy, accurate and consistent.",
-        "At no charge, our lean sterile processing experts are here to assist you to improve the workflow of each work station. Call us."
+        "The name iBR comes from “instrument brush rack”. It combines storage bins, racks, shelves and a French gauge in one workstation organiser. The aim is to keep frequently used sterile processing supplies together and within easy reach.",
+        "The iBR can be configured for the needs of a work area and placed on a bench or mounted on a wall. Depending on the setup, it can hold brushes, sponges, tags, test kits, locks, indicators, load stickers, tip protectors, peel packs, count sheet holders, quality assurance cards, labels, tape and stationery. It is intended for use in decontamination, set assembly and sterilisation areas.",
+        "Contact us to discuss how the iBR could be arranged for your work area."
       ],
       "features": [
         "Combines bins, racks, shelves and a french gauge",
@@ -96,9 +96,9 @@ const DATA = {
       "summary": "A Class I medical device that isolates surgical count sheets from instruments and implants to avoid ink stains and paper-particle contaminants.",
       "image": "productCountSheetHolder",
       "body": [
-        "The Universal Surgical Count Sheet Holder is a Class I medical device for the isolation of surgical count sheets from surgical instruments and surgical implants, to avoid ink stains and paper-particle contaminants during and after sterilisation. This device is compatible with steam, hydrogen peroxide gas, ethylene oxide and ozone sterilants.",
-        "Ideal for rigid containers, this count sheet holder is made from surgical polypropylene, the approved and ideal material for the wrapping of surgical instrument sets. Unlike profit-driven medical device manufacturers and vendors, we are professionals of operating rooms and sterile processing departments who take patient safety seriously.",
-        "Hence, we strictly avoid the use of sterilant-impeding materials such as the plastics commonly used on peel packs, which are not safe for instrument count holders, and the gunk-causing glues, which both shield harmful bacteria from sterilant exposure during sterilisation. Sterile Instrument Systems is proud to stand with top patient-safety-advocate healthcare systems by providing safe surgical count sheet holders to support the minimisation of retained objects and surgical infections."
+        "The Universal Surgical Count Sheet Holder keeps the count sheet separate from surgical instruments and implants during processing. It is designed to help prevent ink transfer and loose paper particles. The stated compatible sterilisation methods are steam, hydrogen peroxide gas, ethylene oxide and ozone.",
+        "The holder is made from surgical polypropylene and is intended for use with rigid containers. Its material and compatibility should be checked against the product instructions and the sterilisation process used by the department.",
+        "The holder is designed without the plastic sleeves and adhesive arrangements described above. Follow the product instructions and local procedures when selecting and using any count sheet holder. A holder supports record placement; it does not replace the department's instrument-counting or patient-safety checks."
       ],
       "features": [
         "Class I medical device",
@@ -137,9 +137,9 @@ const DATA = {
       "summary": "A Class I medical device using impact displacement technology to prevent holes and secure the integrity of each wrapped surgical instrument tray.",
       "image": "productMasterWrap",
       "body": [
-        "A Surgical Instrument Master Wrap is a Class I medical device that applies impact displacement technology to dislodge handling impact that could potentially tear or puncture a hole in a wrapped surgical instrument tray. From set assembly, sterilisation and sterile storage to case carts and each operating room, the master wrap effectively prevents holes and secures the integrity of each wrapped tray.",
-        "For patient safety, the master wrap is made with polypropylene material and does not make use of the dust- and moisture-trapping foam materials used by other vendors for tray belts and corner protectors. It also comes with a smart pouch on the side to isolate surgical count sheets, avoiding ink stains and paper-particle contaminants during sterilisation.",
-        "As recommended by the AORN, this count sheet holder also makes count sheets available to operating rooms in search of rarely used instruments, without the need to blindly open sterile instrument sets."
+        "Surgical Instrument Master Wrap is designed to help protect a wrapped instrument tray from knocks and handling impacts that may damage the primary wrap. It uses an impact-displacement design and can be used during set assembly, storage, transport and movement to the operating room, in accordance with its instructions for use.",
+        "Master Wrap is made from polypropylene and includes a side pouch for the surgical count sheet. The pouch keeps the sheet separate from the wrapped instruments during handling and processing.",
+        "The side pouch keeps the count sheet with the tray so staff can refer to it without opening the wrapped set. Follow current AORN guidance and local policy when handling sterile instrument sets."
       ],
       "features": [
         "Class I medical device",
@@ -198,7 +198,7 @@ const DATA = {
       "summary": "A colour-changing card that sticks to wrapped surgical instrument sets, giving a surface to write on without compromising the wrap.",
       "image": "productQualityAssuranceCard",
       "body": [
-        "The Quality Assurance Card is a colour-changing card that sticks to wrapped surgical instrument sets, providing a surface to write on and avoiding compromising the integrity of wrapped instrument sets. It helps to keep sterile instruments separate from non-sterile instruments.",
+        "The Quality Assurance Card attaches to a wrapped instrument set and provides a surface for written information. Its colour changes as described in the product instructions. It is intended to help staff distinguish sterile sets from non-sterile items.",
         "This quality assurance card is compatible with steam, hydrogen peroxide gas, ethylene oxide gas and ozone sterilisation."
       ],
       "features": [
@@ -232,10 +232,10 @@ const DATA = {
       "summary": "A Class I medical device for the early detection of low to high grade fever associated with communicable diseases, with a highly sensitive red thermometer alert.",
       "image": "productHealthMonitor",
       "body": [
-        "Illness does not come in bright colours and ringing bells. In fact, often it strikes when we least expect it, which can be devastating and life-altering. Therefore, in times like these, we must monitor our health daily and work closely with our healthcare providers to lead healthy and more productive lifestyles. COVIDOT, the Basic Health Monitor, is designed to help us achieve the best health outcomes for each person.",
-        "Science has it that the early detection of illnesses including Covid-19 increases the odds of each patient's survival. With its highly sensitive red thermometer alert, the Basic Health Monitor simply confirms how a person's body feels in real time. It displaces common doubt and the stigma associated with ill-health, and empowers us to proactively pursue health counsel.",
-        "According to the National Cancer Institute, exposure to UV radiation causes early ageing of the skin and damage that can lead to skin cancer. Research further revealed that exposure to the ultraviolet light of the sun does increase the risk of eye conditions such as cataracts, among others, due to oxidative stress. Hence, besides the detection of fever associated with communicable diseases, the Basic Health Monitor also displays red thermometer alerts when exposed to ultraviolet light that could potentially harm a person.",
-        "It should be noted that this device is not a toy. It is a highly sensitive medical device designed to assist people to monitor their health on the go: at home, at workspaces, schools, public venues and so on, and to collaborate with healthcare providers to ensure good health. The Basic Health Monitor is also intended for the preliminary screening of patients and employees in hospitals, clinics and herbal health centres."
+        "COVIDOT is a wearable health monitor designed to provide a visible alert when it detects the conditions described in its instructions. It is intended to support preliminary checks and should be used alongside appropriate advice from a qualified healthcare professional.",
+        "The device uses a red thermometer symbol to indicate a potential fever. This alert is not a diagnosis and cannot confirm whether someone has COVID-19 or another illness. Anyone with symptoms or concerns should seek advice from a healthcare professional.",
+        "The product information also describes a red alert when the device is exposed to ultraviolet light. Use this feature only as described in the manufacturer's instructions. The alert is not a substitute for recognised sun-protection advice or medical assessment.",
+        "COVIDOT is intended for preliminary monitoring in settings such as homes, workplaces, schools and healthcare facilities. It does not replace a clinical thermometer, medical assessment or any screening process required by local health guidance."
       ],
       "features": [
         "Highly sensitive red thermometer alert",
@@ -311,11 +311,11 @@ const DATA = {
     {
       "slug": "surgiciss-matrix",
       "name": "Sterile Matrix (AI)",
-      "summary": "A proactive management system for surgical instruments, equipment, supplies and sterile processing technicians, using data analytics to minimise errors and delay.",
+      "summary": "A management system for tracking sterile processing work, equipment and supplies, with reporting tools to help teams review workloads and day-to-day operations.",
       "body": [
-        "Sterile Matrix (AI) is a proactive surgical instruments, equipment, supplies and sterile processing technician management system. It conducts data analytics of the known and unknown variables of surgical procedures to minimise errors, prevent delay, reduce the cost of surgery, and ensure the best surgical outcomes in operating rooms, each time.",
-        "As a cognitive assistant, Sterile Matrix (AI) enhances the performance of sterile processing technicians, scrub techs and nurses to get the job done right the first time in sterile processing departments, operating rooms and patient care areas. It proactively conducts workload assessments, work schedules, attendance and general performance management. In short, it supercharges sterile processing technicians to consistently deliver clean, sterile, functional and relevant surgical instruments, equipment and supplies on time and on budget.",
-        "Sterile Matrix (AI) guides, monitors and improves the performance of instrument technicians and sterile processing departments to best serve each operating room, each time. It uniquely applies predictive algorithms to minimise medical errors, minimise operating room delay and reduce the cost of patient care. In real time, it offers clinical data analysis of productivity, quality, efficiency, risk, compliance and budgets to guide sound and swift decision making."
+        "Sterile Matrix (AI) is a management system for sterile processing departments. It brings together information about instruments, equipment, supplies and staff activity so teams can review their workload and identify issues that may affect operating room preparation.",
+        "The system includes tools for workload assessment, staff schedules, attendance and performance records. These tools are intended to help managers organise work and review how the department is operating. They do not replace staff training, clinical judgement or established procedures.",
+        "Sterile Matrix provides reports on areas such as productivity, quality, efficiency, risk, compliance and budgets. Managers can use these reports to support operational decisions and identify areas that may need attention. Results depend on the information entered and should be reviewed by the responsible team."
       ],
       "modules": [
         "Workload assessment and work schedules",
@@ -334,13 +334,13 @@ const DATA = {
     {
       "slug": "case-cart-matrix",
       "name": "Case Cart Matrix",
-      "summary": "A lean surgical case cart picking system that picks case carts ten times faster and accurately, and keeps the whole surgical team on the same page.",
+      "summary": "A case cart picking system that helps teams organise items for scheduled procedures and keep relevant staff informed about cart preparation.",
       "body": [
-        "The Case Cart Matrix is a lean surgical case cart picking system, which applies a lean methodology to pick case carts ten times faster and accurately. It provides a platform to schedule surgeries, or interfaces with existing surgery scheduling systems, to promptly put all surgical team members on the same page.",
-        "It promptly notifies concerned team members when cases are scheduled and when case carts are pulled. It also directly notifies team members of missing items or surgical instruments for scheduled surgical procedures and add-ons.",
-        "Instead of picking one case cart at a time, which results in excessive movement and waste of time and energy, the Case Cart Matrix lumps many case carts into one and allows the case cart picker to pull as many case carts as space allows, all at once. It drastically minimises excessive walking by sending the picker to each supply or instrument rack, shelf and bin one time to furnish all case carts in need of an item or surgical instrument set.",
-        "The Case Cart Matrix eliminates error by tracking each item and surgical instrument set that is picked for each surgical procedure. It keeps an accurate and up-to-date inventory of surgical instruments and surgical supplies. It also eliminates scheduling conflicts and avoids surgical delays. It saves time and allows managers to reallocate labour to other labour-intensive areas.",
-        "The Case Cart Matrix interfaces with suppliers and distributors of surgical instruments and surgical supplies and makes ordering a breeze. It keeps track of par levels and notifies concerned team members to click the order button, so instruments and supplies are ordered automatically, without phone calls and without filling out forms."
+        "Case Cart Matrix helps teams prepare case carts for scheduled procedures. It can be used to manage schedules or, where an integration is available, connect with an existing surgery scheduling system.",
+        "The system can notify designated team members when cases are scheduled, when carts are pulled and when required items are missing. This helps staff follow up before a procedure is due to begin.",
+        "Case Cart Matrix supports batch picking. Staff can collect items for several carts during the same pass through the storage area, where the layout and available space allow. This can reduce repeated trips between shelves, racks and bins.",
+        "The system records the items and instrument sets assigned to each procedure and can help teams keep inventory information up to date. It is intended to make missing items and scheduling issues easier to spot; it does not guarantee that errors or delays will be eliminated.",
+        "Where supplier integrations are configured, the system can support stock-level monitoring and purchasing workflows. Availability of these functions depends on the supplier connection and the setup in place."
       ],
       "modules": [
         "Batch picking of many case carts at once",
@@ -363,10 +363,10 @@ const DATA = {
       "name": "Crash Cart Matrix",
       "summary": "The first of its kind: automatic daily monitoring of crash carts for expired items, with faster exchanges and no phone calls.",
       "body": [
-        "When it comes to emergencies, crash carts are critically brilliant. And when precious lives are on the line, ensuring that clean and functional medical equipment and supplies are readily available remains a critical function in healthcare.",
-        "Hence, the issues of crash carts cannot be ignored, which explains why healthcare systems spend about $25 to monitor each crash cart daily. The average annual cost of processing and monitoring each crash cart therefore sums up to about $9,125.",
-        "When this is multiplied by the total number of crash carts in a medical facility, the cost can be high. In addition, when the cost of crash cart delay, waste and medical errors such as the use of expired items on patients are factored in, the cost can be extremely high.",
-        "First of its kind, the Crash Cart Matrix automatically monitors crash carts for expired items daily. It shortens crash cart exchange times, prevents the use of expired items on patients each time, and eliminates phone calls for crash carts in healthcare systems."
+        "Crash carts need to be checked regularly so that staff can find the equipment and supplies required in an emergency. Keeping inspection records up to date is an important part of that work.",
+        "Manual crash cart checks take staff time, particularly when a facility has many carts. The time and cost involved will vary by facility, staffing arrangements and inspection process.",
+        "Missed checks, expired supplies and incomplete records can create additional work and may affect readiness. Facilities should set inspection procedures that match their policies and clinical requirements.",
+        "Crash Cart Matrix is designed to help teams record crash cart checks and identify items that are approaching or past their expiry dates. The system can support follow-up and exchange workflows, but staff must still carry out the required physical checks."
       ],
       "modules": [
         "Automatic daily monitoring for expired items",
@@ -386,10 +386,10 @@ const DATA = {
       "name": "Endoscope Matrix",
       "summary": "Smart endoscope reprocessing control: each scope pre-cleaned, leak tested, cleaned, disinfected or sterilised as the manufacturer specifies, with expiry alerts.",
       "body": [
-        "Endoscopy is usually a very safe procedure. Nevertheless, failure to pre-clean, test, clean, and disinfect or sterilise and handle endoscopes properly could lead to severe endoscopic complications.",
-        "Hence, endoscopy technicians must be well trained, motivated and guided to ensure that each endoscope is properly cleaned, disinfected, sterilised and functional, even as endoscopy remains under review.",
-        "However, with limitless models of endoscopes comes a limitless tide of process and equipment challenges that cannot be ignored in healthcare systems. This means that, when endoscopy comes to the fore, patient safety and regulatory compliance must hold. Endoscope Matrix ensures that each scope is properly pre-cleaned, leak tested, cleaned, disinfected and/or sterilised as specified by its manufacturer's instructions and beyond.",
-        "In addition to keeping and analysing electronic data to support swift decision making on each processed and used endoscope, this smart system is also equipped with automatic endoscope and disinfectant monitoring capabilities to monitor and alert technicians and end-users of expired scopes and the potential risk to patients."
+        "Endoscopes must be processed and handled according to the manufacturer's instructions. Missed or incomplete steps in pre-cleaning, testing, cleaning, disinfection or sterilisation can put patients at risk.",
+        "Endoscopy teams need clear procedures and suitable training to make sure each scope is processed, checked and stored correctly.",
+        "Endoscope Matrix is intended to help teams record the required processing steps for each scope, including pre-cleaning, leak testing, cleaning, disinfection and sterilisation where applicable. Staff should always follow the instructions for the specific endoscope and the equipment used to process it.",
+        "The system stores processing records and can provide alerts for the endoscope and disinfectant checks configured by the facility. Staff remain responsible for confirming that each scope and disinfectant is suitable for use."
       ],
       "modules": [
         "Pre-clean, leak test, clean, disinfect or sterilise steps tracked per scope",
