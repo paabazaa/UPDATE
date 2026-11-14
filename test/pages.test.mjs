@@ -253,9 +253,15 @@ test("a signed-in person sees their profile menu at the top right, ending with L
   await button.click();
   const items = await page.locator(".umenu-panel [role=menuitem]").allTextContents();
   assert.deepEqual(items.map(t => t.trim()), ["Overview", "My quotes", "My enquiries", "My orders", "Order history", "My profile", "Account settings", "Log out"]);
-  await page.click(".umenu-panel a[href='/account/quotes']");
-  await page.waitForURL(`${base}/account/quotes`);
-  assert.ok(await page.locator(".umenu-panel").isHidden(), "the menu closes after a choice");
+  for (const [path, heading] of [["/account", /welcome back/i], ["/account/quotes", /quotes/i], ["/account/enquiries", /enquiries/i], ["/account/orders", /orders/i], ["/account/history", /history/i], ["/account/profile", /profile/i], ["/account/settings", /settings/i]]) {
+    if (!(await page.locator(".umenu-panel").isVisible())) await page.click("[data-umenu]");
+    await page.click(`.umenu-panel a[href='${path}']`);
+    await page.waitForURL(`${base}${path}`);
+    assert.ok(await page.locator(".umenu-panel").isHidden(), `the menu closes after choosing ${path}`);
+    assert.match(await page.locator("main h1, main h2").first().textContent(), heading, `${path} opens its own page`);
+    assert.equal(await page.locator("body").evaluate(b => /page not found|404/i.test(b.innerText)), false, `${path} is not a missing page`);
+  }
+  await page.click("[data-umenu]");
   await page.click("[data-umenu]"); await page.keyboard.press("Escape");
   assert.ok(await page.locator(".umenu-panel").isHidden(), "Escape closes it");
   await page.click("[data-umenu]");
