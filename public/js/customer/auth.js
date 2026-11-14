@@ -14,7 +14,7 @@ function customerHeader() {
   const menuLinks = [["/account", "Overview"], ["/account/quotes", "My quotes"], ["/account/enquiries", "My enquiries"], ["/account/orders", "My orders"], ["/account/history", "Order history"], ["/account/profile", "My profile"], ["/account/settings", "Account settings"]];
   const firstName = user ? (String(user.name || "").trim().split(/\s+/)[0] || "My account") : "";
   const profileMenu = user
-    ? `<div class="umenu desk-only"><button type="button" class="umenu-btn" data-umenu aria-haspopup="menu" aria-expanded="false" aria-label="Your account menu, ${escapeHtml(firstName)}">${avatarHtml(user, "hd")}${icons.down}</button>
+    ? `<div class="umenu"><button type="button" class="umenu-btn" data-umenu aria-haspopup="menu" aria-expanded="false" aria-label="Your account menu, ${escapeHtml(firstName)}">${avatarHtml(user, "hd")}${icons.down}</button>
       <div class="umenu-panel" role="menu" hidden><p class="umenu-who"><strong>${escapeHtml(user.name || "Your account")}</strong><span>${escapeHtml(user.email || "")}</span></p>${menuLinks.map(([to, label]) => `<a role="menuitem" href="${to}"${currentPath() === to ? ' aria-current="page"' : ""}>${label}</a>`).join("")}<button type="button" role="menuitem" class="umenu-out" data-logout>Log out</button></div></div>`
     : "";
   const accountDesktop = user
@@ -29,7 +29,7 @@ function customerHeader() {
       ${searchBox()}
       ${accountDesktop}
       <a class="hbtn primary desk-only" href="/generate-quote">${icons.plus}Generate quote</a>
-      <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav">${state.mobile ? icons.close : icons.menu}Menu</button>
+      <button type="button" class="menubtn" id="menubtn" aria-expanded="${state.mobile}" aria-controls="mobnav" aria-label="${state.mobile ? "Close menu" : "Open menu"}">${state.mobile ? icons.close : icons.menu}</button>
       ${themeButton()}
       ${profileMenu}
     </div>
