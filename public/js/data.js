@@ -4,7 +4,7 @@ const DATA = {
     {
       "slug": "sterile-barrier",
       "name": "Sterile Barrier Products",
-      "description": "Wraps, cards and test devices that protect the sterile barrier from the moment a set leaves the sterilizer until it is opened in theatre."
+      "description": "Wraps, cards and test devices for protecting surgical instrument sets during storage and handling."
     },
     {
       "slug": "count-sheet-holders",
@@ -14,12 +14,12 @@ const DATA = {
     {
       "slug": "workstation-organisation",
       "name": "Workstation Organisation",
-      "description": "Racks and storage devices that consolidate sterile services supplies and ease bottlenecks at each work station."
+      "description": "Racks and storage products that keep commonly used sterile processing supplies organised at each workstation."
     },
     {
       "slug": "monitoring",
       "name": "Monitoring Devices",
-      "description": "Simple indicators that support routine monitoring and everyday compliance checks."
+      "description": "Indicators and devices used for routine checks and monitoring."
     }
   ],
   "products": [
@@ -229,7 +229,7 @@ const DATA = {
       "slug": "basic-health-monitor",
       "name": "Basic Health Monitor COVIDOT",
       "category": "monitoring",
-      "summary": "A Class I medical device for the early detection of low to high grade fever associated with communicable diseases, with a highly sensitive red thermometer alert.",
+      "summary": "A wearable monitor with a red thermometer alert for indicating a possible fever, as described in the product instructions.",
       "image": "productHealthMonitor",
       "body": [
         "COVIDOT is a wearable health monitor designed to provide a visible alert when it detects the conditions described in its instructions. It is intended to support preliminary checks and should be used alongside appropriate advice from a qualified healthcare professional.",
@@ -318,16 +318,16 @@ const DATA = {
         "Sterile Matrix provides reports on areas such as productivity, quality, efficiency, risk, compliance and budgets. Managers can use these reports to support operational decisions and identify areas that may need attention. Results depend on the information entered and should be reviewed by the responsible team."
       ],
       "modules": [
-        "Workload assessment and work schedules",
-        "Attendance and general performance management",
-        "Predictive algorithms to minimise errors and delay",
-        "Real-time analysis of productivity, quality, efficiency, risk, compliance and budgets"
+        "Workload assessment and staff schedules",
+        "Attendance and performance records",
+        "Analysis to help identify possible workflow issues",
+        "Reports on productivity, quality, efficiency, risk, compliance and budgets"
       ],
       "benefits": [
-        "Right-first-time results in sterile processing departments, operating rooms and patient care areas",
-        "Fewer medical errors and operating room delays",
-        "Lower cost of surgery and patient care",
-        "Sound, swift decision making from real-time clinical data"
+        "A clearer view of workloads and staff schedules",
+        "Records to support routine performance reviews",
+        "Reports that help managers identify areas for improvement",
+        "Information to support operational planning"
       ],
       "image": "softwareDashboard"
     },
@@ -351,17 +351,17 @@ const DATA = {
         "Par level tracking and one-click ordering"
       ],
       "benefits": [
-        "Case carts picked ten times faster and accurately",
-        "Far less walking and wasted effort",
-        "Fewer errors, scheduling conflicts and surgical delays",
-        "Labour freed up for other areas"
+        "A more organised case cart picking process",
+        "Fewer repeated trips between storage areas",
+        "Earlier visibility of missing items",
+        "Better records for planning staff and supplies"
       ],
       "image": "softwareCaseCart"
     },
     {
       "slug": "crash-cart-matrix",
       "name": "Crash Cart Matrix",
-      "summary": "The first of its kind: automatic daily monitoring of crash carts for expired items, with faster exchanges and no phone calls.",
+      "summary": "A system for recording crash cart checks and flagging items that are nearing or past their expiry dates.",
       "body": [
         "Crash carts need to be checked regularly so that staff can find the equipment and supplies required in an emergency. Keeping inspection records up to date is an important part of that work.",
         "Manual crash cart checks take staff time, particularly when a facility has many carts. The time and cost involved will vary by facility, staffing arrangements and inspection process.",
@@ -374,17 +374,17 @@ const DATA = {
         "Alerts to concerned team members"
       ],
       "benefits": [
-        "Expired items never reach a patient",
-        "Shorter crash cart exchange times",
-        "No phone calls for crash carts",
-        "Lower cost of daily monitoring, delay and waste"
+        "A record of completed crash cart checks",
+        "Alerts for items that need attention",
+        "A clearer view of cart exchange activity",
+        "Less reliance on manual follow-up alone"
       ],
       "image": "softwareCrashCart"
     },
     {
       "slug": "endoscope-matrix",
       "name": "Endoscope Matrix",
-      "summary": "Smart endoscope reprocessing control: each scope pre-cleaned, leak tested, cleaned, disinfected or sterilised as the manufacturer specifies, with expiry alerts.",
+      "summary": "A system for recording endoscope reprocessing steps and monitoring the checks configured by the facility.",
       "body": [
         "Endoscopes must be processed and handled according to the manufacturer's instructions. Missed or incomplete steps in pre-cleaning, testing, cleaning, disinfection or sterilisation can put patients at risk.",
         "Endoscopy teams need clear procedures and suitable training to make sure each scope is processed, checked and stored correctly.",
@@ -398,10 +398,10 @@ const DATA = {
         "Automatic endoscope and disinfectant monitoring"
       ],
       "benefits": [
-        "Each scope reprocessed as its manufacturer specifies",
-        "Technicians and end-users alerted to expired scopes and patient risk",
-        "Patient safety and regulatory compliance upheld",
-        "Swift decisions from electronic data"
+        "A record of the processing steps completed for each scope",
+        "Alerts for configured scope and disinfectant checks",
+        "Information staff can review during routine checks",
+        "Support for local documentation and follow-up procedures"
       ],
       "image": "softwareEndoscope"
     }
@@ -410,12 +410,12 @@ const DATA = {
     {
       "slug": "sterile-processing-management-and-leadership",
       "name": "Sterile Processing Management & Leadership",
-      "summary": "Support for decision makers deciding whether their department needs steady management or genuine change.",
+      "summary": "Management support for departments reviewing their structure, workload or leadership arrangements.",
       "image": "serviceLeadership",
       "body": [
-        "Change is what distinguishes a leader from a manager. Leaders take an institution to a new level; managers hold the level that has been reached. Both matter, and they rarely sit in the same person.",
-        "For a sterile services department to thrive, decision makers first have to be honest about what the department needs. If change is required, the department needs a leader. If the department is already sound, it needs a manager. Departments that are struggling are often given a manager when what they needed was a leader — which is one reason turnover in sterile services management is so high.",
-        "There are also times when theatre staff and processing technicians cannot see that anything is wrong, because they have not had sight of a better standard. Limitations start to look like the normal order of business. We work alongside senior staff to set out what the department actually needs and what it would take to get there."
+        "A sterile processing department may need stronger day-to-day management, a change in direction, or both. The right approach depends on the department's current workload, staffing and priorities.",
+        "We work with decision makers to review how the department is organised and where support is needed. This may include management cover, changes to responsibilities or a plan to address ongoing operational problems.",
+        "We review current working practices with senior staff and identify changes that are realistic for the team, equipment and resources available."
       ],
       "includes": [
         "Review of departmental structure and workload",
@@ -427,12 +427,12 @@ const DATA = {
     {
       "slug": "sterile-processing-morale-boosting-sessions",
       "name": "Sterile Processing Morale Boosting Sessions",
-      "summary": "Practical sessions for teams that are overstretched, so the department stops running on goodwill alone.",
+      "summary": "Team sessions focused on workload, communication and the day-to-day issues affecting sterile processing staff.",
       "image": "serviceMorale",
       "body": [
-        "All things being equal, nobody comes to work to do harm. Processing technicians come in to deliver clean, sterile, functional and relevant instruments.",
-        "There are times, though, when a team is overworked and overwhelmed, and morale falls far enough to affect what reaches theatre. When that happens, blame tends to travel between departments and very little improves.",
-        "Our sessions deal with the causes rather than the symptoms: workload distribution, recognition, communication with theatre, and the small daily frustrations that wear a team down. We work with the whole team, not only the supervisors."
+        "Sterile processing teams come to work to prepare instruments and equipment for patient care. Workload, staffing and communication problems can make that job harder than it needs to be.",
+        "When a team is under pressure for long periods, communication can suffer and problems may arise between the processing department and theatre staff.",
+        "Sessions can cover workload distribution, staff recognition, communication with theatre and recurring issues raised by the team. Supervisors and technicians are both involved."
       ],
       "includes": [
         "Facilitated team sessions on site",
@@ -444,10 +444,10 @@ const DATA = {
     {
       "slug": "sterile-processing-technician-training-programme",
       "name": "Sterile Processing Technician Training Programme",
-      "summary": "Core knowledge of sterile sciences for technicians, taught around the equipment and sets they handle every day.",
+      "summary": "Training in sterile processing, using the equipment and instrument sets technicians work with each day.",
       "image": "serviceTraining",
       "body": [
-        "No one can give what they do not have. A processing technician cannot deliver dependable instrument outcomes without a working knowledge of sterile sciences.",
+        "Technicians need a sound understanding of sterile processing principles to carry out their work consistently and follow the required procedures.",
         "Our training programme covers decontamination, inspection and assembly, packaging, sterilisation and storage, taught around the equipment and instrument sets the team handles every day rather than as abstract theory.",
         "Programme length, assessment and any certification arrangements are agreed with each customer."
       ],
@@ -463,10 +463,10 @@ const DATA = {
     {
       "slug": "cost-reduction-programme",
       "name": "Cost Reduction Programme",
-      "summary": "A structured review of instrument spend, repair and replacement decisions and the waste hidden inside routine processing.",
+      "summary": "A review of instrument spending, repair and replacement decisions, and routine sources of waste.",
       "image": "serviceLeadership",
       "body": [
-        "A great deal of the money a department spends is committed by habit: sets built larger than the procedure needs, instruments replaced when they could be repaired, consumables ordered because a shelf looks empty.",
+        "Department costs can build up through routine decisions, including oversized instrument sets, avoidable replacements and stock orders that are not based on actual use.",
         "Our cost reduction programme works through those decisions with the department, using its own records, and reports where money is going and what could reasonably be recovered.",
         "Commercial terms for the SURGICISS programme are set out in the proposal."
       ]
@@ -474,20 +474,20 @@ const DATA = {
     {
       "slug": "loaner-instrument-processing",
       "name": "Loaner Instrument Processing",
-      "summary": "A workable routine for loaner sets, which usually arrive late, heavy, incomplete and unfamiliar to the team.",
+      "summary": "A process for receiving, checking and preparing loaner instrument sets before scheduled procedures.",
       "image": "serviceTraining",
       "body": [
-        "Loaner sets are the most demanding trays a department handles. They often arrive dirty, heavy and incomplete, with assembly instructions the team has never seen before, and they are needed for a list that has already been booked.",
+        "Loaner sets can arrive close to the procedure date and may be unfamiliar to the team. Some arrive incomplete or with instructions that need to be reviewed before processing begins.",
         "We help departments put a loaner routine in place: booking-in expectations for suppliers, realistic lead times, inspection at receipt, and a record that stands up when a set is queried afterwards."
       ]
     },
     {
       "slug": "sterile-forensics-programme",
       "name": "Sterile Forensics Programme",
-      "summary": "Investigation of recurring instrument and equipment processing problems, from the routine to the genuinely complex.",
+      "summary": "A review of recurring instrument and equipment processing problems, including staining, wet loads and damaged sets.",
       "image": "serviceMorale",
       "body": [
-        "Some processing problems keep coming back regardless of how much effort is put into them, because the cause sits somewhere nobody has looked.",
+        "Recurring processing problems may continue when the underlying cause has not been identified.",
         "Our sterile forensics programme identifies, classifies and resolves those issues: staining and residue, wet loads, damaged sets, repeated theatre rejections and equipment that never quite performs as it should.",
         "Findings are reported with the evidence behind them, so the department can act on them and show what changed."
       ]
