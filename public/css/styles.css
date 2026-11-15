@@ -1055,3 +1055,18 @@ html.modal-open{overflow:hidden}
 .umenu-btn .ico{right:-2px;bottom:-2px;width:16px;height:16px;padding:3px;background:#e4e6eb;color:#050505;border:0;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
 :root[data-theme="dark"] .umenu-btn .ico{background:#3a3b3c;color:#e4e6eb;box-shadow:none}
 @media(max-width:560px){.umenu-btn .ico{width:15px;height:15px;padding:2.5px}}
+
+/* Account drop down: same purple look as the Software and Products drop downs */
+.umenu-panel{width:290px;padding:8px;border-radius:16px;background:linear-gradient(160deg,oklch(0.5 0.23 295),oklch(0.34 0.18 292));border:1px solid oklch(0.62 0.2 295 / 60%);box-shadow:0 28px 50px -16px oklch(0.25 0.15 295 / 70%);color:#fff}
+.umenu-panel::before{content:"";position:absolute;left:0;right:0;top:-10px;height:10px}
+.umenu-who{border-bottom:1px solid oklch(1 0 0 / 22%);margin-bottom:6px}
+.umenu-who strong{color:#fff}
+.umenu-who span{color:oklch(0.92 0.04 300)}
+.umenu-panel a,.umenu-panel .umenu-out{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid transparent;border-radius:10px;color:#fff;font-size:14px;font-weight:600;text-align:left;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.umenu-panel .pi{display:inline-flex;width:34px;height:34px;border-radius:10px}
+.umenu-panel a:hover,.umenu-panel a:focus-visible,.umenu-panel .umenu-out:hover,.umenu-panel .umenu-out:focus-visible{background:oklch(1 0 0 / 14%);border-color:oklch(1 0 0 / 28%);transform:translateX(3px);color:#fff}
+.umenu-panel a:hover .pi,.umenu-panel .umenu-out:hover .pi,.umenu-panel a:focus-visible .pi{background:#fff;color:oklch(0.42 0.21 293)}
+.umenu-panel a[aria-current=page]{background:oklch(1 0 0 / 18%);border-color:oklch(1 0 0 / 30%);color:#fff}
+.umenu-panel .umenu-out{width:100%;margin-top:8px;border-radius:10px;border:0;background:oklch(0 0 0 / 14%);color:#fff}
+.umenu-panel .umenu-out:hover{background:#fff;color:oklch(0.42 0.21 293);transform:none}
+.umenu-panel .umenu-out:hover .pi{background:oklch(0.42 0.21 293);color:#fff}

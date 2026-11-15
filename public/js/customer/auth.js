@@ -12,10 +12,11 @@ function customerHeader() {
   const user = Accounts.current();
   // Signed-in people get their profile in the top right corner with a menu; Log out is always the last choice.
   const menuLinks = [["/account", "Overview"], ["/account/quotes", "My quotes"], ["/account/enquiries", "My enquiries"], ["/account/orders", "My orders"], ["/account/history", "Order history"], ["/account/profile", "My profile"], ["/account/settings", "Account settings"]];
+  const menuIcons = ["overview", "quotes", "enquiries", "orders", "history", "profile", "settings"];
   const firstName = user ? (String(user.name || "").trim().split(/\s+/)[0] || "My account") : "";
   const profileMenu = user
     ? `<div class="umenu"><button type="button" class="umenu-btn" data-umenu aria-haspopup="menu" aria-expanded="false" aria-label="Your account menu, ${escapeHtml(firstName)}">${avatarHtml(user, "hd")}${icons.down}</button>
-      <div class="umenu-panel" role="menu" hidden><p class="umenu-who"><strong>${escapeHtml(user.name || "Your account")}</strong><span>${escapeHtml(user.email || "")}</span></p>${menuLinks.map(([to, label]) => `<a role="menuitem" href="${to}"${currentPath() === to ? ' aria-current="page"' : ""}>${label}</a>`).join("")}<button type="button" role="menuitem" class="umenu-out" data-logout>Log out</button></div></div>`
+      <div class="umenu-panel" role="menu" hidden><p class="umenu-who"><strong>${escapeHtml(user.name || "Your account")}</strong><span>${escapeHtml(user.email || "")}</span></p>${menuLinks.map(([to, label], i) => `<a role="menuitem" href="${to}"${currentPath() === to ? ' aria-current="page"' : ""}><span class="pi">${dashIcon(menuIcons[i])}</span><span>${label}</span></a>`).join("")}<button type="button" role="menuitem" class="umenu-out" data-logout><span class="pi">${dashIcon("logout")}</span><span>Log out</span></button></div></div>`
     : "";
   const accountDesktop = user
     ? ""
