@@ -1044,3 +1044,8 @@ html.modal-open{overflow:hidden}
 .menubtn{width:42px;padding:0;justify-content:center;gap:0}
 .menubtn .ico{margin:0}
 @media(max-width:560px){.htools{gap:6px}.avatar.hd{width:38px;height:38px;font-size:14px}.umenu-btn .ico{width:14px;height:14px}.umenu-panel{position:fixed;right:12px;left:auto;top:64px;width:min(250px,calc(100vw - 24px))}}
+
+/* The down arrow sits on the bottom right corner of the round picture */
+.umenu-btn{position:relative;gap:0}
+.umenu-btn .ico{position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;padding:3px;box-sizing:border-box;border-radius:50%;background:var(--bg,#fff);color:var(--primary);border:1.5px solid var(--primary);stroke-width:3}
+@media(max-width:560px){.umenu-btn .ico{width:16px;height:16px;padding:2px;right:-3px;bottom:-3px}}
