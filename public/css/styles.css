@@ -1070,3 +1070,9 @@ html.modal-open{overflow:hidden}
 .umenu-panel .umenu-out{width:100%;margin-top:8px;border-radius:10px;border:0;background:oklch(0 0 0 / 14%);color:#fff}
 .umenu-panel .umenu-out:hover{background:#fff;color:oklch(0.42 0.21 293);transform:none}
 .umenu-panel .umenu-out:hover .pi{background:oklch(0.42 0.21 293);color:#fff}
+
+/* Log out in red, both the symbol and the word */
+.umenu-panel .umenu-out{color:#ff8f8f;background:oklch(0.2 0.08 20 / 35%)}
+.umenu-panel .umenu-out .pi{background:oklch(0.62 0.22 25 / 30%);border-color:oklch(0.75 0.18 25 / 55%);color:#ff8f8f}
+.umenu-panel .umenu-out:hover,.umenu-panel .umenu-out:focus-visible{background:#fff;color:oklch(0.52 0.24 27);border-color:transparent}
+.umenu-panel .umenu-out:hover .pi,.umenu-panel .umenu-out:focus-visible .pi{background:oklch(0.52 0.24 27);border-color:transparent;color:#fff}
