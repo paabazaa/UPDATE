@@ -1049,3 +1049,9 @@ html.modal-open{overflow:hidden}
 .umenu-btn{position:relative;gap:0}
 .umenu-btn .ico{position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;padding:3px;box-sizing:border-box;border-radius:50%;background:var(--bg,#fff);color:var(--primary);border:1.5px solid var(--primary);stroke-width:3}
 @media(max-width:560px){.umenu-btn .ico{width:16px;height:16px;padding:2px;right:-3px;bottom:-3px}}
+
+/* Facebook style: a small grey round badge with a dark arrow, tucked on the bottom right of the picture */
+.avatar.hd{border:0}
+.umenu-btn .ico{right:-2px;bottom:-2px;width:16px;height:16px;padding:3px;background:#e4e6eb;color:#050505;border:0;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+:root[data-theme="dark"] .umenu-btn .ico{background:#3a3b3c;color:#e4e6eb;box-shadow:none}
+@media(max-width:560px){.umenu-btn .ico{width:15px;height:15px;padding:2.5px}}
