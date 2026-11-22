@@ -7,6 +7,8 @@ import { loadConfig } from "./config.js";
 import { createMailer } from "./mailer.js";
 import { runMigrations } from "./migrations.js";
 import { httpsRedirect, securityHeaders } from "./security.js";
+import crypto from "node:crypto";
+import { createShield, internal, refuse } from "./shield.js";
 
 const config = loadConfig();
 const db = createDatabase(config.database);
@@ -87,7 +89,47 @@ function setStaticCacheHeaders(res, filePath) {
   );
 }
 
+const shield = createShield({
+  enabled: process.env.SHIELD !== "off",
+  allowlist: String(process.env.SHIELD_ALLOWLIST || "").split(",").map(x => x.trim()).filter(Boolean)
+});
+
+// Optional: when ORIGIN_SECRET is set, only traffic that came through the edge firewall (which adds this secret as the
+// X-Origin-Secret header) is served. Anyone hitting the Render address directly to get around the firewall is refused.
+const originSecret = String(process.env.ORIGIN_SECRET || "");
+function cameThroughFirewall(req) {
+  const sent = String(req.headers["x-origin-secret"] || "");
+  const a = Buffer.from(sent), b = Buffer.from(originSecret);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function visitorAddress(req) {
+  if (config.trustProxy || process.env.RENDER) {
+    // Behind the edge firewall the real visitor address is in CF-Connecting-IP, and is only believed once the secret checks out.
+    if (originSecret && cameThroughFirewall(req)) {
+      const edge = String(req.headers["cf-connecting-ip"] || "").trim();
+      if (edge) return edge;
+    }
+    const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+    if (forwarded) return forwarded;
+  }
+  return req.socket.remoteAddress || "unknown";
+}
+
 const server = http.createServer((req, res) => {
+  // The shield runs first, before any page or API code.
+  const visitor = visitorAddress(req);
+  if (originSecret && !internal(visitor) && !cameThroughFirewall(req)) {
+    res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+    return res.end("Request blocked.");
+  }
+  const verdict = shield.inspect(req, visitor);
+  if (verdict) {
+    for (const [name, value] of Object.entries(securityHeaders(config, req))) res.setHeader(name, value);
+    return refuse(res, verdict);
+  }
+  res.on("finish", () => shield.observe(req, visitor, res.statusCode));
+
   const secureAddress = httpsRedirect(config, req);
   if (secureAddress) {
     res.writeHead(301, { Location: secureAddress, "Cache-Control": "no-store" });
