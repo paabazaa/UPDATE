@@ -187,3 +187,7 @@ GitHub runs both automatically on every push (`.github/workflows/ci.yml`). A red
 ## Content
 
 Product names, descriptions, services and programmes are in `public/js/data.js`. No prices, certifications or testimonials have been invented. Where a product code, price or document is not yet available, the page says it is available on request. The Surgical Instrument Master Wrap page includes the full Instructions for Use (PDF download plus the steps, pictures and materials information).
+
+## Firewall and attack protection
+
+See [docs/FIREWALL-AND-DDOS.md](docs/FIREWALL-AND-DDOS.md): the edge firewall setup, the built-in shield (attack filter, adaptive limits, temporary bans) and the DDoS response plan.
