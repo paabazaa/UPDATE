@@ -10,6 +10,7 @@ import { httpsRedirect, securityHeaders } from "./security.js";
 import crypto from "node:crypto";
 import { createShield, internal, refuse } from "./shield.js";
 import { createStaticFiles } from "./static.js";
+import { createSeo } from "./seo.js";
 import { createQueue } from "./queue.js";
 
 const config = loadConfig();
@@ -54,7 +55,16 @@ console.log(
   clientDist || "NOT FOUND - using API only"
 );
 
-const staticFiles = clientDist ? createStaticFiles(clientDist) : null;
+// Server-rendered pages for search engines. If building them ever fails, the site falls back to the plain single-page app.
+let seo = null;
+if (clientDist) {
+  try {
+    seo = createSeo({ root: clientDist, config, verification: process.env.GOOGLE_SITE_VERIFICATION || "", log: message => console.log(message) });
+  } catch (error) {
+    console.error(`[seo] could not build server-rendered pages, serving the plain app instead: ${error.message}`);
+  }
+}
+const staticFiles = clientDist ? createStaticFiles(clientDist, seo ? { page: seo.page } : {}) : null;
 if (staticFiles) console.log(`[static] ${staticFiles.count} files ready (compressed copies of text files kept in memory)`);
 
 const shield = createShield({
@@ -112,6 +122,24 @@ const server = http.createServer((req, res) => {
   ) {
     res.setHeader("Cache-Control", "no-store");
     return apiApp(req, res);
+  }
+
+  // One address for each page, and the sitemap and robots file written from the real list of pages.
+  if (seo && (req.method === "GET" || req.method === "HEAD")) {
+    const url = new URL(req.url, "http://localhost");
+    const base = config.siteUrl || `${String(req.headers["x-forwarded-proto"] || "http").split(",")[0]}://${req.headers.host}`;
+    if (url.pathname === "/sitemap.xml" || url.pathname === "/robots.txt") {
+      const body = url.pathname === "/sitemap.xml" ? seo.sitemapXml(base) : seo.robotsTxt(base);
+      res.writeHead(200, { "Content-Type": url.pathname === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" });
+      return res.end(req.method === "HEAD" ? undefined : body);
+    }
+    if (!url.pathname.startsWith("/api/") && !url.pathname.startsWith("/auth/")) {
+      const moved = seo.redirectFor(url.pathname, url.search);
+      if (moved) {
+        res.writeHead(301, { Location: moved, "Cache-Control": "public, max-age=3600" });
+        return res.end();
+      }
+    }
   }
 
   // Serve static website files (from memory, compressed, with ETags). See server/static.js.

@@ -37,6 +37,7 @@ function installCustomer() {
     const html = accountView(path);
     if (html != null) {
       document.title = accountTitle(path);
+      seoApply(path); // account pages are kept out of search results
       state.menu = null;
       state.mobile = false;
       render(html);

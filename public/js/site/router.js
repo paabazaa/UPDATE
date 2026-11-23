@@ -37,8 +37,10 @@ function route() {
     if (m) html = pages[m](seg[1]);
   }
   if (html === null) html = pages.notFound();
-  const detailTitle = seg.length === 2 && html && !html.includes("We can't find that page") ? ((html.match(/<h1>(.*?)<\/h1>/) || [])[1] || "") : "";
-  document.title = detailTitle ? detailTitle.replace(/&amp;/g, "&") + " — SURGICISS LTD" : (titles[p] || "Page not found — SURGICISS LTD");
+  const missing = html.includes("We can't find that page");
+  const seoPath = missing ? "/404" : p;
+  document.title = seoInfo(seoPath).title;
+  seoApply(seoPath);
   state.menu = null; state.mobile = false;
   render(html);
 }

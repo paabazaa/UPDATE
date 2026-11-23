@@ -1,6 +1,15 @@
 // Contact, quote, FAQ, resources, search, privacy, terms and not-found pages
 // Part of the site scripts. Loaded in order by index.html; they share one global scope.
 
+const faqItems = [
+      ["How do you prepare a quotation?", "We ask for the products or modules you are considering, the quantities involved and where the goods or work are going. We then quote against that rather than publishing a single list price, because volume and delivery change the figure."],
+      ["What are your lead times?", "Lead times depend on the item and the quantity ordered. We confirm a date in writing with every quotation."],
+      ["Can we trial a product before committing?", "For most physical products we can arrange an evaluation quantity so your technicians can judge it in their own workflow. Terms for evaluations are agreed case by case."],
+      ["Is your software hosted by you or by us?", "Both arrangements are possible and the choice usually depends on your IT policy. The specific hosting, interface and data-retention options we support are confirmed during scoping."],
+      ["Do you deliver training on site?", "Yes. Technician training and morale sessions are normally delivered in the department, because the point is to work with the equipment and pressures your team actually faces."],
+      ["What regulatory information can you supply?", "We provide the documentation relevant to each product on request. Classifications and certifications differ by item and market."]
+];
+
 Object.assign(pages, {
   contact() {
     return banner("Contact us", [{label: "Contact us"}], "Tell us what your department is dealing with. We answer enquiries ourselves rather than routing them through a call centre.")
@@ -38,16 +47,8 @@ Object.assign(pages, {
       </div></aside></div></section>`;
   },
   faq() {
-    const faqs = [
-      ["How do you prepare a quotation?", "We ask for the products or modules you are considering, the quantities involved and where the goods or work are going. We then quote against that rather than publishing a single list price, because volume and delivery change the figure."],
-      ["What are your lead times?", "Lead times depend on the item and the quantity ordered. We confirm a date in writing with every quotation."],
-      ["Can we trial a product before committing?", "For most physical products we can arrange an evaluation quantity so your technicians can judge it in their own workflow. Terms for evaluations are agreed case by case."],
-      ["Is your software hosted by you or by us?", "Both arrangements are possible and the choice usually depends on your IT policy. The specific hosting, interface and data-retention options we support are confirmed during scoping."],
-      ["Do you deliver training on site?", "Yes. Technician training and morale sessions are normally delivered in the department, because the point is to work with the equipment and pressures your team actually faces."],
-      ["What regulatory information can you supply?", "We provide the documentation relevant to each product on request. Classifications and certifications differ by item and market."]
-    ];
     return banner("Frequently asked questions", [{label: "FAQ"}], "The questions departments ask us most often. If yours is not here, send it to us.")
-      + `<section class="wrap narrow sec"><dl class="faq">${faqs.map(f => `<div><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("")}</dl></section>` + callToAction("Still have a question?", "Ask us directly and we will answer plainly.");
+      + `<section class="wrap narrow sec"><dl class="faq">${faqItems.map(f => `<div><dt>${f[0]}</dt><dd>${f[1]}</dd></div>`).join("")}</dl></section>` + callToAction("Still have a question?", "Ask us directly and we will answer plainly.");
   },
   resources() {
     const r = [

@@ -25,7 +25,7 @@ function customerHeader() {
     ? `${menuLinks.map(([to, label]) => `<a href="${to}">${label}</a>`).join("")}<button type="button" class="linkish" data-logout>Log out</button>`
     : `<a href="/login">Login</a><a href="/sign-up">Create account</a>`;
   return `<header class="site" id="hdr"><div class="wrap hbar">
-    <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="760" height="192" decoding="async"></a>
+    <a class="logo" href="/" aria-label="${company.name} home"><img src="${imageUrl("logo")}" alt="SURGICISS — Empowering healing hands; one innovation at a time." width="640" height="177" decoding="async"></a>
     <div class="htools">
       ${searchBox()}
       ${accountDesktop}
