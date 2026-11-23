@@ -652,7 +652,7 @@ test("record lists come in pages with the true totals, newest first, and only th
   assert.equal(next.enquiries, undefined, "only the list asked for is loaded");
   const last = (await ama("GET", "/api/me/records?only=quotes&quotesOffset=50")).data;
   assert.equal(last.quotes.length, 10);
-  assert.equal((await ama("GET", "/api/me/records?limit=100000")).data.quotes.length, 60 > 100 ? 100 : 60, "the page size has a ceiling of 100");
+  assert.equal((await ama("GET", "/api/me/records?limit=100000")).data.quotes.length, 60, "a huge limit is capped at 100 and all 60 fit");
   assert.equal((await ama("GET", "/api/me/records?limit=abc&quotesOffset=-5")).data.quotes.length, 25, "nonsense falls back to the defaults");
   const theirs = (await kofi("GET", "/api/me/records")).data;
   assert.equal(theirs.quotesTotal, 0, "another customer sees none of it");
