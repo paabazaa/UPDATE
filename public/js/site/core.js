@@ -38,7 +38,7 @@ const companyConfig = window.SURGICISS_CONFIG?.company || {};
 
 const company = {
   name: "SURGICISS LTD",
-  tagline: "We're dedicated to best surgical outcomes.",
+  tagline: "Fewer errors, less delay and lower cost in sterile processing and operating rooms.",
   address: companyConfig.location || "Bolgatanga, Upper East Region, Ghana",
   phone: companyConfig.telephone || "+233542205201",
   whatsapp: companyConfig.whatsapp || "+233542205201",
@@ -83,7 +83,7 @@ const icons = {
 /* ---------- state ---------- */
 const state = {menu: null, mobile: false, slide: 0, quoteItem: "", submitted: false, errors: {}, subscribed: false, q: ""};
 const slides = [
-  {image: "heroSterileProcessing", title: "SURGICISS LTD:", body: "With advanced technologies and patient-centred expertise, SURGICISS instrument systems support the consistent delivery of clean, sterile, functional and relevant surgical instruments, equipment and supplies — on time and on budget.", cta: ["Generate quote", "/generate-quote"]},
+  {image: "heroSterileProcessing", title: "Simple innovations that get sterile processing right the first time", body: "With advanced technologies and patient-centred expertise, SURGICISS instrument systems support the consistent delivery of clean, sterile, functional and relevant surgical instruments, equipment and supplies — on time and on budget.", cta: ["Generate quote", "/generate-quote"]},
   {image: services[0].image, title: "For patient safety and system viability:", body: "Healthcare providers must improve quality, increase efficiency, eliminate waste and lower cost. We partner with them to make that possible.", cta: ["Our services", "/services"]},
   {image: "heroMasterWrap", title: "Surgical Instrument Master Wrap", body: "Master Wrap applies impact displacement to help prevent a tear or puncture of a wrapped instrument tray.", cta: ["View product", "/products/surgical-instrument-master-wrap"]},
   {image: "softwareDashboard", title: "We supercharge instrument technicians:", body: "We support sterile processing technicians with practical skills, structured training and analytical technologies that show what is happening in the department.", cta: ["Training programme", "/services/sterile-processing-technician-training-programme"]},

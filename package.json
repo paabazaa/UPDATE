@@ -19,6 +19,7 @@
     "test": "node --test server/test/api.test.mjs server/test/migrations.test.mjs server/test/security.test.mjs server/test/shield.test.mjs server/test/scale.test.mjs test/content.test.mjs",
     "start": "npm run build && node server/index.js",
     "loadtest": "node scripts/loadtest.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
     "test:pages": "node --test test/pages.test.mjs",
     "lint": "eslint server scripts test",
     "format": "prettier --write .",
