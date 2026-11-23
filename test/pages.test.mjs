@@ -281,3 +281,36 @@ test("a signed-in person sees their profile menu at the top right, ending with L
   assert.equal(await page.locator("[data-umenu]").count(), 0, "logged out");
   await page.close();
 });
+
+test("long record lists load a page at a time with Show more", async () => {
+  const {page} = await open("/");
+  const result = await page.evaluate(async () => {
+    const make = (kind, from, count) => Array.from({length: count}, (_, i) => ({id: kind + "-" + (from + i)}));
+    const calls = [];
+    const realGet = Api.get, realEnabled = Api.enabled;
+    Api.enabled = true;
+    Api.get = async path => {
+      calls.push(path);
+      const q = new URLSearchParams(path.split("?")[1]);
+      const limit = Number(q.get("limit")), only = q.get("only");
+      const data = {};
+      if (only !== "enquiries") { data.quotes = make("Q", Number(q.get("quotesOffset") || 0), Math.min(limit, 60 - Number(q.get("quotesOffset") || 0))); data.quotesTotal = 60; }
+      if (only !== "quotes") { data.enquiries = make("E", 0, Math.min(limit, 3)); data.enquiriesTotal = 3; }
+      return {ok: true, data};
+    };
+    try {
+      await Records.sync();
+      const first = {quotes: Records.quotesFor("u").length, total: Records.totalFor("quote", "u"), more: Records.hasMore("quote"), moreEnq: Records.hasMore("enquiry")};
+      await Records.more("quote");
+      const second = {quotes: Records.quotesFor("u").length, more: Records.hasMore("quote")};
+      await Records.more("quote");
+      const third = {quotes: Records.quotesFor("u").length, more: Records.hasMore("quote"), unique: new Set(Records.quotesFor("u").map(x => x.id)).size};
+      return {first, second, third, calls};
+    } finally { Api.get = realGet; Api.enabled = realEnabled; Records.reset(); }
+  });
+  assert.deepEqual(result.first, {quotes: 25, total: 60, more: true, moreEnq: false});
+  assert.deepEqual(result.second, {quotes: 50, more: true});
+  assert.deepEqual(result.third, {quotes: 60, more: false, unique: 60});
+  assert.match(result.calls[1], /only=quotes/);
+  await page.close();
+});

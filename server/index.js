@@ -9,6 +9,8 @@ import { runMigrations } from "./migrations.js";
 import { httpsRedirect, securityHeaders } from "./security.js";
 import crypto from "node:crypto";
 import { createShield, internal, refuse } from "./shield.js";
+import { createStaticFiles } from "./static.js";
+import { createQueue } from "./queue.js";
 
 const config = loadConfig();
 const db = createDatabase(config.database);
@@ -23,7 +25,9 @@ async function initDb() {
   if (result.failed) throw result.failed.error;
 }
 
-const apiApp = createApp({ db, config, mailer });
+// Slow outside work (email) runs here, a few at a time with retries, never inside a visitor's request.
+const queue = createQueue({ concurrency: Number(process.env.MAIL_CONCURRENCY) || 3 });
+const apiApp = createApp({ db, config, mailer, queue });
 
 // Find client folder
 const clientPaths = [
@@ -50,44 +54,8 @@ console.log(
   clientDist || "NOT FOUND - using API only"
 );
 
-// Static file MIME types
-const contentTypes = {
-  ".html": "text/html; charset=utf-8",
-  ".htm": "text/html; charset=utf-8",
-  ".js": "application/javascript; charset=utf-8",
-  ".mjs": "application/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".xml": "application/xml; charset=utf-8",
-  ".txt": "text/plain; charset=utf-8",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".gif": "image/gif",
-  ".webp": "image/webp",
-  ".svg": "image/svg+xml",
-  ".ico": "image/x-icon",
-  ".woff": "font/woff",
-  ".woff2": "font/woff2",
-  ".ttf": "font/ttf",
-  ".otf": "font/otf",
-  ".pdf": "application/pdf"
-};
-
-// Determine appropriate caching for static files
-function setStaticCacheHeaders(res, filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-
-  if (ext === ".html" || ext === ".htm") {
-    res.setHeader("Cache-Control", "no-cache, must-revalidate");
-    return;
-  }
-
-  res.setHeader(
-    "Cache-Control",
-    "public, max-age=86400"
-  );
-}
+const staticFiles = clientDist ? createStaticFiles(clientDist) : null;
+if (staticFiles) console.log(`[static] ${staticFiles.count} files ready (compressed copies of text files kept in memory)`);
 
 const shield = createShield({
   enabled: process.env.SHIELD !== "off",
@@ -146,97 +114,8 @@ const server = http.createServer((req, res) => {
     return apiApp(req, res);
   }
 
-  // Serve static website files.
-  if (clientDist && (req.method === "GET" || req.method === "HEAD")) {
-    let pathname;
-
-    try {
-      pathname = decodeURIComponent(
-        new URL(req.url, "http://localhost").pathname
-      );
-    } catch {
-      res.writeHead(400, {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store"
-      });
-
-      return res.end("Bad Request");
-    }
-
-    // Resolve the requested file safely inside the client directory.
-    const requestedPath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
-
-    const filePath = path.resolve(clientDist, requestedPath);
-
-    // Prevent directory traversal outside the client directory.
-    if (
-      filePath !== clientDist &&
-      !filePath.startsWith(clientDist + path.sep)
-    ) {
-      res.writeHead(403, {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store"
-      });
-
-      return res.end("Forbidden");
-    }
-
-    let finalPath = filePath;
-
-    // Check whether the requested file exists.
-    let fileExists = false;
-
-    try {
-      fileExists =
-        fs.existsSync(finalPath) &&
-        fs.statSync(finalPath).isFile();
-    } catch {
-      fileExists = false;
-    }
-
-    // Support frontend routes without file extensions.
-    if (!fileExists) {
-      const hasExtension = Boolean(path.extname(pathname));
-
-      if (!hasExtension || pathname === "/") {
-        finalPath = path.join(clientDist, "index.html");
-        fileExists = fs.existsSync(finalPath);
-      }
-    }
-
-    if (fileExists) {
-      const ext = path.extname(finalPath).toLowerCase();
-
-      res.setHeader(
-        "Content-Type",
-        contentTypes[ext] || "application/octet-stream"
-      );
-
-      setStaticCacheHeaders(res, finalPath);
-
-      if (req.method === "HEAD") {
-        res.writeHead(200);
-        return res.end();
-      }
-
-      const stream = fs.createReadStream(finalPath);
-
-      stream.on("error", () => {
-        if (!res.headersSent) {
-          res.writeHead(500, {
-            "Content-Type": "text/plain; charset=utf-8",
-            "Cache-Control": "no-store"
-          });
-        }
-
-        if (!res.writableEnded) {
-          res.end("Internal Server Error");
-        }
-      });
-
-      return stream.pipe(res);
-    }
-  }
+  // Serve static website files (from memory, compressed, with ETags). See server/static.js.
+  if (staticFiles && staticFiles.serve(req, res)) return;
 
   // Fallback to API for other routes.
   res.setHeader("Cache-Control", "no-store");
@@ -244,6 +123,26 @@ const server = http.createServer((req, res) => {
 });
 
 const port = config.port || Number(process.env.PORT) || 10000;
+
+// Slow or stuck connections are cut off instead of holding a slot for ever.
+server.keepAliveTimeout = 65000; // longer than the host's load balancer keeps connections open, so it never reuses a dead one
+server.headersTimeout = 66000;
+server.requestTimeout = 30000;
+server.maxRequestsPerSocket = 0;
+
+// On a restart or deploy: stop taking new connections, let waiting email finish, then exit.
+let stopping = false;
+async function shutDown(signal) {
+  if (stopping) return;
+  stopping = true;
+  console.log(`[server] ${signal} received, finishing waiting jobs`);
+  server.close();
+  await queue.drain(8000);
+  await db.close().catch(() => {});
+  process.exit(0);
+}
+process.on("SIGTERM", () => shutDown("SIGTERM"));
+process.on("SIGINT", () => shutDown("SIGINT"));
 
 initDb()
   .then(() => {

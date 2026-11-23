@@ -634,3 +634,37 @@ test("pictures: only real JPEG, PNG and WebP files within the size limit are acc
   }
   await s.close();
 });
+
+test("record lists come in pages with the true totals, newest first, and only the owner's", async () => {
+  const s = await start(); const ama = s.client(); const kofi = s.client();
+  await ama("POST", "/api/auth/signup", signupBody());
+  await kofi("POST", "/api/auth/signup", signupBody("kofi@example.com"));
+  const userId = s.db.sqlite.prepare("SELECT id FROM users WHERE email = 'ama@example.com'").get().id;
+  const insert = s.db.sqlite.prepare("INSERT INTO quotes (id, reference, user_id, contact_email, status, payload, created_at) VALUES (?, ?, ?, ?, 'received', ?, ?)");
+  for (let i = 0; i < 60; i++) insert.run("q" + i, "Q-" + i, userId, "ama@example.com", JSON.stringify({id: "Q-" + i, n: i}), `2026-01-01 00:${String(Math.floor(i / 60)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}`);
+  const first = (await ama("GET", "/api/me/records")).data;
+  assert.equal(first.quotes.length, 25, "a page is 25 by default");
+  assert.equal(first.quotesTotal, 60);
+  assert.equal(first.enquiriesTotal, 0);
+  assert.equal(first.quotes[0].n, 59, "newest first");
+  const next = (await ama("GET", "/api/me/records?only=quotes&quotesOffset=25&limit=25")).data;
+  assert.equal(next.quotes[0].n, 34);
+  assert.equal(next.enquiries, undefined, "only the list asked for is loaded");
+  const last = (await ama("GET", "/api/me/records?only=quotes&quotesOffset=50")).data;
+  assert.equal(last.quotes.length, 10);
+  assert.equal((await ama("GET", "/api/me/records?limit=100000")).data.quotes.length, 60 > 100 ? 100 : 60, "the page size has a ceiling of 100");
+  assert.equal((await ama("GET", "/api/me/records?limit=abc&quotesOffset=-5")).data.quotes.length, 25, "nonsense falls back to the defaults");
+  const theirs = (await kofi("GET", "/api/me/records")).data;
+  assert.equal(theirs.quotesTotal, 0, "another customer sees none of it");
+  await s.close();
+});
+
+test("the password reset email is queued, and the answer does not wait for it", async () => {
+  const s = await start(); const ama = s.client();
+  await ama("POST", "/api/auth/signup", signupBody());
+  const answered = await ama("POST", "/api/auth/forgot", {email: "ama@example.com"});
+  assert.equal(answered.status, 200);
+  await new Promise(r => setTimeout(r, 50));
+  assert.ok(s.outbox.some(m => /Reset your SURGICISS password/.test(m.subject)));
+  await s.close();
+});

@@ -1076,3 +1076,7 @@ html.modal-open{overflow:hidden}
 .umenu-panel .umenu-out .pi{background:oklch(0.62 0.22 25 / 30%);border-color:oklch(0.75 0.18 25 / 55%);color:#ff8f8f}
 .umenu-panel .umenu-out:hover,.umenu-panel .umenu-out:focus-visible{background:#fff;color:oklch(0.52 0.24 27);border-color:transparent}
 .umenu-panel .umenu-out:hover .pi,.umenu-panel .umenu-out:focus-visible .pi{background:oklch(0.52 0.24 27);border-color:transparent;color:#fff}
+
+/* Show more under the account lists */
+.more-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:var(--tint);color:var(--muted-fg);font-size:14px}
+.more-row .btn{padding:10px 18px}

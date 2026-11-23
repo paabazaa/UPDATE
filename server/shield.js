@@ -167,9 +167,9 @@ export function createShield(options = {}) {
         // Scanners ask for lots of different things that do not exist. A person with one broken link does not.
         addPoints(ip, v.notFound.size >= 8 ? 20 : 3, v.notFound.size >= 8 ? "scanning" : "");
       } else if (status === 429) addPoints(ip, 8, "rate-limited");
-      else if (status === 401 || status === 403) addPoints(ip, isAuth ? 8 : 5, "denied");
+      else if (status === 401 || status === 403) addPoints(ip, isAuth ? 6 : 5, "denied");
       else if (status === 400 || status === 422) addPoints(ip, isApi ? 2 : 1, "");
-      else if (isApi) addPoints(ip, 0.4, ""); // a steady stream of API calls adds up slowly: volume counts, but little
+      else if (isApi) addPoints(ip, 0.05, ""); // a steady stream of API calls adds up slowly: volume counts, but little
     } catch (error) {
       log(`[shield] error: ${error.message}`);
     }

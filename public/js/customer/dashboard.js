@@ -85,12 +85,12 @@ function accountHome() {
   const row = (icon, label, value) => `<li>${dashIcon(icon)}<span><small>${label}</small>${value ? escapeHtml(value) : '<em>Not provided</em>'}</span></li>`;
   return accountShell("Your account", `${notice}
     <div class="statgrid dash-stats">
-      <a class="stat" href="/account/quotes"><span class="stat-ico">${dashIcon("quotes")}</span><b>${quotes.length}</b><span class="stat-label">Quote requests</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
-      <a class="stat" href="/account/enquiries"><span class="stat-ico">${dashIcon("enquiries")}</span><b>${enquiries.length}</b><span class="stat-label">Enquiries</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
-      <a class="stat" href="/account/orders"><span class="stat-ico">${dashIcon("orders")}</span><b>${activity.length}</b><span class="stat-label">Orders</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="/account/quotes"><span class="stat-ico">${dashIcon("quotes")}</span><b>${Records.totalFor("quote", user.id)}</b><span class="stat-label">Quote requests</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="/account/enquiries"><span class="stat-ico">${dashIcon("enquiries")}</span><b>${Records.totalFor("enquiry", user.id)}</b><span class="stat-label">Enquiries</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
+      <a class="stat" href="/account/orders"><span class="stat-ico">${dashIcon("orders")}</span><b>${Records.totalFor("quote", user.id) + Records.totalFor("enquiry", user.id)}</b><span class="stat-label">Orders</span><span class="stat-go">View all ${dashIcon("arrow")}</span></a>
     </div>
     <div class="dash-cols">
-      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Recent activity</h2><span class="count-badge">${activity.length}</span></div>${activityHtml}</div>
+      <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Recent activity</h2><span class="count-badge">${Records.totalFor("quote", user.id) + Records.totalFor("enquiry", user.id)}</span></div>${activityHtml}</div>
       <div class="box dash-card"><div class="card-head"><h2 class="h-sec">Your details</h2><a class="tlink" href="/account/profile/edit">Edit</a></div>
         <ul class="detail-list">
           ${row("profile", "Name", user.name)}${row("quotes", "Organisation", user.organisation)}${row("pin", "Location", where)}${row("phone", "Phone number", user.phone)}

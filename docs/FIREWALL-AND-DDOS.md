@@ -45,11 +45,11 @@ It runs before any page or API code. It has two parts.
 | What the visitor does | Points |
 |---|---|
 | Normal page or file request (200) | 0 |
-| API call | 0.4 |
+| API call | 0.05 |
 | Bad request (400) | 1–2 |
 | Page not found (404) | 3 |
 | 8 different missing pages within a minute (scanning) | 20 each |
-| Refused (401/403), wrong password | 5–8 |
+| Refused (401/403), wrong password | 5–6 |
 | Hit the server's own rate limit (429) | 8 |
 | Probing for hidden files | 15 |
 | Attack pattern in the address | 30 |

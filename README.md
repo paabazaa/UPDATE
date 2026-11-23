@@ -191,3 +191,5 @@ Product names, descriptions, services and programmes are in `public/js/data.js`.
 ## Firewall and attack protection
 
 See [docs/FIREWALL-AND-DDOS.md](docs/FIREWALL-AND-DDOS.md): the edge firewall setup, the built-in shield (attack filter, adaptive limits, temporary bans) and the DDoS response plan.
+
+See [docs/SCALING.md](docs/SCALING.md) for how the site is kept fast under load, and how to run the load test.

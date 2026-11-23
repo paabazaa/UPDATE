@@ -32,8 +32,16 @@ export function createDatabase(cfg) {
     user,
     password,
     database,
+    // One shared pool: every request borrows a connection and gives it back, so a thousand visitors never mean a thousand
+    // database connections. Size it below the database plan's connection limit (DB_POOL_SIZE, default 10).
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: Math.max(1, Number(process.env.DB_POOL_SIZE) || 10),
+    queueLimit: Math.max(0, Number(process.env.DB_QUEUE_LIMIT) || 200), // beyond this many waiting requests, fail fast instead of piling up
+    maxIdle: Math.max(1, Number(process.env.DB_POOL_SIZE) || 10),
+    idleTimeout: 60000,
+    connectTimeout: 10000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
     ssl: {
       ca: caCertificate,
       rejectUnauthorized: true,

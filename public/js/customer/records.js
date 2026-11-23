@@ -11,7 +11,8 @@ function accountHistory() {
   const show = currentQuery().get("show");
   const filter = show === "quote" || show === "enquiry" ? show : "all";
   const list = filter === "all" ? all : all.filter(a => a.kind === filter);
-  const counts = {all: all.length, quote: all.filter(a => a.kind === "quote").length, enquiry: all.filter(a => a.kind === "enquiry").length};
+  const counts = {quote: Records.totalFor("quote", Accounts.current().id), enquiry: Records.totalFor("enquiry", Accounts.current().id)};
+  counts.all = counts.quote + counts.enquiry;
   const tab = (key, label) => `<a class="hist-tab" href="/account/history${key === "all" ? "" : "?show=" + key}" ${filter === key ? 'aria-current="page"' : ""}>${label}<span>${counts[key]}</span></a>`;
   if (!all.length) {
     return accountShell("Order history", `<div class="empty"><h2>No history yet</h2>
@@ -31,7 +32,12 @@ function accountHistory() {
   const body = groups.length
     ? groups.map(g => `<div class="box dash-card hist-month"><div class="card-head"><h2 class="h-sec">${escapeHtml(g.label)}</h2><span class="count-badge">${g.items.length}</span></div>${activityList(g.items)}</div>`).join("")
     : `<div class="empty"><h2>Nothing here</h2><p>You have no ${filter === "quote" ? "quote requests" : "enquiries"} in your history.</p></div>`;
-  return accountShell("Order history", `${listMessage()}<div class="hist-bar"><nav class="hist-tabs" aria-label="Filter history">${tab("all", "All")}${tab("quote", "Quote requests")}${tab("enquiry", "Enquiries")}</nav><button type="button" class="hist-dl" data-hist-csv="${filter}">${dashIcon("arrow")}<span>Download CSV</span></button></div>${body}`);
+  return accountShell("Order history", `${listMessage()}<div class="hist-bar"><nav class="hist-tabs" aria-label="Filter history">${tab("all", "All")}${tab("quote", "Quote requests")}${tab("enquiry", "Enquiries")}</nav><button type="button" class="hist-dl" data-hist-csv="${filter}">${dashIcon("arrow")}<span>Download CSV</span></button></div>${body}${showMore(filter === "all" ? "both" : filter, list.length, filter === "all" ? counts.all : counts[filter])}`);
+}
+// "Showing 25 of 60" with a button for the next page. Nothing is shown when everything is already on the page.
+function showMore(kind, shown, total) {
+  if (!Records.hasMore(kind)) return "";
+  return `<div class="more-row"><span>Showing ${shown} of ${total}</span><button type="button" class="btn" data-more="${kind}">Show more</button></div>`;
 }
 function accountQuotes() {
   const user = Accounts.current();
@@ -43,7 +49,7 @@ function accountQuotes() {
       </div>`);
   }
   const rows = list.map(item => `<li><div class="listhead"><a href="/account/quotes/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a>${statusPill(item)}${deleteControl("quote", item.id)}</div><p>${escapeHtml(formatWhen(item.createdAt))} · ${item.lines.length} item${item.lines.length === 1 ? "" : "s"} · ${escapeHtml(item.lines.map(line => line.name).join(", "))}</p></li>`).join("");
-  return accountShell("My quotes", `${listMessage()}<ul class="rec-list">${rows}</ul>`);
+  return accountShell("My quotes", `${listMessage()}<ul class="rec-list">${rows}</ul>${showMore("quote", list.length, Records.totalFor("quote", user.id))}`);
 }
 function accountQuoteDetail(id) {
   const user = Accounts.current();
@@ -63,7 +69,7 @@ function accountEnquiries() {
       </div>`);
   }
   const rows = list.map(item => `<li><div class="listhead"><a href="/account/enquiries/${encodeURIComponent(item.id)}">${escapeHtml(item.subject || "Enquiry")}</a>${statusPill(item)}${deleteControl("enquiry", item.id)}</div><p>${escapeHtml(item.id)} · ${escapeHtml(formatWhen(item.createdAt))}</p></li>`).join("");
-  return accountShell("My enquiries", `${listMessage()}<ul class="rec-list">${rows}</ul>`);
+  return accountShell("My enquiries", `${listMessage()}<ul class="rec-list">${rows}</ul>${showMore("enquiry", list.length, Records.totalFor("enquiry", user.id))}`);
 }
 function accountEnquiryDetail(id) {
   const user = Accounts.current();

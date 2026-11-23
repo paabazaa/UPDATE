@@ -9,6 +9,10 @@ const missingColumn = error => Boolean(error) && (
   error.code === "ER_BAD_FIELD_ERROR" || error.errno === 1054 || /no such column|unknown column/i.test(String(error.message))
 );
 
+const alreadyThere = error => Boolean(error) && (
+  error.errno === 1061 || error.code === "ER_DUP_KEYNAME" || /duplicate key name|already exists/i.test(String(error.message))
+);
+
 export const migrations = [
   { id: "001-baseline", sql: () => sqlFile("001-baseline.sql") },
   { id: "002-widen-user-columns", sql: () => sqlFile("002-widen-user-columns.sql") },
@@ -21,6 +25,19 @@ export const migrations = [
       } catch (error) {
         if (!missingColumn(error)) throw error;
         await db.execute("ALTER TABLE users ADD COLUMN avatar MEDIUMTEXT NULL");
+      }
+    }
+  },
+  {
+    // Every column the code searches or sorts by now has an index. This is the one that was missing: clearing out expired reset links.
+    id: "004-search-indexes",
+    async run(db) {
+      for (const statement of ["CREATE INDEX idx_resets_expires ON password_resets (expires_at)"]) {
+        try {
+          await db.execute(statement);
+        } catch (error) {
+          if (!alreadyThere(error)) throw error;
+        }
       }
     }
   }
