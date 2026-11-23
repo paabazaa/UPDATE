@@ -15,7 +15,7 @@ export default [
   },
   {
     // The browser tests run small pieces of code inside the page, so they use browser names such as document and window.
-    files: ["test/pages.test.mjs"],
+    files: ["test/pages.test.mjs", "scripts/screenshots.mjs"],
     languageOptions: { globals: { ...globals.node, ...globals.browser } }
   }
 ];
