@@ -29,7 +29,7 @@ const IMAGES = {
   "serviceMorale": "/images/service-sterile-storage.jpg?v=2",
   "serviceTraining": "/images/hero-sterile-services.jpg?v=2",
   "heroSterileProcessing": "/images/hero-sterile-services.jpg?v=2",
-  "logo": "/images/logo.png"
+  "logo": "/images/logo.png?v=2"
 };
 
 // Official SURGICISS LTD contact information.

@@ -30,7 +30,7 @@ function walk(root, dir = root, found = new Map()) {
   return found;
 }
 
-export function createStaticFiles(root) {
+export function createStaticFiles(root, options = {}) {
   const files = new Map();
   for (const [url, full] of walk(root)) {
     const ext = path.extname(full).toLowerCase();
@@ -52,11 +52,28 @@ export function createStaticFiles(root) {
   }
   const index = files.get("/index.html");
 
+  // Pages built by the server (see seo.js) are compressed once, like files, and remembered per finished page.
+  const built = new WeakMap();
+  function pageEntry(result) {
+    let entry = built.get(result);
+    if (!entry) {
+      const raw = Buffer.from(result.html, "utf8");
+      entry = { ext: ".html", type: contentTypes[".html"], size: raw.length, raw, status: result.status, noindex: result.noindex,
+        etag: `"${crypto.createHash("sha1").update(raw).digest("base64url").slice(0, 20)}"`,
+        br: zlib.brotliCompressSync(raw, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 } }), gzip: zlib.gzipSync(raw, { level: 9 }) };
+      built.set(result, entry);
+    }
+    return entry;
+  }
+
   function lookup(pathname) {
     const direct = files.get(pathname);
     if (direct) return direct;
-    // A page address such as /account/quotes (no file extension) is the single-page app: serve index.html.
-    if (pathname === "/" || !path.extname(pathname)) return index || null;
+    // A page address such as /account/quotes (no file extension) is a page of the single-page app.
+    if (pathname === "/" || !path.extname(pathname)) {
+      if (options.page) return pageEntry(options.page(pathname));
+      return index || null;
+    }
     return null;
   }
 
@@ -83,9 +100,11 @@ export function createStaticFiles(root) {
     res.setHeader("Cache-Control", entry.ext === ".html" || entry.ext === ".htm" ? "no-cache, must-revalidate" : "public, max-age=86400");
     res.setHeader("ETag", entry.etag);
     if (COMPRESSIBLE.has(entry.ext)) res.setHeader("Vary", "Accept-Encoding");
+    if (entry.noindex) res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    const status = entry.status || 200;
 
     const sent = String(req.headers["if-none-match"] || "");
-    if (sent && sent.split(",").some(tag => tag.trim() === entry.etag || tag.trim() === "W/" + entry.etag)) {
+    if (status === 200 && sent && sent.split(",").some(tag => tag.trim() === entry.etag || tag.trim() === "W/" + entry.etag)) {
       res.writeHead(304);
       res.end();
       return true;
@@ -99,7 +118,7 @@ export function createStaticFiles(root) {
     }
     if (body) {
       res.setHeader("Content-Length", body.length);
-      res.writeHead(200);
+      res.writeHead(status);
       res.end(req.method === "HEAD" ? undefined : body);
       return true;
     }
