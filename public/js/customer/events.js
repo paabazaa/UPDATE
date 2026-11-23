@@ -69,6 +69,14 @@ function installCustomer() {
       setTimeout(() => URL.revokeObjectURL(url), 2000);
       return;
     }
+    const moreButton = event.target.closest("[data-more]");
+    if (moreButton) {
+      moreButton.disabled = true;
+      moreButton.textContent = "Loading...";
+      await Records.more(moreButton.dataset.more);
+      refreshAccount();
+      return;
+    }
     if (del) {state.confirmDelete = del.dataset.del; state.notice = ""; state.deleteError = ""; refreshAccount(); return;}
     if (delNo) {state.confirmDelete = null; refreshAccount(); return;}
     if (delYes) {

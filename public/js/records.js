@@ -46,15 +46,48 @@ const Records = (() => {
     return record;
   }
   // Server mode keeps the signed-in customer's records here after loading them from the API.
-  let fromServer = {quotes: [], enquiries: []};
+  // Only a page of each list is loaded at a time (25), with the true totals kept alongside, so an account with hundreds of
+  // requests stays quick. "Show more" fetches the next page.
+  const PAGE = 25;
+  let fromServer = {quotes: [], enquiries: [], quotesTotal: 0, enquiriesTotal: 0};
+  let loadingMore = false;
   // A request just sent from this page, kept so its confirmation can be shown. Lost when the page is reloaded.
   let justSent = [];
   function remember(record) {justSent.unshift(record);}
   async function sync() {
-    const result = await Api.get("/me/records");
-    if (result.ok) fromServer = {quotes: result.data.quotes || [], enquiries: result.data.enquiries || []};
+    // Reload at least the first page, and as many as are already on screen, so a refresh does not shorten the list.
+    const keep = Math.min(100, Math.max(PAGE, fromServer.quotes.length, fromServer.enquiries.length));
+    const result = await Api.get("/me/records?limit=" + keep);
+    if (result.ok) {
+      const quotes = result.data.quotes || [], enquiries = result.data.enquiries || [];
+      fromServer = {quotes, enquiries, quotesTotal: result.data.quotesTotal ?? quotes.length, enquiriesTotal: result.data.enquiriesTotal ?? enquiries.length};
+    }
   }
-  function reset() {fromServer = {quotes: [], enquiries: []}; justSent = [];}
+  function reset() {fromServer = {quotes: [], enquiries: [], quotesTotal: 0, enquiriesTotal: 0}; justSent = [];}
+  const totalFor = (kind, userId) => (Api.enabled
+    ? (kind === "quote" ? fromServer.quotesTotal : fromServer.enquiriesTotal)
+    : (kind === "quote" ? quotesFor(userId) : enquiriesFor(userId)).length);
+  const hasMore = kind => Api.enabled && (
+    kind === "both" ? hasMore("quote") || hasMore("enquiry")
+      : kind === "quote" ? fromServer.quotes.length < fromServer.quotesTotal : fromServer.enquiries.length < fromServer.enquiriesTotal);
+  // Loads the next page of quotes, enquiries or both. Returns false when nothing could be loaded.
+  async function more(kind) {
+    if (!Api.enabled || loadingMore) return false;
+    loadingMore = true;
+    try {
+      const wantQuotes = (kind === "quote" || kind === "both") && hasMore("quote");
+      const wantEnquiries = (kind === "enquiry" || kind === "both") && hasMore("enquiry");
+      if (!wantQuotes && !wantEnquiries) return false;
+      const query = "limit=" + PAGE + (wantQuotes ? "&quotesOffset=" + fromServer.quotes.length : "") + (wantEnquiries ? "&enquiriesOffset=" + fromServer.enquiries.length : "")
+        + (wantQuotes && !wantEnquiries ? "&only=quotes" : wantEnquiries && !wantQuotes ? "&only=enquiries" : "");
+      const result = await Api.get("/me/records?" + query);
+      if (!result.ok) return false;
+      const merge = (have, next) => have.concat((next || []).filter(item => !have.some(old => old.id === item.id)));
+      if (wantQuotes) { fromServer.quotes = merge(fromServer.quotes, result.data.quotes); fromServer.quotesTotal = result.data.quotesTotal ?? fromServer.quotesTotal; }
+      if (wantEnquiries) { fromServer.enquiries = merge(fromServer.enquiries, result.data.enquiries); fromServer.enquiriesTotal = result.data.enquiriesTotal ?? fromServer.enquiriesTotal; }
+      return true;
+    } finally { loadingMore = false; }
+  }
 
   function quotesFor(userId) {return Api.enabled ? fromServer.quotes : read(QUOTES).filter(item => item.userId === userId);}
   function enquiriesFor(userId) {return Api.enabled ? fromServer.enquiries : read(ENQUIRIES).filter(item => item.userId === userId);}
@@ -137,7 +170,7 @@ const Records = (() => {
     return {ok: true};
   }
   return {
-    sync, reset, stamp, remember, remove, saveQuote, saveEnquiry, quotesFor, enquiriesFor,
+    sync, more, hasMore, totalFor, reset, stamp, remember, remove, saveQuote, saveEnquiry, quotesFor, enquiriesFor,
     visibleQuote, visibleEnquiry, claim, purgeUser,
     loadDraft, saveDraft, clearDraft, deliver
   };

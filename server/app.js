@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 import {hashPassword, verifyPassword, DUMMY_HASH, sha256, newToken} from "./passwords.js";
 import {createRateLimiter} from "./ratelimit.js";
+import {createQueue} from "./queue.js";
 import {providerSettings, enabledProviders, newPkce, authorizeUrl, fetchProfile, safeNextPath} from "./oauth.js";
 import {text, normaliseEmail, isEmail, checkPassword, cleanProfile, cleanSignup, cleanQuote, cleanEnquiry} from "./validation.js";
 
@@ -23,7 +24,7 @@ class HttpError extends Error {
   }
 }
 
-export function createApp({db, config, mailer, fetchImpl = fetch}) {
+export function createApp({db, config, mailer, fetchImpl = fetch, queue = createQueue()}) {
   const allow = createRateLimiter();
 
   function clientIp(req) {
@@ -289,9 +290,7 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
       lines.push("", `Relates to: ${value.interest}`, `Subject: ${value.subject || "none"}`, "", "Message", value.message);
     }
     lines.push("", "Reply to this email to answer the customer directly.");
-    Promise.resolve()
-      .then(() => mailer.send({to, subject: `New ${kind === "quote" ? "quote request" : "enquiry"} ${ref}`, text: lines.join("\n"), replyTo: c.email}))
-      .catch(error => console.error(`[mail] Could not send the notification for ${ref}:`, error.message));
+    queue.add(`notify ${ref}`, () => mailer.send({to, subject: `New ${kind === "quote" ? "quote request" : "enquiry"} ${ref}`, text: lines.join("\n"), replyTo: c.email}));
   }
 
   const siteBase = () => config.siteUrl || config.allowedOrigins[0] || "";
@@ -554,12 +553,10 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
         if (row) {
           const token = newToken();
           const now = new Date();
-          await db.execute("DELETE FROM password_resets WHERE user_id = ?", [row.id]);
+          await db.execute("DELETE FROM password_resets WHERE user_id = ? OR expires_at < ?", [row.id, sqlDate(now)]);
           await db.execute("INSERT INTO password_resets (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)", [sha256(token), row.id, sqlDate(now), sqlDate(new Date(now.getTime() + RESET_MINUTES * 60 * 1000))]);
           const base = config.siteUrl || config.allowedOrigins[0] || "";
-          try {
-            await mailer.send({ to: email, subject: "Reset your SURGICISS password", text: `Use this link within 30 minutes to choose a new password:\n\n${base}/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.` });
-          } catch (error) { console.error("[mail] Could not send password-reset email:", String((error && error.message) || error).slice(0, 300)); }
+          queue.add("password reset", () => mailer.send({ to: email, subject: "Reset your SURGICISS password", text: `Use this link within 30 minutes to choose a new password:\n\n${base}/reset-password?token=${token}\n\nIf you did not ask for this, you can ignore this message.` }));
         }
       }
       return { body: { ok: true } };
@@ -601,8 +598,27 @@ export function createApp({db, config, mailer, fetchImpl = fetch}) {
     },
     "GET /api/me/records": async req => {
       const user = await requireUser(req);
-      const load = async table => (await db.query(`SELECT payload FROM ${table} WHERE user_id = ? ORDER BY created_at DESC LIMIT 200`, [user.id])).map(row => parseJson(row.payload));
-      return { body: { quotes: await load("quotes"), enquiries: await load("enquiries") } };
+      const url = new URL(req.url, "http://localhost");
+      const number = (name, fallback, max) => Math.min(max, Math.max(0, Math.floor(Number(url.searchParams.get(name))) || fallback));
+      const size = number("limit", 25, 100) || 25;
+      const only = url.searchParams.get("only");
+      const load = async (table, offset) => {
+        const rows = await db.query(`SELECT payload FROM ${table} WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`, [user.id, size, offset]);
+        const total = Number((await db.query(`SELECT COUNT(*) AS n FROM ${table} WHERE user_id = ?`, [user.id]))[0]?.n || 0);
+        return { items: rows.map(row => parseJson(row.payload)), total };
+      };
+      const body = {};
+      if (only !== "enquiries") {
+        const quotes = await load("quotes", number("quotesOffset", 0, 100000));
+        body.quotes = quotes.items;
+        body.quotesTotal = quotes.total;
+      }
+      if (only !== "quotes") {
+        const enquiries = await load("enquiries", number("enquiriesOffset", 0, 100000));
+        body.enquiries = enquiries.items;
+        body.enquiriesTotal = enquiries.total;
+      }
+      return { body };
     },
     "POST /api/me/records/delete": async req => {
       const user = await requireUser(req);

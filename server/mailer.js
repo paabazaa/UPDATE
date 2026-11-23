@@ -1,6 +1,15 @@
 // Sends email through Brevo's web API (BREVO_API_KEY) or Resend's web API (RESEND_API_KEY). Without either, messages are not sent;
 // outside production the text is printed to the console. There is deliberately no SMTP route: it needed the nodemailer package,
 // which has open security advisories, and hosts such as Render's free plan block SMTP anyway.
+// The error carries the HTTP status and any Retry-After wait, so the queue knows whether trying again can help.
+function failure(response, detail) {
+  const error = new Error(`Email service answered ${response.status} ${detail}`.trim());
+  error.status = response.status;
+  const wait = Number(response.headers?.get?.("retry-after"));
+  if (wait > 0) error.retryAfterMs = Math.min(wait, 60) * 1000;
+  return error;
+}
+
 export function createMailer(config, fetchImpl = fetch) {
   return {
     configured: Boolean(config.mail.resendKey || config.mail.brevoKey),
@@ -17,7 +26,7 @@ export function createMailer(config, fetchImpl = fetch) {
         });
         if (!response.ok) {
           const detail = (await response.text().catch(() => "")).slice(0, 300);
-          throw new Error(`Email service answered ${response.status} ${detail}`.trim());
+          throw failure(response, detail);
         }
         return true;
       }
@@ -30,7 +39,7 @@ export function createMailer(config, fetchImpl = fetch) {
         });
         if (!response.ok) {
           const detail = (await response.text().catch(() => "")).slice(0, 300);
-          throw new Error(`Email service answered ${response.status} ${detail}`.trim());
+          throw failure(response, detail);
         }
         return true;
       }
