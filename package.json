@@ -16,7 +16,7 @@
     "api:dev": "node --env-file=.env server/index.js",
     "db:migrate": "node scripts/migrate-db.mjs",
     "db:migrate:dev": "node --env-file=.env scripts/migrate-db.mjs",
-    "test": "node --test server/test/api.test.mjs server/test/migrations.test.mjs server/test/security.test.mjs server/test/shield.test.mjs server/test/scale.test.mjs server/test/seo.test.mjs test/content.test.mjs",
+    "test": "node --test server/test/api.test.mjs server/test/migrations.test.mjs server/test/security.test.mjs server/test/shield.test.mjs server/test/scale.test.mjs server/test/seo.test.mjs server/test/env.test.mjs test/content.test.mjs",
     "start": "npm run build && node server/index.js",
     "loadtest": "node scripts/loadtest.mjs",
     "screenshots": "node scripts/screenshots.mjs",
