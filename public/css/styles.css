@@ -416,7 +416,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(min-width:900px){
   .login-page{padding-block:72px 96px}
   .auth-box{max-width:600px;padding:52px 48px 44px}
-  .auth-box:has(#signup-form){max-width:1000px;padding:56px 72px 48px;background:linear-gradient(160deg,color-mix(in oklch,var(--primary) 7%,var(--card)),var(--card) 60%)}
+  .auth-box{border:0;background:transparent;box-shadow:none}
+  .auth-box:has(#signup-form){max-width:1000px;padding:56px 72px 48px}
   .auth-title{font-size:72px;letter-spacing:.06em;text-shadow:0 0 34px color-mix(in oklch,var(--primary) 65%,transparent),0 0 4px color-mix(in oklch,var(--primary) 80%,transparent)}
   .auth-lead{font-size:19px;margin-top:18px}
   .auth-switch{font-size:16px;margin-top:14px}
