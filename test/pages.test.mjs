@@ -206,11 +206,12 @@ test("text in the address bar is never run as code", async () => {
 
 test("hostile text typed into the account form is shown as plain text everywhere", async () => {
   const {page} = await open("/sign-up");
-  await page.fill("#name", PAYLOADS[0]);
+  await page.fill("#first", PAYLOADS[0]);
   await page.fill("#email", "xss@example.com");
   await page.fill("#password", "correct horse 9"); await page.fill("#confirm", "correct horse 9");
   await page.fill("#organisation", PAYLOADS[1]);
   await page.fill("#phone", PAYLOADS[2]);
+  await page.check("#terms");
   await page.click("#signup-form button[type=submit]");
   await page.waitForTimeout(600);
   for (const route of ["/account", "/account/profile", "/account/profile/edit", "/account/settings", "/generate-quote", "/"]) {
@@ -235,9 +236,10 @@ test("a sign-in return address cannot send people to another website", async () 
 
 test("a signed-in person sees their profile menu at the top right, ending with Log out", async () => {
   const {page} = await open("/sign-up");
-  await page.fill("#name", "Ama Mensah");
+  await page.fill("#first", "Ama Mensah");
   await page.fill("#email", "menu@example.com");
   await page.fill("#password", "correct horse 9"); await page.fill("#confirm", "correct horse 9");
+  await page.check("#terms");
   await page.click("#signup-form button[type=submit]");
   await page.waitForSelector("[data-umenu]");
   assert.equal(await page.locator("header .hbtn.plain[data-logout]").count(), 0, "the old loose Log out button is gone");

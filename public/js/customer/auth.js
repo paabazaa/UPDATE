@@ -50,7 +50,7 @@ function customerHeader() {
 }
 
 function authCard(title, lead, body) {
-  return banner(title, [{label: title}], lead) + `<section class="wrap sec"><div class="auth-card">${localNotice()}<div style="margin-top:20px">${body}</div></div></section>`;
+  return authBox({title: title.toUpperCase(), lead, body: `${localNotice()}${body}`});
 }
 function fieldError(name) {
   return state.errors[name] ? `<p class="err">${escapeHtml(state.errors[name])}</p>` : "";
@@ -86,81 +86,76 @@ function socialButtons(intro = "", divider = "before", label = "or continue with
 function socialError() {
   return SOCIAL_ERRORS[currentQuery().get("error")] || "";
 }
-// Shared two-panel layout for the login and sign-up pages: purple brand panel with the logo, form on the right.
-function authSplit({title, heading, lead, perks, body, fine}) {
+// One centred card for every sign-in page: a large glowing title, a short line, a link to the other page, then the form.
+function authBox({title, lead, switchLine = "", body}) {
   return `<section class="login-page"><div class="wrap">
-    <div class="login-card">
-      <aside class="login-brand">
-        <h1>${title}</h1>
-        <p class="login-lead">${lead}</p>
-        <ul class="login-perks">${perks.map(text => `<li>${text}</li>`).join("")}</ul>
-      </aside>
-      <div class="login-main">
-        <h2>${heading}</h2>
-        ${body}
-        ${fine ? `<p class="login-fine">${fine}</p>` : ""}
-      </div>
+    <div class="auth-box">
+      <h1 class="auth-title">${title}</h1>
+      <p class="auth-lead">${lead}</p>
+      ${switchLine ? `<p class="auth-switch">${switchLine}</p>` : ""}
+      ${body}
     </div>
   </div></section>`;
 }
-const EYE_BUTTON = `<button class="pw-toggle" type="button" data-toggle-password aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>`;
-function passwordField(id, label, autocomplete, extra = "", required = false) {
-  return `<div class="fld"><div class="label-row"><label for="${id}">${label}${required ? ' <span class="req">*</span>' : ""}</label>${extra}</div>
-    <div class="pw"><input id="${id}" name="${id}" type="password" autocomplete="${autocomplete}" maxlength="128">${EYE_BUTTON}</div>${fieldError(id)}</div>`;
+const AUTH_ICON = {
+  mail: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>`,
+  lock: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  user: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`,
+  phone: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>`,
+  building: `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M19 21V11a2 2 0 0 0-2-2h-2M9 7h2M9 11h2M9 15h2"/></svg>`
+};
+const EYE_BUTTON = `<button class="pw-toggle" type="button" data-toggle-password aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>`;
+// A labelled box with a small symbol at its left edge.
+function authField({id, label, icon, type = "text", autocomplete = "off", placeholder = "", required = false, toggle = false, max = 255}) {
+  return `<div class="fld auth-fld"><label for="${id}">${label}${required ? ' <span class="req">*</span>' : ""}</label>
+    <div class="auth-input">${AUTH_ICON[icon]}<input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}" maxlength="${max}" placeholder="${placeholder}">${toggle ? EYE_BUTTON : ""}</div>${fieldError(id)}</div>`;
 }
-const AUTH_FINE = () => "";
+const passwordField = (id, label, autocomplete, placeholder = "", required = false) => authField({id, label, icon: "lock", type: "password", autocomplete, placeholder, required, toggle: true, max: 128});
 function loginPage() {
   const message = state.authError || socialError();
   const formError = message ? `<p class="err login-error" role="alert">${escapeHtml(message)}</p>` : "";
-  return authSplit({
+  const social = socialButtons("", "after");
+  return authBox({
     title: "LOGIN",
-    lead: "Sign in to open your dashboard, quotes and enquiries.",
-    perks: ["Review your saved quotes", "Follow up your enquiries", "Keep your delivery details ready"],
-    heading: "Sign in to your account",
-    fine: AUTH_FINE(),
+    lead: "Access your SURGICISS account",
+    switchLine: `New user? <a href="${withNext("/sign-up")}">Create an account</a>`,
     body: `<form class="enq login-form" id="login-form" novalidate>
           ${formError}
-          <div class="fld"><label for="email">Email address</label>
-            <input id="email" name="email" type="email" autocomplete="username" maxlength="255" placeholder="you@example.com">${fieldError("email")}</div>
-          ${passwordField("password", "Password", "current-password")}
+          ${authField({id: "email", label: "Email address", icon: "mail", type: "email", autocomplete: "username", placeholder: "you@example.com"})}
+          ${passwordField("password", "Password", "current-password", "Your password")}
           <p class="forgot-row"><a href="${withNext("/forgot-password")}">Forgot password?</a></p>
-          <button class="btn lg login-submit" type="submit">Sign in</button>
+          <button class="btn lg login-submit" type="submit">LOGIN</button>
         </form>
-        ${socialButtons("", "after")}
-        <p class="login-alt">New to SURGICISS? <a href="${withNext("/sign-up")}">Create an account</a></p>`
+        ${social || `<p class="or"><span>OR</span></p>`}
+        <p class="login-alt">Don't have an account? <a href="${withNext("/sign-up")}">Sign up</a></p>`
   });
 }
 function signupPage() {
   const message = state.authError || socialError();
   const formError = message ? `<p class="err login-error" role="alert">${escapeHtml(message)}</p>` : "";
-  const perks = ["Keep every quote and enquiry in one place", "Reuse your details on each new request"];
-  if (Accounts.providers && Accounts.providers().length) perks.push("Or skip the form with Google or Facebook");
-  return authSplit({
-    title: "SIGN UP",
-    lead: "Use an account only if you want a dashboard for your quotes and enquiries.",
-    perks,
-    heading: "Your details",
-    fine: AUTH_FINE(),
+  const social = socialButtons("", "after", "or sign up with");
+  return authBox({
+    title: "CREATE ACCOUNT",
+    lead: "Create an account to keep your quotes and enquiries in one place",
+    switchLine: `Already have an account? <a href="${withNext("/login")}">Sign in here</a>`,
     body: `<form class="enq login-form" id="signup-form" novalidate>
           ${formError}
           <div class="fields">
-            <div class="fld"><label for="name">Full name <span class="req">*</span></label>
-              <input id="name" name="name" autocomplete="name" maxlength="255">${fieldError("name")}</div>
-            <div class="fld"><label for="email">Email address <span class="req">*</span></label>
-              <input id="email" name="email" type="email" autocomplete="email" maxlength="255">${fieldError("email")}</div>
-            ${passwordField("password", "Password", "new-password", "", true)}
-            ${passwordField("confirm", "Confirm password", "new-password", "", true)}
-            <div class="fld"><label for="organisation">Organisation</label>
-              <input id="organisation" name="organisation" autocomplete="organization" maxlength="255"></div>
-            <div class="fld"><label for="phone">Phone number</label>
-              <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="255"></div>
+            ${authField({id: "first", label: "First name", icon: "user", autocomplete: "given-name", placeholder: "First name", required: true}).replace(fieldError("first"), fieldError("name"))}
+            ${authField({id: "last", label: "Last name", icon: "user", autocomplete: "family-name", placeholder: "Last name"})}
+            ${authField({id: "email", label: "Email address", icon: "mail", type: "email", autocomplete: "email", placeholder: "you@example.com", required: true})}
+            ${authField({id: "phone", label: "Phone number", icon: "phone", type: "tel", autocomplete: "tel", placeholder: "Phone number"})}
+            ${authField({id: "organisation", label: "Organisation", icon: "building", autocomplete: "organization", placeholder: "Your organisation"})}
+            ${passwordField("password", "Password", "new-password", "At least 8 characters", true)}
+            ${passwordField("confirm", "Confirm password", "new-password", "Repeat the password", true)}
             ${Places.countryField("")}
             ${Places.cityField("", "")}
           </div>
-          <button class="btn lg login-submit" type="submit">Create account</button>
+          <label class="auth-terms"><input type="checkbox" id="terms" name="terms" value="yes"><span>I agree to the <a href="/terms">Terms of use</a> and <a href="/privacy">Privacy notice</a></span></label>${fieldError("terms")}
+          <button class="btn lg login-submit" type="submit">CREATE ACCOUNT</button>
         </form>
-        ${socialButtons("", "after", "or sign up with")}
-        <p class="login-alt">${"Already registered?"} <a href="${withNext("/login")}">Sign in</a></p>`
+        ${social || `<p class="or"><span>OR</span></p>`}
+        <p class="login-alt">Already have an account? <a href="${withNext("/login")}">Sign in</a></p>`
   });
 }
 function forgotPage() {
