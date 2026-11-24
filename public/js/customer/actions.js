@@ -21,15 +21,35 @@ async function submitSignup(form) {
   if (form.dataset.busy === "1") return;
   form.dataset.busy = "1";
   const data = Object.fromEntries(new FormData(form).entries());
+  const agreed = Boolean(data.terms);
+  // The page asks for a first and last name; the account keeps one full name.
+  data.name = [data.first, data.last].map(part => String(part || "").trim()).filter(Boolean).join(" ");
+  delete data.first; delete data.last; delete data.terms;
+  const keep = () => {
+    const parts = data.name.split(" ");
+    const values = {first: parts[0] || "", last: parts.slice(1).join(" "), email: data.email, phone: data.phone, organisation: data.organisation, country: data.country};
+    for (const [key, value] of Object.entries(values)) {
+      const input = document.querySelector(`#signup-form [name=${key}]`);
+      if (input) input.value = value || "";
+    }
+    const box = document.querySelector("#signup-form [name=terms]");
+    if (box) box.checked = agreed;
+  };
+  state.errors = {};
+  if (!agreed) {
+    form.dataset.busy = "";
+    state.authError = "";
+    state.errors = {terms: "Please agree to the terms and privacy notice to create an account."};
+    rerenderKeepScroll(signupPage());
+    keep();
+    return;
+  }
   const result = await Accounts.register(data);
   form.dataset.busy = "";
   if (!result.ok) {
     state.authError = result.error;
     rerenderKeepScroll(signupPage());
-    ["name", "email", "organisation", "phone", "country"].forEach(key => {
-      const input = document.querySelector(`#signup-form [name=${key}]`);
-      if (input) input.value = data[key] || "";
-    });
+    keep();
     return;
   }
   state.authError = "";
