@@ -93,6 +93,12 @@ export function createStaticFiles(root, options = {}) {
       res.end("Forbidden");
       return true;
     }
+    // Hidden files (.env, .git and the like) are never served, whatever folder they end up in. Only /.well-known is allowed.
+    if (pathname.split("/").some(part => part.startsWith(".") && part !== ".well-known")) {
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+      res.end("Not found");
+      return true;
+    }
     const entry = lookup(pathname);
     if (!entry) return false;
 

@@ -1,6 +1,7 @@
 import http from "node:http";
 import path from "node:path";
 import fs from "node:fs";
+import { loadEnvFile } from "./env.js";
 import { createApp } from "./app.js";
 import { createDatabase } from "./db.js";
 import { loadConfig } from "./config.js";
@@ -13,6 +14,7 @@ import { createStaticFiles } from "./static.js";
 import { createSeo } from "./seo.js";
 import { createQueue } from "./queue.js";
 
+loadEnvFile();
 const config = loadConfig();
 const db = createDatabase(config.database);
 const mailer = createMailer(config);
