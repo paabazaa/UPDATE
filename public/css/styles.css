@@ -409,10 +409,21 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(min-width:640px){
   .login-page{padding-block:56px 72px}
   .auth-box{padding:44px 40px 36px}
-  #signup-form .fields{grid-template-columns:1fr 1fr}
-  #signup-form .fields .fld:nth-child(n+3):nth-child(-n+5),#signup-form .fields .fld:nth-child(n+6){grid-column:auto}
+  #signup-form .fields{grid-template-columns:1fr 1fr;gap:22px 28px}
+  #signup-form .fields .fld:nth-child(3),#signup-form .fields .fld:nth-child(6),#signup-form .fields .fld:nth-child(7){grid-column:1/-1}
 }
-@media(min-width:640px){.auth-box:has(#signup-form){max-width:680px}}
+/* Laptops and desktops: a wide, open form like the reference, with the purple glow instead of a small card */
+@media(min-width:900px){
+  .login-page{padding-block:72px 96px}
+  .auth-box{max-width:600px;padding:52px 48px 44px}
+  .auth-box:has(#signup-form){max-width:1000px;padding:56px 72px 48px;background:linear-gradient(160deg,color-mix(in oklch,var(--primary) 7%,var(--card)),var(--card) 60%)}
+  .auth-title{font-size:72px;letter-spacing:.06em;text-shadow:0 0 34px color-mix(in oklch,var(--primary) 65%,transparent),0 0 4px color-mix(in oklch,var(--primary) 80%,transparent)}
+  .auth-lead{font-size:19px;margin-top:18px}
+  .auth-switch{font-size:16px;margin-top:14px}
+  .login-form{margin-top:40px;gap:24px}
+  .auth-input input{background:color-mix(in oklch,var(--primary) 6%,var(--bg))}
+  .login-submit{min-height:60px;font-size:16px}
+}
 
 .tl.home{padding:8px 12px}
 .tl.home .ico{margin:0}
